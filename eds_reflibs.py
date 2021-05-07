@@ -134,8 +134,8 @@ class EDS_dict(object):
                 if entry.fields[fieldindex].name == '':
                     """ Single fields have the same name as their entry.
                         In worst case we return the entry name as field name """
-                    return (entry.keyword, entry.fields[fieldindex].cr)
-                return (entry.fields[fieldindex].name, entry.fields[fieldindex].cr)
+                    return (entry.keyword, entry.fields[fieldindex].save_decorator_new_line)
+                return (entry.fields[fieldindex].name, entry.fields[fieldindex].save_decorator_new_line)
             except:
                 pass
         # No field is found. return a N name
@@ -377,7 +377,7 @@ EDS_SECTION = namedtuple('EDS_SECTION' , 'name keyword id mandatory entries')
     #   example: Section:Assembly entry:Assem the 7th, 9th, 11th... fields can present the members size field. then 7 sould be listed as Nth field
 EDS_ENTRY   = namedtuple('EDS_ENTRY'   , 'name keyword mandatory placement Nthfields fields')
 DT          = namedtuple('DT'          , 'type typeinfo')
-EDS_FIELD   = namedtuple('EDS_FIELD'   , 'name mandatory placement datatypes cr')
+EDS_FIELD   = namedtuple('EDS_FIELD'   , 'name mandatory placement datatypes save_decorator_new_line')
 
 eds_libs = [
     EDS_LIB("Standard", [
@@ -722,7 +722,8 @@ eds_libs += [
         , EDS_SECTION( "TCP/IP Interface Class", "TCP/IP Interface Class", 0xF5, False,
 
             [
-
+              EDS_ENTRY( "EtherNet/IP QuickConnect Target" , "ENetQCTN", False, 0, [0], [EDS_FIELD("Ready for Connection Time", True, 0, [DT(CIP_UINT,  [])], True) ] )
+            , EDS_ENTRY( "EtherNet/IP QuickConnect Originator" , "ENetQCON", False, 0, [0], [EDS_FIELD("Connection Origination Time", True, 0, [DT(CIP_UINT, [])], True) ] )
             ])
 
         , EDS_SECTION( "Ethernet Link Class", "Ethernet Link Class", 0xF6, False,

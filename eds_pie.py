@@ -201,6 +201,7 @@ class WARNINGS(EDS_PIE_ENUMS):
     WARNING_UNEXPECTED_SPACE = 2004
     WARNING_NOT_EXACT_MATCH  = 2005
     WARNING_UNEXPECTED_ORDER = 2006
+    WARNING_TYPE_MISMATCH    = 2007
 
 OPERATORS  = [ SYMBOLS.ASSIGNMENT ]
 SEPARATORS = [ SYMBOLS.COMMA, SYMBOLS.SEMICOLON ]
@@ -581,10 +582,16 @@ class EDS(object):
 
                     else: # No TYPEREF
                         # creating type instance with field value
+
                         fielddata = dtype(fieldvalue, typeinfo)
 
             if fielddata is None: # No proper type was found
                 if EDS_VENDORSPEC.validate(fieldvalue):
+                    typelist = [(type, "") for type, typeinfo in datatypes if not typeinfo]
+                    typelist += [(type, typeinfo) for type, typeinfo in datatypes if typeinfo]
+                    types_str = ", ".join("<{}{}>".format(type[0].__name__, type[1]) for type in typelist)
+                    self.warnings.append(Warning(WARNINGS.WARNING_TYPE_MISMATCH, "[{}].{}.{} = ({}), should be a type of: {}. Switched to VENDOR_SPECIFIC type."
+                                            .format(section._name, entry.name, fieldname, fieldvalue, types_str), self.showwarnings))
                     fielddata = EDS_VENDORSPEC(fieldvalue)
                 elif self.reflib.ismandatory(section._name, entry.name, fieldname):
                     typelist = [(type, "") for type, typeinfo in datatypes if not typeinfo]
@@ -594,7 +601,6 @@ class EDS(object):
                          .format(section._name, entry.name, fieldname, fieldvalue, types_str))
 
                 elif fieldvalue == '':
-                    print "omid, omid , omid , omid , omid ,omid"
                     fielddata = EDS_EMPTY(fieldvalue)
                 else:
                     fielddata = EDS_UNDEFINED(fieldvalue)
