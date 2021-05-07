@@ -66,7 +66,7 @@ SOFTWARE.
     IDENTIFIER
         {a-zA-Z0-9_}
 
-    DATASTRUCT
+    DATASET
         "{"...,...,..."}"
 
     KEYWORD
@@ -82,7 +82,7 @@ SOFTWARE.
 
     KEYWORDVALUE (or keyword data field)
         NUMBER | STRING | IDENTIFIER | VSIDENTIFIER| CIP_DATE | CIP_TIME
-      | DATASTRUCT
+      | DATASET
 
     ENTRY
         KEYWORD "=" KEYWORDVALUE {"," KEYWORDVALUE} ";"
@@ -154,7 +154,7 @@ class TOKEN_TYPES(EDS_PIE_ENUMS):
     OPERATOR   =  7
     SEPARATOR  =  8
     IDENTIFIER =  9
-    DATASTRUCT =  10
+    DATASET    =  10
 
 class SYMBOLS(EDS_PIE_ENUMS):
     ASSIGNMENT     = "="
@@ -945,6 +945,17 @@ class parser(object):
                 elif ch == '_': token.type = TOKEN_TYPES.IDENTIFIER
                 token.value += ch
 
+        if ch == SYMBOLS.OPENINGBRACE:
+            token = Token(TOKEN_TYPES.DATASET, value = ch, offset = self.offset, line = self.line, col = self.col)
+            while True:
+                if self.lookahead() == SYMBOLS.SEMICOLON:
+                    return token
+                ch = self.getchar()
+                token.value += ch
+
+                if ch == SYMBOLS.CLOSINGBRACE:
+                    return token
+
         if ch.isalpha():
             token = Token(TOKEN_TYPES.IDENTIFIER, value = ch, offset = self.offset, line = self.line, col = self.col)
             while True:
@@ -1023,7 +1034,7 @@ class parser(object):
             self.nexttoken()
 
             if self.token is None:
-                raise Exception(__name__ + ":> ERROR! Unexpected EOF. {}".format(self.token))
+                raise Exception(__name__ + ":> ERROR! Unexpected EOF.")
 
             if self.match(TOKEN_TYPES.COMMENT):
                 self.addcomment()
@@ -1034,7 +1045,7 @@ class parser(object):
                 self.match(TOKEN_TYPES.NUMBER)      or
                 self.match(TOKEN_TYPES.DATE)        or
                 self.match(TOKEN_TYPES.TIME)        or
-                self.match(TOKEN_TYPES.DATASTRUCT)):
+                self.match(TOKEN_TYPES.DATASET)):
 
                 if fieldvalue == '' and fieldtype is None:
                     fieldvalue += self.token.value
