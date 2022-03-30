@@ -1,6 +1,6 @@
 # EDS pie
 
-**A python EDS(Electronic Data Sheet) parser library**
+**A python EDS(Electronic Data Sheet) parser library for the ODVA protocol family(EthereNetIP, DeviceNet,...)**
 
 
 
@@ -176,5 +176,4 @@ eds = eds_pie.parse(edsfile = "demo.eds", showprogress = True, verbosemode = Tru
 ```
 
 ![image-demo1_verbosemode](readme-images/image-demo1_verbosemode.png)
-
 
