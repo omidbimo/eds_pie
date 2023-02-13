@@ -165,15 +165,15 @@ if eds.protocol == "EtherNetIP":
 
 
 
-## Verbose mode
+## Debug mode
 
-The parser also supports ***verbosemode*** to control the display output of the parsing flow. Setting the verbose modes true, will display a list of parsed tokens.
+To retrieve the maximum information about the parsing process, set the logging level of eds_pie to DEBUG. In the debug mode, a list of parsed tokens will be displayed. 
 
 ```python
 from eds_pie import *
 
-eds = eds_pie.parse(edsfile = "demo.eds", showprogress = True, verbosemode = True)
+eds = eds_pie.parse(edsfile = "demo.eds", showprogress = True)
 ```
 
-![image-demo1_verbosemode](readme-images/image-demo1_verbosemode.png)
+![image-demo1_verbosemode](readme-images/image-demo1_debug mode.png)
 
