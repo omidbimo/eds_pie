@@ -27,5 +27,5 @@ from eds_pie import *
 
 print "{}\n".format(__file__)
 
-eds = eds_pie.parse(edsfile = "demo.eds", showprogress = True, verbosemode = True)
+eds = eds_pie.parse(edsfile = "demo.eds", showprogress = True)
 print eds.protocol

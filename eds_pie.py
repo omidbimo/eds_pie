@@ -99,6 +99,7 @@ import os
 import sys
 import inspect
 import struct
+import logging
 
 from collections import namedtuple
 from datetime    import datetime, date, time
@@ -106,6 +107,10 @@ from string      import digits
 
 from eds_reflibs import *
 from cip_types   import isnumber, ishex
+
+logging.basicConfig(level=logging.DEBUG,
+    format='%(asctime)s - %(name)s.%(levelname)-8s %(message)s')
+logger = logging.getLogger(__name__)
 #-------------------------------------------------------------------------------
 EDS_PIE_VERSION     = "0.1"
 EDS_PIE_RELASE_DATE = "3 Nov. 2020"
@@ -178,55 +183,10 @@ class SYMBOLS(EDS_PIE_ENUMS):
     EOL            = "\n"
     EOF            = None
 
-class ERRORS(EDS_PIE_ENUMS):
-    ERR_SECTION_NOT_FOUND        = 1001
-    ERR_ENTRY_NOT_FOUND          = 1002
-    ERR_DATATYPE_MISMATCH        = 1003
-    ERR_UNABLE_TO_REMOVE_SECTION = 1004
-    ERR_UNABLE_TO_REMOVE_ENTRY   = 1005
-    ERR_MISSING_REQUIRED_SECTION = 1006
-    ERR_MISSING_REQUIRED_ENTRY   = 1007
-    ERR_MISSING_REQUIRED_FIELD   = 1008
-    ERR_DUPLICATED_SECTION       = 1009
-    ERR_DUPLICATED_ENTRY         = 1010
-    ERR_INVALID_SECTION_NAME     = 1011
-    ERR_INVALID_ENTRY_NAME       = 1012
-    ERR_WRITE_TO_FILE_FAILED     = 1013
-    ERR_INVALID_EPATH_FORMAT     = 1014
-
-class WARNINGS(EDS_PIE_ENUMS):
-    WARNING_UNKNOWN_SECTION = 2001
-    WARNING_UNKNOWN_ENTRY   = 2002
-    WARNING_UNKNOWN_FIELD   = 2003
-    WARNING_UNEXPECTED_SPACE = 2004
-    WARNING_NOT_EXACT_MATCH  = 2005
-    WARNING_UNEXPECTED_ORDER = 2006
-    WARNING_TYPE_MISMATCH    = 2007
-
 OPERATORS  = [ SYMBOLS.ASSIGNMENT ]
 SEPARATORS = [ SYMBOLS.COMMA, SYMBOLS.SEMICOLON ]
 
-#-------------------------------------------------------------------------------
-def Error(id, extended_info = None):
-    msg = "eds_pie:> ***ERROR*** #{}({})".format(id, ERRORS.Str(id))
-    if extended_info: msg += " - " + extended_info
-    raise Exception(__name__ + msg)
 
-# ------------------------------------------------------------------------------
-class Warning(object):
-
-    def __init__(self, id, extended_info = None, echo = False):
-        self.id  = id
-        self.text = WARNINGS.Str(id)
-        self.extended_info = extended_info
-        if echo: print self
-
-    def __str__(self):
-        msg = "**WARNING** #{}({})".format(self.id, self.text)
-        if self.extended_info: msg += " - " + self.extended_info
-        return "eds_pie:> " + msg
-
-#---------------------------------------------------------------------------
 class EDS_Section(object):
     _instancecount = -1
     def __init__(self, eds, name, id = 0):
@@ -359,9 +319,10 @@ class EDS_Field(object):
                     self._data = datatype(value, valid_data)
                     return
         types_str = ", ".join("<{}>{}".format(datatype.__name__, valid_data) for datatype, valid_data in self._datatypes)
-        error = Error(ERRORS.ERR_DATATYPE_MISMATCH, "[{}].{}.{} = ({}), should be a type of: {}".format(self._entry._section.name, self._entry.name, self.name, value, types_str))
+        error_msg = ('Data_type mismatch! [{}].{}.{} = ({}), should be a type of: {}'
+            .format(self._entry._section.name, self._entry.name, self.name, value, types_str))
 
-        raise Exception(__name__ + ":> calling: \"{}()\" {}".format(str(inspect.stack()[0][3]), error))
+        raise Exception(__name__ + ":> calling: \"{}()\" {}".format(str(inspect.stack()[0][3]), error_msg))
 
     @property
     def datatype(self):
@@ -382,6 +343,7 @@ class EDS(object):
         self._sections  = {}
         self.reflib     = EDS_dict()
         self.showwarnings = showwarnings
+
     def list(self, sectionname = None, entryname = None):
         if sectionname is None and entryname is None:
             sections = sorted(self.sections, key = lambda section: section._index)
@@ -393,6 +355,7 @@ class EDS(object):
                     for field in entry.fields:
                         print "        ", field
             return
+
         if sectionname is not None and entryname is not None:
             entry = self.getentry(sectionname, entryname)
             if entry:
@@ -400,6 +363,7 @@ class EDS(object):
                 for field in entry.fields:
                     print "    ", field
             return
+
         if sectionname is not None and entryname is None:
             section = self.getsection(sectionname)
             if section:
@@ -475,28 +439,25 @@ class EDS(object):
     def addsection(self, sectionname):
         sectionkey = sectionname.replace(' ', '').lower()
         if sectionkey == '':
-            Error(ERRORS.ERR_INVALID_SECTION_NAME,
-                 "{} contains invalid characters".format(sectionname))
+            logger.error('Invalid section name! {} contains invalid characters'.format(sectionname))
 
         if sectionkey in self._sections.keys():
-            Error(ERR_DUPLICATED_SECTION, "[{}}".foemat(sectionname))
+            logger.error('DUplicated section! [{}}'.format(sectionname))
 
         ref_id = -1
         if not self.reflib.hassection(sectionname):
-            self.warnings.append(Warning(WARNINGS.WARNING_UNKNOWN_SECTION,
-                                "[{}]".format(sectionname), self.showwarnings))
+            logger.warning('Unknown Section [{}]'.format(sectionname))
         else:
             ref_keyword, ref_id = self.reflib.getsectioninfo(sectionname)
 
             if ref_keyword != sectionname:
-                self.warnings.append(Warning(WARNINGS.WARNING_NOT_EXACT_MATCH,
-                                    "section name: [{}] should be: [{}]"
-                                    .format(sectionname, ref_keyword), self.showwarnings))
+                logger.warning('section name: [{}] should be: [{}]'.format(sectionname, ref_keyword))
+
 
             if ((ref_id == 0x10001 and len(self._sections) != 0) or
                 (ref_id == 0x10002 and len(self._sections) != 1)):
-                self.warnings.append(Warning(WARNINGS.WARNING_UNEXPECTED_ORDER,
-                                    "[{}]".format(sectionname), self.showwarnings))
+                logger.warning('Unexpected order [{}]'.format(sectionname))
+
             sectionname = ref_keyword
 
         section = EDS_Section(self, sectionname, ref_id)
@@ -510,30 +471,23 @@ class EDS(object):
         section = self._sections[sectionname.replace(' ', '').lower()]
 
         if entryname == '':
-            Error(ERRORS.ERR_INVALID_ENTRY_NAME,
-                 "[{}]\"{}\" contains invalid characters."
-                 .format(sectionname, entryname), self.showerrors,
-                 self.stoponerror)
+            logger.error('Invalid Entry name! [{}]\"{}\" contains invalid characters.'
+                .format(sectionname, entryname))
             return None
 
         if entryname.replace(' ', '').lower() in section._entries.keys():
-            Error(ERRORS.ERR_DUPLICATED_ENTRY,
-                  "to serialize \"{}\", set the serialize switch to True"
-                  .format(entry))
+            logger.error('Duplicated Entry! to serialize \"{}\", set the serialize switch to True'.format(entry))
 
         if not self.reflib.hasentry(sectionname, entryname):
-            self.warnings.append(Warning(WARNINGS.WARNING_UNKNOWN_ENTRY,
-                                "[{}].{}".format(sectionname, entryname), self.showwarnings))
+            loger.warning('Unknown Entry! [{}].{}'.format(sectionname, entryname))
 
         # Correcting entry name
         ref_keyword, ref_oredr = self.reflib.getentryinfo(sectionname, entryname)
         ref_keyword = ref_keyword.rstrip('N').rstrip(digits)
         if ref_keyword != entryname.rstrip(digits):
-            self.warnings.append(Warning(WARNINGS.WARNING_NOT_EXACT_MATCH,
-                                "in section [{}], entry name: \"{}\" should be:"
-                                " \"{}[N]\""
-                                .format(sectionname, entryname,
-                                ref_keyword), self.showwarnings))
+            logger.warning('Not exact match! in section [{}], entry name: \"{}\" should be:'
+                ' \"{}[N]\"'.format(sectionname, entryname, ref_keyword))
+
             entry_nid = entryname[len(ref_keyword):]
             entryname = ref_keyword + entry_nid
 
@@ -546,19 +500,18 @@ class EDS(object):
     def addfield(self, sectionname, entryname, fieldvalue, fielddatatype = None):
         section = self.getsection(sectionname)
         if section is None:
-            Error(ERRORS.ERR_SECTION_NOT_FOUND, "[{}]".format(section._name))
+            logger.error('Section not found! [{}]'.format(section._name))
 
         entry   = section.getentry(entryname)
         if entry is None:
-            Error(ERRORS.ERR_ENTRY_NOT_FOUND, "[{}].{}".format(sectionname, entryname))
+            logger.error('Entry not found! [{}].{}'.format(sectionname, entryname))
         fielddata = None
 
         # getting the type info from eds dictionary
         fieldname, cr = self.reflib.getfieldinfo(section._name, entry.name, (entry.fieldcount))
         datatypes = self.reflib.gettypes(section._name, entry.name, fieldname)
         if not datatypes:
-            self.warnings.append(Warning(WARNINGS.WARNING_UNKNOWN_FIELD, "[{}].{}.{} = {}"
-                        .format(section._name, entry.name, fieldname, fieldvalue), self.showwarnings))
+            logger.warning('Unknown Field! [{}].{}.{} = {}'.format(section._name, entry.name, fieldname, fieldvalue))
 
         # Validating field value
         if fieldvalue != '' or self.reflib.ismandatory(section._name, entry.name, fieldname):
@@ -590,14 +543,15 @@ class EDS(object):
                     typelist = [(type, "") for type, typeinfo in datatypes if not typeinfo]
                     typelist += [(type, typeinfo) for type, typeinfo in datatypes if typeinfo]
                     types_str = ", ".join("<{}{}>".format(type[0].__name__, type[1]) for type in typelist)
-                    self.warnings.append(Warning(WARNINGS.WARNING_TYPE_MISMATCH, "[{}].{}.{} = ({}), should be a type of: {}. Switched to VENDOR_SPECIFIC type."
-                                            .format(section._name, entry.name, fieldname, fieldvalue, types_str), self.showwarnings))
+                    logger.warning('Type mismatch! [{}].{}.{} = ({}), should be a type of: {}. '
+                    'Switched to VENDOR_SPECIFIC type.'.format(section._name, entry.name, fieldname, fieldvalue, types_str))
+
                     fielddata = EDS_VENDORSPEC(fieldvalue)
                 elif self.reflib.ismandatory(section._name, entry.name, fieldname):
                     typelist = [(type, "") for type, typeinfo in datatypes if not typeinfo]
                     typelist += [(type, typeinfo) for type, typeinfo in datatypes if typeinfo]
                     types_str = ", ".join("<{}{}>".format(type[0].__name__, type[1]) for type in typelist)
-                    Error(ERRORS.ERR_DATATYPE_MISMATCH, "[{}].{}.{} = ({}), should be a type of: {}"
+                    logger.error('Data_type mismatch! [{}].{}.{} = ({}), should be a type of: {}'
                          .format(section._name, entry.name, fieldname, fieldvalue, types_str))
 
                 elif fieldvalue == '':
@@ -626,9 +580,8 @@ class EDS(object):
                 self.removeentry(sectionname, entry.name, removetree)
             del self._sections[sectionname.replace(' ', '').lower()]
         else:
-            Error(ERRORS.ERR_UNABLE_TO_REMOVE_SECTION
-                 , "[{}]  contains one or more entries."
-                 + "Remove the entries first or use removetree = True".format(section._name))
+            logger.error('Unable to remove section! [{}] contains one or more entries.'
+                'Remove the entries first or use removetree = True'.format(section._name))
 
     def removeentry(self, sectionname, entryname, removetree = False):
         entry = self.getentry(sectionname, entryname)
@@ -639,7 +592,8 @@ class EDS(object):
         elif removetree:
             entry._fields = []
         else:
-            Error(ERRORS.ERR_UNABLE_TO_REMOVE_ENTRY, "[{}].{} contains one or more fields. Remove the fields first or use removetree = True".format(section._name, entry.name))
+            logger.error('Unable to remove entry! [{}].{} contains one or more fields.'
+                'Remove the fields first or use removetree = True'.format(section._name, entry.name))
 
     def removefield(self, sectionname, sentryname, fieldindex):
         pass
@@ -648,7 +602,8 @@ class EDS(object):
         items = path.split()
         for index, item in enumerate(items):
             if len(item) < 2:
-                Error(ERRORS.ERR_INVALID_EPATH_FORMAT, "item[{}]:\"{}\" in [{}]: ".format(index, item, path))
+                logger.error('Invalid EPATH format! item[{}]:\"{}\" in [{}]'.format(index, item, path))
+
             if not isnumber(item):
                 if item[0] == '[' and item[-1] == ']':
                     entryname = item.strip('[]').lower()
@@ -656,13 +611,12 @@ class EDS(object):
                     if field:
                         items[index] = int(field.value)
                         continue
-                    Error(ERRORS.ERR_ENTRY_NOT_FOUND, "item[{}]:\"{}\" in [{}]: "
-                         .format(index, item, path))
-                Error(ERRORS.ERR_INVALID_EPATH_FORMAT, "item[{}]:\"{}\" in [{}]: "
-                     .format(index, item, path))
+                    logger.error('Entry not found! item[{}]:\"{}\" in [{}]'.format(index, item, path))
+                # ? Error(ERRORS.ERR_INVALID_EPATH_FORMAT, "item[{}]:\"{}\" in [{}]: "
+                # ?      .format(index, item, path))
             elif not ishex(item):
-                Error(ERRORS.ERR_INVALID_EPATH_FORMAT, "item[{}]:\"{}\" in [{}]: "
-                     .format(index, item, path))
+                logger.error('Invalid EPATH format! item[{}]:\"{}\" in [{}]'.format(index, item, path))
+
             items[index] = int(item, 16)
         return " ".join("{:02X}".format(item) for item in items)
 
@@ -675,31 +629,28 @@ class EDS(object):
         requiredsections = self.reflib.getrequired_sections()
         for section in requiredsections:
             if self.hassection(section.keyword) == False:
-                Error(ERRORS.ERR_MISSING_REQUIRED_SECTION, "[{}] \"{}\""
-                     .format(section.keyword, section.name))
+                logger.error('Missing required section! [{}] \"{}\"'.format(section.keyword, section.name))
 
         for section in self.sections:
             requiredentries = self.reflib.getrequired_entries(section.name)
             for entry in requiredentries:
                 if self.hasentry(section.name, entry.keyword) == False:
-                    Error(ERRORS.ERR_MISSING_REQUIRED_ENTRY, "[{}].\"{}\"{}"
-                         .format(section.name, entry.keyword, entry.name))
+                    logger.error('Missing required entry! [{}].\"{}\"{}'
+                        .format(section.name, entry.keyword, entry.name))
 
             for entry in section.entries:
                 requiredfields = self.reflib.getrequired_fields(section.name, entry.name)
                 for field in requiredfields:
                     if self.hasfield(section.name, entry.name, field.placement) == False:
-                        Error(ERRORS.ERR_MISSING_REQUIRED_FIELD, "[{}].{}.{} #{}"
-                             .format(section.name, entry.name, field.name, field.placement))
+                        logger.error('Missing required field! [{}].{}.{} #{}'
+                            .format(section.name, entry.name, field.name, field.placement))
 
     def save(self, filename = None, overwrite = False):
         if filename is None:
             filename = self.sourcefile
         if os.path.isfile(filename) and overwrite == False:
-            Error(ERRORS.ERR_WRITE_TO_FILE_FAILED,
-                  "{} already exists. To enable file-overwrite, "
-                  "To overwrite the file, set \"overwrite\" argument to True."
-                  .format(filename))
+            logger.error('Failed to write to file! {} already exists. To enable file-overwrite, '
+                'To overwrite the file, set \"overwrite\" argument to True.'.format(filename))
 
         self.getsection("file").hcomment = EDSCOMMENT_TEMPLATE
         edscontent = ''
@@ -820,7 +771,7 @@ class Token(object):
                                                               , self.value)
 #---------------------------------------------------------------------------
 class parser(object):
-    def __init__(self, sourcetext, showprogress = False, echo = False):
+    def __init__(self, sourcetext, showprogress = False):
 
         self.edsstream  = sourcetext
         self.lastoffset = len(sourcetext) - 1
@@ -840,7 +791,6 @@ class parser(object):
         self.actualelement = None
 
         self.showprogress = showprogress
-        self.echo = echo
         self.progress = 0.0
 
     def getchar(self):
@@ -910,12 +860,12 @@ class parser(object):
                 if ((token.value == '' or self.lookahead() == ']') and
                     (not ch.isalpha() and not ch.isdigit())):
                     if ch.isspace():
-                        self.eds.warnings.append(Warning(WARNINGS.WARNING_UNEXPECTED_SPACE, "section id @[idx: {}] [ln: {}] [col: {}]".format(self.offset, self.line, self.col), self.showwarnings))
+                        logger.warning('Unexpected character: \' \'.section id @[idx: {}] [ln: {}] [col: {}]'.format(self.offset, self.line, self.col))
                     else:
                         raise Exception( __name__ + ".lexer:> Invalid section identifier. Unexpected char sequence @[idx: {}] [ln: {}] [col: {}]".format(self.offset, self.line, self.col))
 
                 if ch == ' ' and self.lookahead().isspace(): # consecutive spaces
-                    self.eds.warnings.append(Warning(WARNINGS.WARNING_UNEXPECTED_SPACE, "section id @[idx: {}] [ln: {}] [col: {}]".format(self.offset, self.line, self.col), self.showwarnings))
+                    logger.warning('Unexpected character: \' \'.section id @[idx: {}] [ln: {}] [col: {}]'.format(self.offset, self.line, self.col))
 
                 if ch == SYMBOLS.EOF or ch == SYMBOLS.EOL:
                     raise Exception( __name__ + ".lexer:> Invalid section identifier @[idx: {}] [ln: {}] [col: {}]".format(self.offset, self.line, self.col))
@@ -977,8 +927,7 @@ class parser(object):
         self.prevtoken = self.token
         self.token = self.gettoken()
 
-        if self.echo:
-            if self.token: print "eds_pie.lexer:>", self.token
+        logger.debug('token: ' + str(self.token))
 
     def parse(self):
         while True:
@@ -1111,19 +1060,17 @@ class parser(object):
 # ------------------------------------------------------------------------------
 class eds_pie(object):
     @staticmethod
-    def parse(edscontent = "", edsfile = "", showprogress = True, verbosemode = False):
-
-        if showprogress: print "----- eds_pie -----"
+    def parse(edscontent = "", edsfile = "", showprogress = True):
 
         if edscontent:
-            eds = parser(edscontent, showprogress, verbosemode).parse()
+            eds = parser(edscontent, showprogress).parse()
         elif edsfile:
-            if showprogress: print "Loading {}".format(edsfile) + "..."
+            logger.info('Parsing {}...'.format(edsfile))
             with open(edsfile, 'r') as edssourcefile:
                 edscontent = edssourcefile.read()
-            eds = parser(edscontent, showprogress, verbosemode).parse()
+            eds = parser(edscontent, showprogress).parse()
         else:
-            ErrorMsg = "No eds source data! One of edscontent or edsfile should be set as the eds source."
+            ErrorMsg = "No EDS source data! One of edscontent or edsfile should be set as the eds source."
             raise Exception(__name__ + ":> calling: \"{}()\" {}".format(str(inspect.stack()[0][3]), ErrorMsg))
 
         # setting the protocol
