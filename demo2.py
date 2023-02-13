@@ -27,7 +27,9 @@ from eds_pie import *
 
 print "{}\n".format(__file__)
 
-eds = eds_pie.parse(edsfile = "demo.eds", showprogress = True)
+with open('demo.eds', 'r') as edssourcefile:
+    eds_content = edssourcefile.read()
+eds = eds_pie.parse(eds_content, showprogress = True)
 
 eds.list("file")
 

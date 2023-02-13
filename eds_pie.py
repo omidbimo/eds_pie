@@ -108,7 +108,7 @@ from string      import digits
 from eds_reflibs import *
 from cip_types   import isnumber, ishex
 
-logging.basicConfig(level=logging.DEBUG,
+logging.basicConfig(level=logging.INFO,
     format='%(asctime)s - %(name)s.%(levelname)-8s %(message)s')
 logger = logging.getLogger(__name__)
 #-------------------------------------------------------------------------------
@@ -1060,18 +1060,9 @@ class parser(object):
 # ------------------------------------------------------------------------------
 class eds_pie(object):
     @staticmethod
-    def parse(edscontent = "", edsfile = "", showprogress = True):
+    def parse(edscontent = "", showprogress = True):
 
-        if edscontent:
-            eds = parser(edscontent, showprogress).parse()
-        elif edsfile:
-            logger.info('Parsing {}...'.format(edsfile))
-            with open(edsfile, 'r') as edssourcefile:
-                edscontent = edssourcefile.read()
-            eds = parser(edscontent, showprogress).parse()
-        else:
-            ErrorMsg = "No EDS source data! One of edscontent or edsfile should be set as the eds source."
-            raise Exception(__name__ + ":> calling: \"{}()\" {}".format(str(inspect.stack()[0][3]), ErrorMsg))
+        eds = parser(edscontent, showprogress).parse()
 
         # setting the protocol
         sect = eds.getsection("Device Classification")
