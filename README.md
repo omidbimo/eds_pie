@@ -1,10 +1,10 @@
 # EDS pie
 
-**A python EDS(Electronic Data Sheet) parser library for the ODVA protocol family(EthereNetIP, DeviceNet,...)**
+**An EDS(Electronic Data Sheet) parser library for ODVA's CIP protocol family(EthereNetIP, DeviceNet,...)**
 
 
 
-## Who may need an EDS parser library
+### Who may need an EDS parser library
 
 Use cases:
 
