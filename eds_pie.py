@@ -100,6 +100,7 @@ import sys
 import inspect
 import struct
 import logging
+import numbers
 
 from collections import namedtuple
 from datetime    import datetime, date, time
@@ -383,8 +384,12 @@ class EDS(object):
     def sections(self):
         return list(self._sections.values())
 
-    def getsection(self, sectionname):
-        return self._sections.get(sectionname.replace(' ', '').lower())
+    def getsection(self, section):
+        if isinstance(section, str):
+            return self._sections.get(section.replace(' ', '').lower())
+        #if isinstance(section, numbers.Number):
+        #    return None
+        raise TypeError('Inappropriate data type: {}'.format(type(section)))
 
     def getentry(self, sectionname, entryname):
         if sectionname.replace(' ', '').lower() in self._sections.keys():
@@ -479,7 +484,7 @@ class EDS(object):
             logger.error('Duplicated Entry! to serialize \"{}\", set the serialize switch to True'.format(entry))
 
         if not self.reflib.hasentry(sectionname, entryname):
-            loger.warning('Unknown Entry! [{}].{}'.format(sectionname, entryname))
+            logger.warning('Unknown Entry! [{}].{}'.format(sectionname, entryname))
 
         # Correcting entry name
         ref_keyword, ref_oredr = self.reflib.getentryinfo(sectionname, entryname)
@@ -731,9 +736,6 @@ class EDS(object):
                         singleline_str = ''
                         singleline_str += "\n"
 
-
-
-
         # end comment
         if self.endcomment == '':
             self.endcomment = ENDCOMMENT_TEMPLATE
@@ -742,6 +744,7 @@ class EDS(object):
         hfile = open(filename, 'w')
         hfile.write(edscontent)
         hfile.close()
+
     def __str__(self):
         Msg = ''
         for section in self.__sections:
@@ -753,6 +756,8 @@ class EDS(object):
                 Msg += "\n"
         return Msg
 
+    def get_cip_section_name(self, classid):
+        pass
 # ---------------------------------------------------------------------------
 class Token(object):
 
@@ -1076,3 +1081,5 @@ class eds_pie(object):
         #self.final_rollcall()
         if showprogress: print ""
         return eds
+
+

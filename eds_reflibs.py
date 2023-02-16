@@ -47,11 +47,10 @@ def trimstring(srcstring, exclude_list):
 class EDS_dict(object):
 
     def __init__(self):
-        self.dict = {}
         self.libs = []
+        self.dict = {}
         for lib in eds_libs:
             lib_key = lib.name.lower()
-            self.dict[(lib_key, '', '', '')] = lib
             self.libs.append(lib_key)
 
             for section in lib.sections:
@@ -100,11 +99,11 @@ class EDS_dict(object):
                             }
 
     def getfieldinfo(self, sectionname, entryname, fieldindex):
+        entry = None
         for libname in self.libs:
             lib_key     = libname.lower()
             section_key = trimstring(sectionname, EXCLUDE_CHARS).lower()
             entry_key   = trimstring(entryname,   EXCLUDE_CHARS).lower()
-            entry       = None
 
             if (lib_key, section_key, entry_key, '') in self.dict.keys():
                 entry = self.dict[(lib_key, section_key, entry_key, '')]
@@ -182,6 +181,8 @@ class EDS_dict(object):
                         self.dict[(lib_key, section_key, '', '')].id)
         return ("", 0)
 
+    def getsectionname(self, classid):
+        pass
     def getrequired_sections(self):
         for libname in self.libs:
             lib_key = libname.lower()
@@ -274,11 +275,11 @@ class EDS_dict(object):
         return False
 
     def getentryinfo(self, sectionname , entryname):
+        entry = None
         for libname in self.libs:
             lib_key     = libname.lower()
             section_key = trimstring(sectionname, EXCLUDE_CHARS).lower()
             entry_key   = trimstring(entryname, EXCLUDE_CHARS).lower()
-            entry = None
 
             if (lib_key, section_key, entry_key, '') in self.dict.keys():
                 entry = self.dict[(lib_key, section_key, entry_key, '')]

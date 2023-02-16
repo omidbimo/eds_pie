@@ -31,6 +31,9 @@ import inspect
 import datetime
 
 def getnumber(data):
+    '''
+    Converts an input of string type into its numeric representaion.
+    '''
     if data is None:  return None
     if data == '':    return None
     if isint(data):   return int(data)
@@ -41,6 +44,9 @@ def getnumber(data):
 
 
 def isnumber(data):
+    '''
+    Checks if a string represents a numeric value.
+    '''
     if data is None:  return False
     if data == '':    return False
     if isint(data):   return True
@@ -51,6 +57,9 @@ def isnumber(data):
 
 
 def isint(data):
+    '''
+    Checks if a string represents a decimal coded numeric value.
+    '''
     if data is None: return False
     try:
         int(data)
@@ -60,6 +69,9 @@ def isint(data):
 
 
 def isfloat(data):
+    '''
+    Checks if a string represents a floating point numeric value.
+    '''
     if data is None: return False
     try:
         float(data)
@@ -69,6 +81,9 @@ def isfloat(data):
 
 
 def ishex(data):
+    '''
+    Checks if a string represents a hexadecimal coded numeric value.
+    '''
     if data is None: return False
     try:
         int(data, 16)
@@ -78,6 +93,9 @@ def ishex(data):
 
 
 def isbin(data):
+    '''
+    Checks if a string represents a binary coded numeric value.
+    '''
     if data is None: return False
     try:
         int(data, 2)
