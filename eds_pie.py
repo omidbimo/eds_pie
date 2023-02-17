@@ -106,10 +106,10 @@ from collections import namedtuple
 from datetime    import datetime, date, time
 from string      import digits
 
-from eds_reflibs import *
-from cip_types   import isnumber, ishex
+from eds_libs import *
+from cip_types import isnumber, ishex
 
-logging.basicConfig(level=logging.INFO,
+logging.basicConfig(level=logging.WARNING,
     format='%(asctime)s - %(name)s.%(levelname)-8s %(message)s')
 logger = logging.getLogger(__name__)
 #-------------------------------------------------------------------------------
@@ -337,13 +337,11 @@ class EDS_Field(object):
 # ------------------------------------------------------------------------------
 class EDS(object):
 
-    def __init__(self, showwarnings = False):
-        self.warnings   = []
+    def __init__(self):
         self.endcomment = ''
-        self._protocol  = ''
+        self._protocol  = None
         self._sections  = {}
-        self.reflib     = EDS_dict()
-        self.showwarnings = showwarnings
+        self.lib = CIP_EDS_lib()
 
     def list(self, sectionname = None, entryname = None):
         if sectionname is None and entryname is None:
@@ -387,8 +385,8 @@ class EDS(object):
     def getsection(self, section):
         if isinstance(section, str):
             return self._sections.get(section.replace(' ', '').lower())
-        #if isinstance(section, numbers.Number):
-        #    return None
+        if isinstance(section, numbers.Number):
+            return self._sections.get(self.lib.get_section_name(section, self.protocol).replace(' ', '').lower())
         raise TypeError('Inappropriate data type: {}'.format(type(section)))
 
     def getentry(self, sectionname, entryname):
@@ -450,10 +448,10 @@ class EDS(object):
             logger.error('DUplicated section! [{}}'.format(sectionname))
 
         ref_id = -1
-        if not self.reflib.hassection(sectionname):
+        if not self.lib.hassection(sectionname):
             logger.warning('Unknown Section [{}]'.format(sectionname))
         else:
-            ref_keyword, ref_id = self.reflib.getsectioninfo(sectionname)
+            ref_keyword, ref_id = self.lib.getsectioninfo(sectionname)
 
             if ref_keyword != sectionname:
                 logger.warning('section name: [{}] should be: [{}]'.format(sectionname, ref_keyword))
@@ -483,11 +481,11 @@ class EDS(object):
         if entryname.replace(' ', '').lower() in section._entries.keys():
             logger.error('Duplicated Entry! to serialize \"{}\", set the serialize switch to True'.format(entry))
 
-        if not self.reflib.hasentry(sectionname, entryname):
-            logger.warning('Unknown Entry! [{}].{}'.format(sectionname, entryname))
+        if not self.lib.hasentry(sectionname, entryname):
+            logger.warning('Unknown Entry [{}].{}'.format(sectionname, entryname))
 
         # Correcting entry name
-        ref_keyword, ref_oredr = self.reflib.getentryinfo(sectionname, entryname)
+        ref_keyword, ref_oredr = self.lib.getentryinfo(sectionname, entryname)
         ref_keyword = ref_keyword.rstrip('N').rstrip(digits)
         if ref_keyword != entryname.rstrip(digits):
             logger.warning('Not exact match! in section [{}], entry name: \"{}\" should be:'
@@ -513,13 +511,13 @@ class EDS(object):
         fielddata = None
 
         # getting the type info from eds dictionary
-        fieldname, cr = self.reflib.getfieldinfo(section._name, entry.name, (entry.fieldcount))
-        datatypes = self.reflib.gettypes(section._name, entry.name, fieldname)
+        fieldname, cr = self.lib.getfieldinfo(section._name, entry.name, (entry.fieldcount))
+        datatypes = self.lib.gettypes(section._name, entry.name, fieldname)
         if not datatypes:
-            logger.warning('Unknown Field! [{}].{}.{} = {}'.format(section._name, entry.name, fieldname, fieldvalue))
+            logger.warning('Unknown Field [{}].{}.{} = {}'.format(section._name, entry.name, fieldname, fieldvalue))
 
         # Validating field value
-        if fieldvalue != '' or self.reflib.ismandatory(section._name, entry.name, fieldname):
+        if fieldvalue != '' or self.lib.ismandatory(section._name, entry.name, fieldname):
             for dtype, typeinfo in datatypes: # Getting the listed data types and their acceptable ranges
                 if dtype.validate(fieldvalue, typeinfo):
 
@@ -530,7 +528,7 @@ class EDS(object):
 
                         typeid = self.getfield(sectionname, entryname, fieldname = typeinfo[0]).value
                         try:
-                            dtype = self.reflib.gettype(typeid)
+                            dtype = self.lib.gettype(typeid)
                             if dtype.validate(fieldvalue, []):
                                 fielddata = dtype(fieldvalue, [])
                                 break
@@ -552,7 +550,7 @@ class EDS(object):
                     'Switched to VENDOR_SPECIFIC type.'.format(section._name, entry.name, fieldname, fieldvalue, types_str))
 
                     fielddata = EDS_VENDORSPEC(fieldvalue)
-                elif self.reflib.ismandatory(section._name, entry.name, fieldname):
+                elif self.lib.ismandatory(section._name, entry.name, fieldname):
                     typelist = [(type, "") for type, typeinfo in datatypes if not typeinfo]
                     typelist += [(type, typeinfo) for type, typeinfo in datatypes if typeinfo]
                     types_str = ", ".join("<{}{}>".format(type[0].__name__, type[1]) for type in typelist)
@@ -631,20 +629,20 @@ class EDS(object):
         return "".join((struct.pack('B', int(item, 16)) for item in items))
 
     def final_rollcall(self):
-        requiredsections = self.reflib.getrequired_sections()
+        requiredsections = self.lib.getrequired_sections()
         for section in requiredsections:
             if self.hassection(section.keyword) == False:
                 logger.error('Missing required section! [{}] \"{}\"'.format(section.keyword, section.name))
 
         for section in self.sections:
-            requiredentries = self.reflib.getrequired_entries(section.name)
+            requiredentries = self.lib.getrequired_entries(section.name)
             for entry in requiredentries:
                 if self.hasentry(section.name, entry.keyword) == False:
                     logger.error('Missing required entry! [{}].\"{}\"{}'
                         .format(section.name, entry.keyword, entry.name))
 
             for entry in section.entries:
-                requiredfields = self.reflib.getrequired_fields(section.name, entry.name)
+                requiredfields = self.lib.getrequired_fields(section.name, entry.name)
                 for field in requiredfields:
                     if self.hasfield(section.name, entry.name, field.placement) == False:
                         logger.error('Missing required field! [{}].{}.{} #{}'
@@ -756,8 +754,10 @@ class EDS(object):
                 Msg += "\n"
         return Msg
 
-    def get_cip_section_name(self, classid):
-        pass
+    def get_cip_section_name(self, classid, protocol=None):
+        if protocol is None:
+            protocol = self.protocol
+        return self.lib.get_section_name(classid, protocol)
 # ---------------------------------------------------------------------------
 class Token(object):
 
@@ -784,7 +784,7 @@ class parser(object):
         self.line       = 1
         self.col        = 0
 
-        self.eds       = EDS(showprogress)
+        self.eds       = EDS()
         self.token     = None
         self.prevtoken = None
 

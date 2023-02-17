@@ -44,27 +44,14 @@ def trimstring(srcstring, exclude_list):
     return string
 
 
-class EDS_dict(object):
+class CIP_EDS_lib(object):
 
     def __init__(self):
-        self.libs = []
-        self.dict = {}
-        for lib in eds_libs:
-            lib_key = lib.name.lower()
-            self.libs.append(lib_key)
+        self.libs = {}
+        self.import_lib(src=eds_standard_lib)
 
-            for section in lib.sections:
-                section_key = trimstring(section.keyword, EXCLUDE_CHARS).lower()
-                self.dict[(lib_key, section_key, '', '')] = section
-
-                for entry in section.entries:
-                    entry_key = trimstring(entry.keyword, EXCLUDE_CHARS).lower()
-                    self.dict[(lib_key, section_key, entry_key, '')] = entry
-
-                    for field in entry.fields:
-                        if field.name == '': field_key = trimstring(entry.name, EXCLUDE_CHARS).lower()
-                        else: field_key = trimstring(field.name, EXCLUDE_CHARS).lower()
-                        self.dict[(lib_key, section_key, entry_key, field_key)] = field
+        for prot_lib in protocol_libs:
+            self.import_lib(src=prot_lib)
 
         self.cipdatatypes = { 0xC1: cip_types.BOOL
                             , 0xC2: cip_types.SINT
@@ -98,29 +85,49 @@ class EDS_dict(object):
                             , 0xDE: cip_types.STRINGI
                             }
 
+    def import_lib(self, src):
+        lib_key = src.name.lower()
+        self.libs[lib_key] = {}
+        lib = self.libs[lib_key]
+
+        for section in src.sections:
+            section_key = trimstring(section.key, EXCLUDE_CHARS).lower()
+            lib[(lib_key, section_key, '', '')] = section
+            lib[(section.id)] = section.key
+
+            for entry in section.entries:
+                entry_key = trimstring(entry.key, EXCLUDE_CHARS).lower()
+                lib[(lib_key, section_key, entry_key, '')] = entry
+
+                for field in entry.fields:
+                    if field.name == '': field_key = trimstring(entry.name, EXCLUDE_CHARS).lower()
+                    else: field_key = trimstring(field.name, EXCLUDE_CHARS).lower()
+                    lib[(lib_key, section_key, entry_key, field_key)] = field
+
+
     def getfieldinfo(self, sectionname, entryname, fieldindex):
         entry = None
         for libname in self.libs:
-            lib_key     = libname.lower()
+            lib = self.libs[libname]
             section_key = trimstring(sectionname, EXCLUDE_CHARS).lower()
             entry_key   = trimstring(entryname,   EXCLUDE_CHARS).lower()
 
-            if (lib_key, section_key, entry_key, '') in self.dict.keys():
-                entry = self.dict[(lib_key, section_key, entry_key, '')]
+            if (libname, section_key, entry_key, '') in lib.keys():
+                entry = lib[(libname, section_key, entry_key, '')]
                 break
 
             # Trying the incremental entries
             if entryname[-1].isdigit():
                 entry_key = (trimstring(entryname.rstrip(digits), EXCLUDE_CHARS) + 'N').lower()
-                if (lib_key, section_key, entry_key, '') in self.dict.keys():
-                    entry = self.dict[(lib_key, section_key, entry_key, '')]
+                if (libname, section_key, entry_key, '') in lib.keys():
+                    entry = lib[(libname, section_key, entry_key, '')]
                     break
 
             # Trying the common object
             if libname != STANDARD_EDS_LIB:
                 section_key = COMMON_OBJECT_CLASS
-                if (lib_key, section_key, entry_key, '') in self.dict.keys():
-                    entry = self.dict[(lib_key, section_key, entry_key, '')]
+                if (libname, section_key, entry_key, '') in lib.keys():
+                    entry = lib[(libname, section_key, entry_key, '')]
                     break
 
         if entry:
@@ -133,7 +140,7 @@ class EDS_dict(object):
                 if entry.fields[fieldindex].name == '':
                     """ Single fields have the same name as their entry.
                         In worst case we return the entry name as field name """
-                    return (entry.keyword, entry.fields[fieldindex].save_decorator_new_line)
+                    return (entry.key, entry.fields[fieldindex].save_decorator_new_line)
                 return (entry.fields[fieldindex].name, entry.fields[fieldindex].save_decorator_new_line)
             except:
                 pass
@@ -142,163 +149,165 @@ class EDS_dict(object):
 
     def gettypes(self, sectionname, entryname, fieldname):
         for libname in self.libs:
-            lib_key     = libname.lower()
+            lib = self.libs[libname]
             section_key = trimstring(sectionname, EXCLUDE_CHARS).lower()
             entry_key   = trimstring(entryname,   EXCLUDE_CHARS).lower()
             field_key   = trimstring(fieldname,   EXCLUDE_CHARS).lower()
 
-            if (lib_key, section_key, entry_key, '') in self.dict.keys():
-                if (lib_key, section_key, entry_key, field_key) in self.dict.keys():
-                    return self.dict[(lib_key, section_key, entry_key, field_key)].datatypes
+            if (libname, section_key, entry_key, '') in lib.keys():
+                if (libname, section_key, entry_key, field_key) in lib.keys():
+                    return lib[(libname, section_key, entry_key, field_key)].datatypes
                 if fieldname[-1].isdigit():
                     field_key   = (trimstring(fieldname.rstrip(digits), EXCLUDE_CHARS) + 'N').lower()
-                    if (lib_key, section_key, entry_key, field_key) in self.dict.keys():
-                        return self.dict[(lib_key, section_key, entry_key, field_key)].datatypes
+                    if (libname, section_key, entry_key, field_key) in lib.keys():
+                        return lib[(libname, section_key, entry_key, field_key)].datatypes
 
             if entry_key[-1].isdigit():
                 entry_key   = (trimstring(entryname.rstrip(digits), EXCLUDE_CHARS) + 'N').lower()
-                if (lib_key, section_key, entry_key, '') in self.dict.keys():
-                    if (lib_key, section_key, entry_key, field_key) in self.dict.keys():
-                        return self.dict[(lib_key, section_key, entry_key, field_key)].datatypes
+                if (libname, section_key, entry_key, '') in lib.keys():
+                    if (libname, section_key, entry_key, field_key) in lib.keys():
+                        return lib[(libname, section_key, entry_key, field_key)].datatypes
                     if fieldname[-1].isdigit():
                         field_key   = (trimstring(fieldname.rstrip(digits), EXCLUDE_CHARS) + 'N').lower()
-                        if (lib_key, section_key, entry_key, field_key) in self.dict.keys():
-                            return self.dict[(lib_key, section_key, entry_key, field_key)].datatypes
+                        if (libname, section_key, entry_key, field_key) in lib.keys():
+                            return lib[(libname, section_key, entry_key, field_key)].datatypes
 
             if libname != STANDARD_EDS_LIB: # trying the common object
                 section_key = COMMON_OBJECT_CLASS
-                if (lib_key, section_key, entry_key, field_key) in self.dict.keys():
-                    return self.dict[(lib_key, section_key, entry_key, field_key)].datatypes
+                if (libname, section_key, entry_key, field_key) in lib.keys():
+                    return lib[(libname, section_key, entry_key, field_key)].datatypes
         return []
 
     def getsectioninfo(self, sectionname):
         for libname in self.libs:
-            lib_key     = libname.lower()
+            lib = self.libs[libname]
             section_key = trimstring(sectionname, EXCLUDE_CHARS).lower()
 
-            if (lib_key, section_key, '', '') in self.dict.keys():
-                return (self.dict[(lib_key, section_key, '', '')].keyword,
-                        self.dict[(lib_key, section_key, '', '')].id)
+            if (libname, section_key, '', '') in lib.keys():
+                return (lib[(libname, section_key, '', '')].key,
+                        lib[(libname, section_key, '', '')].id)
         return ("", 0)
 
-    def getsectionname(self, classid):
-        pass
+    def get_section_name(self, sectionid, protocol=None):
+        if protocol is not None:
+            return self.libs[trimstring(protocol, EXCLUDE_CHARS).lower()][sectionid]
+
     def getrequired_sections(self):
         for libname in self.libs:
-            lib_key = libname.lower()
+            lib = self.libs[libname]
 
-            if (lib_key, '', '') in self.dict.keys():
-                lib = self.dict[(lib_key, '', '')]
+            if (libname, '', '') in lib.keys():
+                lib = lib[(libname, '', '')]
                 return tuple(section for section in lib.sections if section.mandatory == True)
         return []
 
     def getrequired_entries(self, sectionname):
         for libname in self.libs:
-            lib_key     = libname.lower()
+            lib = self.libs[libname]
             section_key = sectionname.replace(' ', '').lower()
 
-            if (lib_key, section_key, '') in self.dict.keys():
-                section = self.dict[(lib_key, section_key, '')]
+            if (libname, section_key, '') in lib.keys():
+                section = lib[(libname, section_key, '')]
                 return tuple(entry for entry in section.entries if entry.mandatory == True)
         return []
 
     def getrequired_fields(self, sectionname , entryname):
         for libname in self.libs:
-            lib_key     = libname.replace(' ', '').lower()
+            lib = self.libs[libname]
             section_key = sectionname.replace(' ', '').lower()
             entry_key   = entryname.rstrip(digits).replace(' ', '').lower()
 
-            if (lib_key, section_key, entry_key) in self.dict.keys():
-                entry = self.dict[(lib_key, section_key, entry_key)]
+            if (libname, section_key, entry_key) in lib.keys():
+                entry = lib[(libname, section_key, entry_key)]
                 return tuple(field for field in entry.fields if field.mandatory == True)
         return []
 
     def getsection(self, sectionname):
         for libname in self.libs:
-            lib_key = trimstring(libname, EXCLUDE_CHARS).lower()
+            lib = self.libs[libname]
             section_key = trimstring(sectionname, EXCLUDE_CHARS).lower()
 
-            if (lib_key, section_key, '', '') in self.dict.keys():
-                return self.dict[(lib_key, section_key, '', '')]
+            if (libname, section_key, '', '') in lib.keys():
+                return lib[(libname, section_key, '', '')]
         return None
 
     def getentry(self, sectionname , entryname):
         #todo: cleanup, optimimize
         for libname in self.libs:
-            lib_key     = lib.lower()
+            lib = self.libs[libname]
             section_key = trimstring(sectionname, EXCLUDE_CHARS).lower()
             entry_key   = trimstring(entryname, EXCLUDE_CHARS).lower()
 
-            if (lib_key, section_key, entry_key, '') in self.dict.keys():
-                return self.dict[(lib_key, section_key, entry_key, '')]
+            if (libname, section_key, entry_key, '') in lib.keys():
+                return lib[(libname, section_key, entry_key, '')]
 
             if entryname[-1].isdigit():
                 entry_key = (trimstring(entryname.rstrip(digits), EXCLUDE_CHARS) + 'N').lower()
-                if (lib_key, section_key, entry_key, '') in self.dict.keys():
-                    return self.dict[(lib_key, section_key, entry_key, '')]
+                if (libname, section_key, entry_key, '') in lib.keys():
+                    return lib[(libname, section_key, entry_key, '')]
 
             if libname is not STANDARD_EDS_LIB:
                 section_key = COMMON_OBJECT_CLASS
                 entry_key = trimstring(entryname, EXCLUDE_CHARS).lower()
-                if (lib_key, section_key, entry_key, '') in self.dict.keys():
-                    return self.dict[(lib_key, section_key, entry_key, '')]
+                if (libname, section_key, entry_key, '') in lib.keys():
+                    return lib[(libname, section_key, entry_key, '')]
         return []
 
     def hassection(self, sectionname):
         for libname in self.libs:
-            lib_key     = libname.lower()
+            lib = self.libs[libname]
             section_key = trimstring(sectionname, EXCLUDE_CHARS).lower()
 
-            if (lib_key, section_key, '', '') in self.dict.keys():
+            if (libname, section_key, '', '') in lib.keys():
                 return True
         return False
 
     def hasentry(self, sectionname , entryname):
         for libname in self.libs:
-            lib_key     = libname.lower()
+            lib = self.libs[libname]
             section_key = trimstring(sectionname, EXCLUDE_CHARS).lower()
             entry_key   = trimstring(entryname, EXCLUDE_CHARS).lower()
 
-            if (lib_key, section_key, entry_key, '') in self.dict.keys():
+            if (libname, section_key, entry_key, '') in lib.keys():
                 return True
 
             if entryname[-1].isdigit(): # Incremental entry
                 entry_key =  (trimstring(entryname.rstrip(digits), EXCLUDE_CHARS) + 'N').lower()
-                if (lib_key, section_key, entry_key, '') in self.dict.keys():
+                if (libname, section_key, entry_key, '') in lib.keys():
                     return True
 
             if libname is not STANDARD_EDS_LIB:
                 section_key = COMMON_OBJECT_CLASS
                 entry_key = trimstring(entryname, EXCLUDE_CHARS).lower()
-                if (lib_key, section_key, entry_key, '') in self.dict.keys():
+                if (libname, section_key, entry_key, '') in lib.keys():
                     return True
         return False
 
     def getentryinfo(self, sectionname , entryname):
         entry = None
         for libname in self.libs:
-            lib_key     = libname.lower()
+            lib = self.libs[libname]
             section_key = trimstring(sectionname, EXCLUDE_CHARS).lower()
             entry_key   = trimstring(entryname, EXCLUDE_CHARS).lower()
 
-            if (lib_key, section_key, entry_key, '') in self.dict.keys():
-                entry = self.dict[(lib_key, section_key, entry_key, '')]
+            if (libname, section_key, entry_key, '') in lib.keys():
+                entry = lib[(libname, section_key, entry_key, '')]
                 break
 
             if entryname[-1].isdigit(): # Incremental entry
                 entry_key =  (trimstring(entryname.rstrip(digits), EXCLUDE_CHARS) + 'N').lower()
-                if (lib_key, section_key, entry_key, '') in self.dict.keys():
-                    entry = self.dict[(lib_key, section_key, entry_key, '')]
+                if (libname, section_key, entry_key, '') in lib.keys():
+                    entry = lib[(libname, section_key, entry_key, '')]
                     break
 
             if libname is not STANDARD_EDS_LIB:
                 section_key = COMMON_OBJECT_CLASS
                 entry_key = trimstring(entryname, EXCLUDE_CHARS).lower()
-                if (lib_key, section_key, entry_key, '') in self.dict.keys():
-                    entry = self.dict[(lib_key, section_key, entry_key, '')]
+                if (libname, section_key, entry_key, '') in lib.keys():
+                    entry = lib[(libname, section_key, entry_key, '')]
                     break
         if entry:
-            return (entry.keyword, entry.placement)
+            return (entry.key, entry.placement)
         return ("", 0)
 
 
@@ -308,33 +317,33 @@ class EDS_dict(object):
             raise Exception(__name__ + ":> Error calling \"%s\" %s" %(str(inspect.stack()[0][3]), error))
 
         for libname in self.libs:
-            lib_key     = libname.lower()
+            lib = self.libs[libname]
             section_key = trimstring(sectionname, EXCLUDE_CHARS).lower()
             entry_key   = trimstring(entryname,   EXCLUDE_CHARS).lower()
             field_key   = trimstring(fieldname,   EXCLUDE_CHARS).lower()
 
-            if (lib_key, section_key, entry_key, '') in self.dict.keys():
-                if (lib_key, section_key, entry_key, field_key) in self.dict.keys():
-                    return self.dict[(lib_key, section_key, entry_key, field_key)].mandatory
+            if (libname, section_key, entry_key, '') in lib.keys():
+                if (libname, section_key, entry_key, field_key) in lib.keys():
+                    return lib[(libname, section_key, entry_key, field_key)].mandatory
                 if fieldname[-1].isdigit():
                     field_key   = (trimstring(fieldname.rstrip(digits), EXCLUDE_CHARS) + 'N').lower()
-                    if (lib_key, section_key, entry_key, field_key) in self.dict.keys():
-                        return self.dict[(lib_key, section_key, entry_key, field_key)].mandatory
+                    if (libname, section_key, entry_key, field_key) in lib.keys():
+                        return lib[(libname, section_key, entry_key, field_key)].mandatory
 
             if entry_key[-1].isdigit():
                 entry_key   = (trimstring(entryname.rstrip(digits), EXCLUDE_CHARS) + 'N').lower()
-                if (lib_key, section_key, entry_key, '') in self.dict.keys():
-                    if (lib_key, section_key, entry_key, field_key) in self.dict.keys():
-                        return self.dict[(lib_key, section_key, entry_key, field_key)].mandatory
+                if (libname, section_key, entry_key, '') in lib.keys():
+                    if (libname, section_key, entry_key, field_key) in lib.keys():
+                        return lib[(libname, section_key, entry_key, field_key)].mandatory
                     if fieldname[-1].isdigit():
                         field_key   = (trimstring(fieldname.rstrip(digits), EXCLUDE_CHARS) + 'N').lower()
-                        if (lib_key, section_key, entry_key, field_key) in self.dict.keys():
-                            return self.dict[(lib_key, section_key, entry_key, field_key)].mandatory
+                        if (libname, section_key, entry_key, field_key) in lib.keys():
+                            return lib[(libname, section_key, entry_key, field_key)].mandatory
 
             if libname != STANDARD_EDS_LIB: # trying the common object
                 section_key = COMMON_OBJECT_CLASS
-                if (lib_key, section_key, entry_key, field_key) in self.dict.keys():
-                    return self.dict[(lib_key, section_key, entry_key, field_key)].mandatory
+                if (libname, section_key, entry_key, field_key) in lib.keys():
+                    return lib[(libname, section_key, entry_key, field_key)].mandatory
         return False
 
 
@@ -373,15 +382,17 @@ EDS_SERVICE    = cip_types.EDS_SERVICE
 
     # Note: the key "public" determines if a class is a public class and may contain entries from common object class.
 EDS_LIB     = namedtuple('EDS_LIB'     , 'name sections')
-EDS_SECTION = namedtuple('EDS_SECTION' , 'name keyword id mandatory entries')
+EDS_SECTION = namedtuple('EDS_SECTION' , 'name key id mandatory entries')
     # Note: if an entry has recurring fields(Nth fields) first field number of these fields should be listed in the Nthfields of the entry.
     #   example: Section:Assembly entry:Assem the 7th, 9th, 11th... fields can present the members size field. then 7 sould be listed as Nth field
-EDS_ENTRY   = namedtuple('EDS_ENTRY'   , 'name keyword mandatory placement Nthfields fields')
+EDS_ENTRY   = namedtuple('EDS_ENTRY'   , 'name key mandatory placement Nthfields fields')
 DT          = namedtuple('DT'          , 'type typeinfo')
 EDS_FIELD   = namedtuple('EDS_FIELD'   , 'name mandatory placement datatypes save_decorator_new_line')
 
-eds_libs = [
-    EDS_LIB("Standard", [
+## *****************************************************************************
+## Standard common EDS sections
+## *****************************************************************************
+eds_standard_lib = EDS_LIB("Standard", [
         EDS_SECTION( "File Description", "File", 0x10001, True,
             [
               EDS_ENTRY( "File Description Text" , "DescText"  , True , 0, [], [EDS_FIELD("File Description Text" , True, 0, [DT(CIP_STRING, None)], True) ] )
@@ -454,9 +465,11 @@ eds_libs = [
                 ])
             ])
         ])
-    ]
 
-eds_libs += [
+## *****************************************************************************
+## Protocol specific EDS sections
+## *****************************************************************************
+protocol_libs = [
     EDS_LIB("EtherNetIP", [
         EDS_SECTION( "Identity Class", "Identity Class", 0x01, False,
             [
