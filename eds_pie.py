@@ -193,7 +193,7 @@ class EDS_Section(object):
     def __init__(self, eds, name, id = 0):
         type(self)._instancecount += 1
         self._eds        = eds
-        #self._index      = type(self)._instancecount
+        self._index      = type(self)._instancecount
         self._id         = id
         self._name       = name
         self._entries    = {}
