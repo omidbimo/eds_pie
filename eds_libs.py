@@ -34,7 +34,7 @@ import cip_types
 
 EXCLUDE_CHARS = [' ', '_', '\\']
 STANDARD_EDS_LIB = "Standard".lower()
-COMMON_OBJECT_CLASS = "CommonObjectClass".lower()
+CIP_COMMON_OBJECT_CLASS = "CommonObjectClass".lower()
 
 def trimstring(srcstring, exclude_list):
     string = srcstring
@@ -53,6 +53,10 @@ class CIP_EDS_lib(object):
         for prot_lib in protocol_libs:
             self.import_lib(src=prot_lib)
 
+        #lib = self.libs.get('standard')
+        #for sec_key, sec in lib.items():
+        #    print '---------------------'
+        #    print sec_key, sec
         #for lib_key, lib in self.libs.items():
         #    print '---------------------'
         #    print lib_key
@@ -171,11 +175,11 @@ class CIP_EDS_lib(object):
             if (section_key, entry_key, '') in lib.keys():
                 return True
 
-            #if libname is not STANDARD_EDS_LIB:
-            #    section_key = COMMON_OBJECT_CLASS
-            #    entry_key = trimstring(entryname, EXCLUDE_CHARS).lower()
-            #    if (libname, section_key, entry_key, '') in lib.keys():
-            #        return True
+        # Finally check if the entry is an entry of common class information
+        lib = self.libs.get('standard')
+        if (CIP_COMMON_OBJECT_CLASS, entry_key, '') in lib.keys():
+            return True
+
         return False
 
     def get_entry(self, section_name, entry_name, protocol=None):
@@ -197,11 +201,11 @@ class CIP_EDS_lib(object):
             if (section_key, entry_key, '') in lib.keys():
                 return lib[(section_key, entry_key, '')]
 
-            #if libname is not STANDARD_EDS_LIB:
-            #    section_key = COMMON_OBJECT_CLASS
-            #    entry_key = trimstring(entryname, EXCLUDE_CHARS).lower()
-            #    if (libname, section_key, entry_key, '') in lib.keys():
-            #        return lib[(libname, section_key, entry_key, '')]
+        # Finally check if the entry is an entry of common class information
+        lib = self.libs.get('standard')
+        if (CIP_COMMON_OBJECT_CLASS, entry_key, '') in lib.keys():
+            return lib[(CIP_COMMON_OBJECT_CLASS, entry_key, '')]
+
         return None
 
     def get_field(self, section_name, entry_name, field_index, protocol=None):
@@ -222,51 +226,6 @@ class CIP_EDS_lib(object):
             return entry.fields[field_index]
         return None
 
-
-
-
-    #def get_field_info(self, section_name, entryname, fieldindex):
-    #    entry = None
-    #    for libname in self.libs:
-    #        lib = self.libs[libname]
-    #        section_key = trimstring(section_name, EXCLUDE_CHARS).lower()
-    #        entry_key   = trimstring(entryname,   EXCLUDE_CHARS).lower()
-    #
-    #        if (libname, section_key, entry_key, '') in lib.keys():
-    #            entry = lib[(libname, section_key, entry_key, '')]
-    #            break
-    #
-    #        # Trying the incremental entries
-    #        if entryname[-1].isdigit():
-    #            entry_key = (trimstring(entryname.rstrip(digits), EXCLUDE_CHARS) + 'N').lower()
-    #            if (libname, section_key, entry_key, '') in lib.keys():
-    #                entry = lib[(libname, section_key, entry_key, '')]
-    #                break
-    #
-    #        # Trying the common object
-    #        if libname != STANDARD_EDS_LIB:
-    #            section_key = COMMON_OBJECT_CLASS
-    #            if (libname, section_key, entry_key, '') in lib.keys():
-    #                entry = lib[(libname, section_key, entry_key, '')]
-    #                break
-    #
-    #    if entry:
-    #        try:
-    #            """ The requested index is greater than listed fields in the lib,
-    #                 Consider the field as Nth field filed and re-calculate the index. """
-    #            if fieldindex >= len(entry.fields) and entry.Nthfields:
-    #                fieldindex = (fieldindex % len(entry.Nthfields)) + entry.Nthfields[0] - 1 # To get the array index
-    #
-    #            if entry.fields[fieldindex].name == '':
-    #                """ Single fields have the same name as their entry.
-    #                    In worst case we return the entry name as field name """
-    #                return (entry.key, entry.fields[fieldindex].save_decorator_new_line)
-    #            return (entry.fields[fieldindex].name, entry.fields[fieldindex].save_decorator_new_line)
-    #        except:
-    #            pass
-    #    # No field is found. return a N name
-    #    return ("field{}".format(fieldindex), True)
-
     def get_field_datatypes(self, section_name, entry_name, field_name):
         section_key = trimstring(section_name, EXCLUDE_CHARS).lower()
 
@@ -283,28 +242,12 @@ class CIP_EDS_lib(object):
         for _, lib in self.libs.items():
             if (section_key, entry_key, field_key) in lib.keys():
                 return lib[(section_key, entry_key, field_key)].datatypes
-            #if (libname, section_key, entry_key, '') in lib.keys():
-            #    if (libname, section_key, entry_key, field_key) in lib.keys():
-            #        return lib[(libname, section_key, entry_key, field_key)].datatypes
-            #    if fieldname[-1].isdigit():
-            #        field_key   = (trimstring(fieldname.rstrip(digits), EXCLUDE_CHARS) + 'N').lower()
-            #        if (libname, section_key, entry_key, field_key) in lib.keys():
-            #            return lib[(libname, section_key, entry_key, field_key)].datatypes
-            #
-            #if entry_key[-1].isdigit():
-            #    entry_key   = (trimstring(entry_name.rstrip(digits), EXCLUDE_CHARS) + 'N').lower()
-            #    if (libname, section_key, entry_key, '') in lib.keys():
-            #        if (libname, section_key, entry_key, field_key) in lib.keys():
-            #            return lib[(libname, section_key, entry_key, field_key)].datatypes
-            #        if fieldname[-1].isdigit():
-            #            field_key   = (trimstring(fieldname.rstrip(digits), EXCLUDE_CHARS) + 'N').lower()
-            #            if (libname, section_key, entry_key, field_key) in lib.keys():
-            #                return lib[(libname, section_key, entry_key, field_key)].datatypes
-            #
-            #if libname != STANDARD_EDS_LIB: # trying the common object
-            #    section_key = COMMON_OBJECT_CLASS
-            #    if (libname, section_key, entry_key, field_key) in lib.keys():
-            #        return lib[(libname, section_key, entry_key, field_key)].datatypes
+
+        # Finally check if the entry is an entry of common class information
+        lib = self.libs.get('standard')
+        if (CIP_COMMON_OBJECT_CLASS, entry_key, field_key) in lib.keys():
+            return lib[(CIP_COMMON_OBJECT_CLASS, entry_key, field_key)].datatypes
+
         return []
 
     def get_required_sections(self):
@@ -337,33 +280,6 @@ class CIP_EDS_lib(object):
                 return tuple(field for field in entry.fields if field.mandatory == True)
         return []
 
-    #def getentryinfo(self, section_name , entryname):
-    #    entry = None
-    #    for libname in self.libs:
-    #        lib = self.libs[libname]
-    #        section_key = trimstring(section_name, EXCLUDE_CHARS).lower()
-    #        entry_key   = trimstring(entryname, EXCLUDE_CHARS).lower()
-    #
-    #        if (libname, section_key, entry_key, '') in lib.keys():
-    #            entry = lib[(libname, section_key, entry_key, '')]
-    #            break
-    #
-    #        if entryname[-1].isdigit(): # Incremental entry
-    #            entry_key =  (trimstring(entryname.rstrip(digits), EXCLUDE_CHARS) + 'N').lower()
-    #            if (libname, section_key, entry_key, '') in lib.keys():
-    #                entry = lib[(libname, section_key, entry_key, '')]
-    #                break
-    #
-    #        if libname is not STANDARD_EDS_LIB:
-    #            section_key = COMMON_OBJECT_CLASS
-    #            entry_key = trimstring(entryname, EXCLUDE_CHARS).lower()
-    #            if (libname, section_key, entry_key, '') in lib.keys():
-    #                entry = lib[(libname, section_key, entry_key, '')]
-    #                break
-    #    if entry:
-    #        return (entry.key, entry.placement)
-    #    return ("", 0)
-
     def ismandatory(self, section_name, entryname, fieldname):
         if section_name == '' or entryname == '' or fieldname == '':
             error = info(ERROR, "Invalid parameter.", extended_info = "section_name:\"%\", entryname:\"%\" fieldname:\"%s\"" %(section_name, entryname, fieldname))
@@ -394,11 +310,10 @@ class CIP_EDS_lib(object):
                             return lib[(libname, section_key, entry_key, field_key)].mandatory
 
             if libname != STANDARD_EDS_LIB: # trying the common object
-                section_key = COMMON_OBJECT_CLASS
+                section_key = CIP_COMMON_OBJECT_CLASS
                 if (libname, section_key, entry_key, field_key) in lib.keys():
                     return lib[(libname, section_key, entry_key, field_key)].mandatory
         return False
-
 
     def gettype(self, cip_typeid):
         return self.cipdatatypes[cip_typeid]
@@ -517,6 +432,27 @@ eds_standard_lib = EDS_LIB("Standard", [
                 , EDS_FIELD("Nth Enum String"  , False, 0, [DT(CIP_STRING, [])], True )
                 ])
             ])
+
+        , EDS_SECTION( "Common Object Class", "CommonObjectClass", None, False,
+            [
+              EDS_ENTRY( "Revision",                            "Revision",                        False, 0, [], [EDS_FIELD("Revision",                            True, 0, [DT(CIP_UINT,   [])], True) ])
+            , EDS_ENTRY( "Maximum Instance Number",             "MaxInst",                         False, 0, [], [EDS_FIELD("MaxInst",                             True, 0, [DT(CIP_UINT,   [])], True) ])
+            , EDS_ENTRY( "Number of Static Instances",          "Number_Of_Static_Instances",      False, 0, [], [EDS_FIELD("Maximum Instance Number",             True, 0, [DT(CIP_UINT,   [])], True) ])
+            , EDS_ENTRY( "Maximum Number of Dynamic Instances", "Max_Number_Of_Dynamic_Instances", False, 0, [], [EDS_FIELD("Maximum Number of Dynamic Instances", True, 0, [DT(CIP_UINT,   [])], True) ])
+            , EDS_ENTRY( "Class attribute identification",      "Class_Attributes",                False, 0, [1], [EDS_FIELD("Attribute ID",                       True, 0, [DT(CIP_UINT,   [])], True) ])
+            , EDS_ENTRY( "Instance attribute identification",   "Instance_Attributes",             False, 0, [1], [EDS_FIELD("Attribute ID",                       True, 0, [DT(CIP_UINT,   [])], True) ])
+            , EDS_ENTRY( "Class service support",               "Class_Services",                  False, 0, [1], [EDS_FIELD("Service",                            True, 0, [DT(EDS_SERVICE, [])], True) ])
+            , EDS_ENTRY( "Instance service support",            "Instance_Services",               False, 0, [1], [EDS_FIELD("Service",                            True, 0, [DT(EDS_SERVICE, [])], True) ])
+            , EDS_ENTRY( "Object Name",                         "Object_Name",                     False, 0, [], [EDS_FIELD("Name",                                True, 0, [DT(CIP_STRING, [])], True) ])
+            , EDS_ENTRY( "Object Class Code",                   "Object_Class_Code",               False, 0, [], [EDS_FIELD("Object Class Code",                   True, 0, [DT(CIP_UDINT,  [])], True) ])
+            , EDS_ENTRY( "Service Description",                 "Service_DescriptionN",            False, 0, [1],
+                [ EDS_FIELD("Service Code",             True, 0, [DT(CIP_USINT, [])], True)
+                , EDS_FIELD("Name",                     True, 1, [DT(CIP_STRING, [])], True)
+                , EDS_FIELD("Service Application Path", True, 2, [DT(CIP_EPATH, []), DT(EDS_KEYWORD, ["SYMBOL_ANSI"])], True)
+                , EDS_FIELD("Service Request Data",     True, 3, [DT(EDS_DATAREF, ["AssemExaN", "ParamN", "ConstructedParamN"]), DT(EDS_EMPTY, [])], True)
+                , EDS_FIELD("Service Response Data",    True, 4, [DT(EDS_DATAREF, ["AssemExaN", "ParamN", "ConstructedParamN"]), DT(EDS_EMPTY, [])], True)
+                ])
+            ]),
         ])
 
 ## *****************************************************************************
@@ -819,26 +755,7 @@ protocol_libs = [
             [
             ])
 
-        , EDS_SECTION( "Common Object Class", "CommonObjectClass", 0, False,
-            [
-              EDS_ENTRY( "Revision",                            "Revision",                        False, 0, [], [EDS_FIELD("Revision",                            True, 0, [DT(CIP_UINT,   [])], True) ])
-            , EDS_ENTRY( "Maximum Instance Number",             "MaxInst",                         False, 0, [], [EDS_FIELD("MaxInst",                             True, 0, [DT(CIP_UINT,   [])], True) ])
-            , EDS_ENTRY( "Number of Static Instances",          "Number_Of_Static_Instances",      False, 0, [], [EDS_FIELD("Maximum Instance Number",             True, 0, [DT(CIP_UINT,   [])], True) ])
-            , EDS_ENTRY( "Maximum Number of Dynamic Instances", "Max_Number_Of_Dynamic_Instances", False, 0, [], [EDS_FIELD("Maximum Number of Dynamic Instances", True, 0, [DT(CIP_UINT,   [])], True) ])
-            , EDS_ENTRY( "Class attribute identification",      "Class_Attributes",                False, 0, [1], [EDS_FIELD("Attribute ID",                       True, 0, [DT(CIP_UINT,   [])], True) ])
-            , EDS_ENTRY( "Instance attribute identification",   "Instance_Attributes",             False, 0, [1], [EDS_FIELD("Attribute ID",                       True, 0, [DT(CIP_UINT,   [])], True) ])
-            , EDS_ENTRY( "Class service support",               "Class_Services",                  False, 0, [1], [EDS_FIELD("Service",                            True, 0, [DT(EDS_SERVICE, [])], True) ])
-            , EDS_ENTRY( "Instance service support",            "Instance_Services",               False, 0, [1], [EDS_FIELD("Service",                            True, 0, [DT(EDS_SERVICE, [])], True) ])
-            , EDS_ENTRY( "Object Name",                         "Object_Name",                     False, 0, [], [EDS_FIELD("Name",                                True, 0, [DT(CIP_STRING, [])], True) ])
-            , EDS_ENTRY( "Object Class Code",                   "Object_Class_Code",               False, 0, [], [EDS_FIELD("Object Class Code",                   True, 0, [DT(CIP_UDINT,  [])], True) ])
-            , EDS_ENTRY( "Service Description",                 "Service_DescriptionN",            False, 0, [1],
-                [ EDS_FIELD("Service Code",             True, 0, [DT(CIP_USINT, [])], True)
-                , EDS_FIELD("Name",                     True, 1, [DT(CIP_STRING, [])], True)
-                , EDS_FIELD("Service Application Path", True, 2, [DT(CIP_EPATH, []), DT(EDS_KEYWORD, ["SYMBOL_ANSI"])], True)
-                , EDS_FIELD("Service Request Data",     True, 3, [DT(EDS_DATAREF, ["AssemExaN", "ParamN", "ConstructedParamN"]), DT(EDS_EMPTY, [])], True)
-                , EDS_FIELD("Service Response Data",    True, 4, [DT(EDS_DATAREF, ["AssemExaN", "ParamN", "ConstructedParamN"]), DT(EDS_EMPTY, [])], True)
-                ])
-            ])
+
         ])
     ]
 
