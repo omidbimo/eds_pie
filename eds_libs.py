@@ -446,7 +446,7 @@ EDS_FIELD   = namedtuple('EDS_FIELD'   , 'name mandatory placement datatypes sav
 ## Standard common EDS sections
 ## *****************************************************************************
 eds_standard_lib = EDS_LIB("Standard", [
-        EDS_SECTION( "File Description", "File", 0x10001, True,
+        EDS_SECTION( "File Description", "File", None, True,
             [
               EDS_ENTRY( "File Description Text" , "DescText"  , True , 0, [], [EDS_FIELD("File Description Text" , True, 0, [DT(CIP_STRING, None)], True) ] )
             , EDS_ENTRY( "File Creation Date"    , "CreateDate", True , 0, [], [EDS_FIELD("File Creation Date"    , True, 0, [DT(CIP_DATE,     [])], True) ] )
@@ -459,7 +459,7 @@ eds_standard_lib = EDS_LIB("Standard", [
             , EDS_ENTRY( "EDS File CRC"          , "EDSFileCRC", False, 0, [], [EDS_FIELD("EDS File CRC"          , True, 0, [DT(CIP_UDINT,    [])], True) ] )
             ])
 
-        , EDS_SECTION( "Device Description", "Device", 0x10002, True,
+        , EDS_SECTION( "Device Description", "Device", None, True,
             [
               EDS_ENTRY( "Vendor ID"         , "VendCode"    , True,  0, [], [EDS_FIELD("Vendor ID"         , True, 0, [DT(CIP_UINT,   [])], True) ] )
             , EDS_ENTRY( "Vendor Name"       , "VendName"    , True,  0, [], [EDS_FIELD("Vendor Name"       , True, 0, [DT(CIP_STRING, [])], True) ] )
@@ -474,7 +474,7 @@ eds_standard_lib = EDS_LIB("Standard", [
             , EDS_ENTRY( "Icon Contents"     , "IconContents", False, 0, [], [EDS_FIELD("Icon Contents"     , True, 0, [DT(CIP_STRING, [])], True) ] )
             ])
 
-        , EDS_SECTION( "Device Classification", "Device Classification", 0x10003, True,
+        , EDS_SECTION( "Device Classification", "Device Classification", None, True,
             [
               EDS_ENTRY( "Classification 1"  , "Class1"   , True    , 0, [1],
                     [EDS_FIELD("Class1", True, 0, [DT(EDS_KEYWORD, ["CompoNet", "ControlNet", "DeviceNet", "EtherNetIP", "ModbusSL", "ModbusTCP", "Safety"])], True) ] ),
@@ -482,7 +482,7 @@ eds_standard_lib = EDS_LIB("Standard", [
                     [EDS_FIELD("ClassN", True, 0, [DT(EDS_KEYWORD, ["CompoNet", "ControlNet", "DeviceNet", "EtherNetIP", "ModbusSL", "ModbusTCP", "Safety"])], True) ] )
             ])
 
-        , EDS_SECTION( "Parameters", "Params", 0x10004, False,
+        , EDS_SECTION( "Parameters", "Params", None, False,
             [
               EDS_ENTRY( "Parameter", "ParamN", False, 0, [],
                 [ EDS_FIELD("Reserved"                       , True,  0, [DT(CIP_USINT,    [])], True )
