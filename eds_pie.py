@@ -1,11 +1,11 @@
-"""
+'''
 
 MIT License
 
 Copyright (c) 2021 Omid Kompani
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
+of this software and associated documentation files (the 'Software'), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
@@ -14,7 +14,7 @@ furnished to do so, subject to the following conditions:
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
@@ -22,7 +22,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-"""
+'''
 
 '''
     EDS grammatics:
@@ -38,7 +38,7 @@ SOFTWARE.
         \n
 
     STRING
-        """ {ASCII symbols} """
+        {ASCII symbols}
 
     NUMBER
         {.0-9}
@@ -47,11 +47,11 @@ SOFTWARE.
         0x{0-9a-fA-F}
 
     CIP_DATE
-        mm"-"dd"-"yyyy
+        mm'-'dd'-'yyyy
         [m,d,y] = NUMBER/HEXNUMBER
 
     CIP_TIME
-        hh":"mm":"ss
+        hh':'mm':'ss
         [h,m,s] = NUMBER/HEXNUMBER
 
     COMMENT
@@ -67,14 +67,14 @@ SOFTWARE.
         {a-zA-Z0-9_}
 
     DATASET
-        "{"...,...,..."}"
+        '{'...,...,...'}'
 
     KEYWORD
         IDENTIFIER
 
     SECTION_IDENTIFIER
-        "[" {a-zA-Z0-9_/- } "]"
-        ***Note: the SYMBOLS "/" , "-" and " " should be used non-consecutive
+        '[' {a-zA-Z0-9_/- } ']'
+        ***Note: the SYMBOLS '/' , '-' and ' ' should be used non-consecutive
         ***Note: A public section identifier shall never begin with a number
         ***Note: A vendor specific section identifier shall always begin with
                 the vendor Id of the company making the addition followed by an
@@ -85,7 +85,7 @@ SOFTWARE.
       | DATASET
 
     ENTRY
-        KEYWORD "=" KEYWORDVALUE {"," KEYWORDVALUE} ";"
+        KEYWORD '=' KEYWORDVALUE {',' KEYWORDVALUE} ';'
 
     SECTION
         HEADRCOMMENT
@@ -109,46 +109,46 @@ from string      import digits
 from eds_libs import *
 from cip_types import isnumber, ishex
 
-logging.basicConfig(level=logging.WARNING,
+logging.basicConfig(level=logging.DEBUG,
     format='%(asctime)s - %(name)s.%(levelname)-8s %(message)s')
 logger = logging.getLogger(__name__)
 #-------------------------------------------------------------------------------
-EDS_PIE_VERSION     = "0.1"
-EDS_PIE_RELASE_DATE = "3 Nov. 2020"
-SECTION_NAME_VALID_SYMBOLES = "-.\\_/"
+EDS_PIE_VERSION     = '0.1'
+EDS_PIE_RELASE_DATE = '3 Nov. 2020'
+SECTION_NAME_VALID_SYMBOLES = '-.\\_/'
 #-------------------------------------------------------------------------------
-ENDCOMMENT_TEMPLATE = ( ' '.ljust(79, '-') + "\n" + " EOF \n"
-                      + ' '.ljust(79, '-') + "\n" )
+END_COMMENT_TEMPLATE = ( ' '.ljust(79, '-') + '\n' + ' EOF \n'
+                      + ' '.ljust(79, '-') + '\n' )
 
-EDSCOMMENT_TEMPLATE = ( " Electronic Data Sheet Generated with EDS-pie Version "
-                      + "{} - {}\n".format(EDS_PIE_VERSION, EDS_PIE_RELASE_DATE)
-                      + ' '.ljust(79, '-') + "\n"
-                      + " Created on: {} - {}:{}\n".format(str(date.today()),
-                          str(datetime.now().hour), str(datetime.now().minute))
-                      + ' '.ljust(79, '-') + "\n\n ATTENTION: \n"
-                      + " Changes in this file may cause configuration or "
-                      + "communication problems.\n\n" + " ".ljust(79, '-')
-                      + "\n" )
+HEADING_COMMENT_TEMPLATE = ( ' Electronic Data Sheet Generated with EDS-pie Version '
+                         +   '{} - {}\n'.format(EDS_PIE_VERSION, EDS_PIE_RELASE_DATE)
+                         +   ' '.ljust(79, '-') + '\n'
+                         +   ' Created on: {} - {}:{}\n'.format(str(date.today()),
+                                 str(datetime.now().hour), str(datetime.now().minute))
+                         +   ' '.ljust(79, '-') + '\n\n ATTENTION: \n'
+                         +   ' Changes in this file may cause configuration or '
+                         +   'communication problems.\n\n' + ' '.ljust(79, '-')
+                         +   '\n' )
 
 # ------------------------------------------------------------------------------
 class EDS_PIE_ENUMS(object):
 
     def Str(self, enum):
         for attr in vars(self.__class__):
-            if isinstance(self.__class__.__dict__[attr], int) and self.__class__.__dict__[attr] == enum: return "{}".format(attr)
+            if isinstance(self.__class__.__dict__[attr], int) and self.__class__.__dict__[attr] == enum: return '{}'.format(attr)
         for base in self.__class__.__bases__:
             for attr in vars(base):
-                if isinstance(base.__dict__[attr], int) and base.__dict__[attr] == enum: return "{}".format(attr)
-        return ""
+                if isinstance(base.__dict__[attr], int) and base.__dict__[attr] == enum: return '{}'.format(attr)
+        return ''
 
     @classmethod
     def Str(cls, enum):
         for attr in vars(cls):
-            if isinstance(cls.__dict__[attr], int) and cls.__dict__[attr] == enum: return "{}".format(attr)
+            if isinstance(cls.__dict__[attr], int) and cls.__dict__[attr] == enum: return '{}'.format(attr)
         for base in cls.__bases__:
             for attr in vars(base):
-                if isinstance(base.__dict__[attr], int) and base.__dict__[attr] == enum: return "{}".format(attr)
-        return ""
+                if isinstance(base.__dict__[attr], int) and base.__dict__[attr] == enum: return '{}'.format(attr)
+        return ''
 
 class TOKEN_TYPES(EDS_PIE_ENUMS):
     DATE       =  1
@@ -163,25 +163,25 @@ class TOKEN_TYPES(EDS_PIE_ENUMS):
     DATASET    =  10
 
 class SYMBOLS(EDS_PIE_ENUMS):
-    ASSIGNMENT     = "="
-    COMMA          = ","
-    SEMICOLON      = ";"
-    COLON          = ":"
-    MINUS          = "-"
-    UNDERLINE      = "_"
-    PLUS           = "+"
-    POINT          = "."
-    BACKSLASH      = "\\"
-    QUOTATION      = "\""
-    TAB            = "\t"
-    DOLLAR         = "$"
-    OPENINGBRACKET = "["
-    CLOSINGBRACKET = "]"
-    OPENINGBRACE   = "{"
-    CLOSINGBRACE   = "}"
-    AMPERSAND      = "&"
-    SPACE          = " "
-    EOL            = "\n"
+    ASSIGNMENT     = '='
+    COMMA          = ','
+    SEMICOLON      = ';'
+    COLON          = ':'
+    MINUS          = '-'
+    UNDERLINE      = '_'
+    PLUS           = '+'
+    POINT          = '.'
+    BACKSLASH      = '\\'
+    QUOTATION      = '\"'
+    TAB            = '\t'
+    DOLLAR         = '$'
+    OPENINGBRACKET = '['
+    CLOSINGBRACKET = ']'
+    OPENINGBRACE   = '{'
+    CLOSINGBRACE   = '}'
+    AMPERSAND      = '&'
+    SPACE          = ' '
+    EOL            = '\n'
     EOF            = None
 
 OPERATORS  = [ SYMBOLS.ASSIGNMENT ]
@@ -234,7 +234,7 @@ class EDS_Section(object):
         return None
 
     def __str__(self):
-        return "SECTION({})".format(self._name)
+        return 'SECTION({})'.format(self._name)
 
 # --------------------------------------------------------------------------
 class EDS_Entry(object):
@@ -282,7 +282,7 @@ class EDS_Entry(object):
         return tuple(self._fields)
 
     def __str__(self):
-        return "ENTRY({})".format(self._name)
+        return 'ENTRY({})'.format(self._name)
 # --------------------------------------------------------------------------
 class EDS_Field(object):
     def __init__(self, entry, name, data, index):
@@ -319,11 +319,11 @@ class EDS_Field(object):
                     del self._data
                     self._data = datatype(value, valid_data)
                     return
-        types_str = ", ".join("<{}>{}".format(datatype.__name__, valid_data) for datatype, valid_data in self._datatypes)
+        types_str = ', '.join('<{}>{}'.format(datatype.__name__, valid_data) for datatype, valid_data in self._datatypes)
         error_msg = ('Data_type mismatch! [{}].{}.{} = ({}), should be a type of: {}'
             .format(self._entry._section.name, self._entry.name, self.name, value, types_str))
 
-        raise Exception(__name__ + ":> calling: \"{}()\" {}".format(str(inspect.stack()[0][3]), error_msg))
+        raise Exception(__name__ + ':> calling: \'{}()\' {}'.format(str(inspect.stack()[0][3]), error_msg))
 
     @property
     def datatype(self):
@@ -331,14 +331,15 @@ class EDS_Field(object):
 
     def __str__(self):
         if self._data is None:
-            return "\"\""
-        return "FIELD(index: {}, name: \"{}\", value: ({}), type: <{}>{})".format(self._index, self._name, str(self._data), type(self._data).__name__, self._data.range )
+            return '\'\''
+        return 'FIELD(index: {}, name: \'{}\', value: ({}), type: <{}>{})'.format(self._index, self._name, str(self._data), type(self._data).__name__, self._data.range )
 
 # ------------------------------------------------------------------------------
 class EDS(object):
 
     def __init__(self):
-        self.endcomment = ''
+        self.heading_comment = ''
+        self.end_comment = ''
         self._protocol  = None
         self._sections  = {}
         self.ref = CIP_EDS_lib()
@@ -350,9 +351,9 @@ class EDS(object):
                 print section
                 entries = sorted(section.entries, key = lambda entry: entry._index)
                 for entry in entries:
-                    print "    ", entry
+                    print '    ', entry
                     for field in entry.fields:
-                        print "        ", field
+                        print '        ', field
             return
 
         if sectionname is not None and entryname is not None:
@@ -360,7 +361,7 @@ class EDS(object):
             if entry:
                 print entry
                 for field in entry.fields:
-                    print "    ", field
+                    print '    ', field
             return
 
         if sectionname is not None and entryname is None:
@@ -369,9 +370,9 @@ class EDS(object):
                 print section
                 entries = sorted(section.entries, key = lambda entry: entry._index)
                 for entry in entries:
-                    print "    ", entry
+                    print '    ', entry
                     for field in entry.fields:
-                        print "        ", field
+                        print '        ', field
             return
 
     @property
@@ -480,12 +481,12 @@ class EDS(object):
         section = self._sections[sectionname.replace(' ', '').lower()]
 
         if entryname == '':
-            logger.error('Invalid Entry name! [{}]\"{}\" contains invalid characters.'
+            logger.error('Invalid Entry name! [{}]\'{}\' contains invalid characters.'
                 .format(sectionname, entryname))
             return None
 
         if entryname.replace(' ', '').lower() in section._entries.keys():
-            logger.error('Duplicated Entry! to serialize \"{}\", set the serialize switch to True'.format(entry))
+            logger.error('Duplicated Entry! to serialize \'{}\', set the serialize switch to True'.format(entry))
 
         if not self.ref.has_entry(sectionname, entryname):
             logger.warning('Unknown Entry [{}].{}'.format(sectionname, entryname))
@@ -497,8 +498,8 @@ class EDS(object):
             ref_keyword = ref_entry.key.rstrip('N').rstrip(digits)
 
         if ref_keyword != entryname.rstrip(digits):
-            logger.warning('Not exact match! in section [{}], entry name: \"{}\" should be:'
-                ' \"{}[N]\"'.format(sectionname, entryname, ref_keyword))
+            logger.warning('Not exact match! in section [{}], entry name: \'{}\' should be:'
+                ' \'{}[N]\''.format(sectionname, entryname, ref_keyword))
 
             entry_nid = entryname[len(ref_keyword):]
             entryname = ref_keyword + entry_nid
@@ -524,7 +525,7 @@ class EDS(object):
         if ref_field:
             field_name = ref_field.name or entry.name
         else:
-            field_name = "field{}".format(entry.fieldcount)
+            field_name = 'field{}'.format(entry.fieldcount)
 
         datatypes = self.ref.get_field_datatypes(section._name, entry.name, field_name)
         if not datatypes:
@@ -536,9 +537,9 @@ class EDS(object):
                 if dtype.validate(fieldvalue, typeinfo):
 
                     if dtype == EDS_TYPEREF:
-                        """ A referenced-type has to be validated. Type this
+                        ''' A referenced-type has to be validated. Type this
                             filed comes from another field which is here named
-                            The linked field contains a CIP type id """
+                            The linked field contains a CIP type id '''
 
                         typeid = self.getfield(sectionname, entryname, fieldname = typeinfo[0]).value
                         try:
@@ -557,17 +558,17 @@ class EDS(object):
 
             if fielddata is None: # No proper type was found
                 if EDS_VENDORSPEC.validate(fieldvalue):
-                    typelist = [(type, "") for type, typeinfo in datatypes if not typeinfo]
+                    typelist = [(type, '') for type, typeinfo in datatypes if not typeinfo]
                     typelist += [(type, typeinfo) for type, typeinfo in datatypes if typeinfo]
-                    types_str = ", ".join("<{}{}>".format(type[0].__name__, type[1]) for type in typelist)
+                    types_str = ', '.join('<{}{}>'.format(type[0].__name__, type[1]) for type in typelist)
                     logger.warning('Type mismatch! [{}].{}.{} = ({}), should be a type of: {}. '
                     'Switched to VENDOR_SPECIFIC type.'.format(section._name, entry.name, field_name, fieldvalue, types_str))
 
                     fielddata = EDS_VENDORSPEC(fieldvalue)
                 elif self.ref.ismandatory(section._name, entry.name, field_name):
-                    typelist = [(type, "") for type, typeinfo in datatypes if not typeinfo]
+                    typelist = [(type, '') for type, typeinfo in datatypes if not typeinfo]
                     typelist += [(type, typeinfo) for type, typeinfo in datatypes if typeinfo]
-                    types_str = ", ".join("<{}{}>".format(type[0].__name__, type[1]) for type in typelist)
+                    types_str = ', '.join('<{}{}>'.format(type[0].__name__, type[1]) for type in typelist)
                     logger.error('Data_type mismatch! [{}].{}.{} = ({}), should be a type of: {}'
                          .format(section._name, entry.name, field_name, fieldvalue, types_str))
 
@@ -619,40 +620,40 @@ class EDS(object):
         items = path.split()
         for index, item in enumerate(items):
             if len(item) < 2:
-                logger.error('Invalid EPATH format! item[{}]:\"{}\" in [{}]'.format(index, item, path))
+                logger.error('Invalid EPATH format! item[{}]:\'{}\' in [{}]'.format(index, item, path))
 
             if not isnumber(item):
                 if item[0] == '[' and item[-1] == ']':
                     entryname = item.strip('[]').lower()
-                    field = self.getfield("Params", entryname, fieldname = "Default Value") #TODO: requires improvement
+                    field = self.getfield('Params', entryname, fieldname = 'Default Value') #TODO: requires improvement
                     if field:
                         items[index] = int(field.value)
                         continue
-                    logger.error('Entry not found! item[{}]:\"{}\" in [{}]'.format(index, item, path))
-                # ? Error(ERRORS.ERR_INVALID_EPATH_FORMAT, "item[{}]:\"{}\" in [{}]: "
+                    logger.error('Entry not found! item[{}]:\'{}\' in [{}]'.format(index, item, path))
+                # ? Error(ERRORS.ERR_INVALID_EPATH_FORMAT, 'item[{}]:\'{}\' in [{}]: '
                 # ?      .format(index, item, path))
             elif not ishex(item):
-                logger.error('Invalid EPATH format! item[{}]:\"{}\" in [{}]'.format(index, item, path))
+                logger.error('Invalid EPATH format! item[{}]:\'{}\' in [{}]'.format(index, item, path))
 
             items[index] = int(item, 16)
-        return " ".join("{:02X}".format(item) for item in items)
+        return ' '.join('{:02X}'.format(item) for item in items)
 
     def packpath(self, path):
         path = self.resolve_path(path)
         items = path.split()
-        return "".join((struct.pack('B', int(item, 16)) for item in items))
+        return ''.join((struct.pack('B', int(item, 16)) for item in items))
 
     def final_rollcall(self):
         requiredsections = self.ref.get_required_sections()
         for section in requiredsections:
             if self.has_section(section.keyword) == False:
-                logger.error('Missing required section! [{}] \"{}\"'.format(section.keyword, section.name))
+                logger.error('Missing required section! [{}] \'{}\''.format(section.keyword, section.name))
 
         for section in self.sections:
             requiredentries = self.ref.get_required_entries(section.name)
             for entry in requiredentries:
                 if self.has_entry(section.name, entry.keyword) == False:
-                    logger.error('Missing required entry! [{}].\"{}\"{}'
+                    logger.error('Missing required entry! [{}].\'{}\'{}'
                         .format(section.name, entry.keyword, entry.name))
 
             for entry in section.entries:
@@ -662,15 +663,14 @@ class EDS(object):
                         logger.error('Missing required field! [{}].{}.{} #{}'
                             .format(section.name, entry.name, field.name, field.placement))
 
-    def save(self, filename = None, overwrite = False):
-        if filename is None:
-            filename = self.sourcefile
+    def save(self, filename, overwrite = False):
         if os.path.isfile(filename) and overwrite == False:
-            logger.error('Failed to write to file! {} already exists. To enable file-overwrite, '
-                'To overwrite the file, set \"overwrite\" argument to True.'.format(filename))
+            raise Exception('Failed to write to file! \'{}\' already exists and overrwite is not enabled.'.format(filename))
 
-        self.getsection("file").hcomment = EDSCOMMENT_TEMPLATE
-        edscontent = ''
+        eds_content = self.heading_comment
+        if eds_content == '':
+            for line in HEADING_COMMENT_TEMPLATE.splitlines():
+                eds_content +='$ {}\n'.format(line.strip())
 
         # sections
         std_sections = [section for section in self.sections if section._id > 0x10000]
@@ -683,14 +683,14 @@ class EDS(object):
 
             if section.hcomment != '':
                 for linecomment in section.hcomment.splitlines():
-                    edscontent += "$ {}\n".format(linecomment.strip())
+                    eds_content += '$ {}\n'.format(linecomment.strip())
 
-            edscontent += "\n[{}]".format(section.name)
+            eds_content += '\n[{}]'.format(section.name)
 
             if section.fcomment != '':
                 for linecomment in section.fcomment.splitlines():
-                    edscontent += "$ {}\n".format(linecomment.strip())
-            edscontent += "\n"
+                    eds_content += '$ {}\n'.format(linecomment.strip())
+            eds_content += '\n'
 
             # entries
             entries = sorted(section.entries, key = lambda entry: entry._index)
@@ -699,29 +699,29 @@ class EDS(object):
                 tabsize = 4
                 if entry.hcomment != '':
                     for linecomment in entry.hcomment.splitlines():
-                        edscontent += "".ljust(tabsize, ' ') + "$ {}\n".format(linecomment.strip())
+                        eds_content += ''.ljust(tabsize, ' ') + '$ {}\n'.format(linecomment.strip())
                 if entry.fcomment != '':
-                    edscontent += "".ljust(tabsize, ' ') + "    $ {}\n".format(entry.fcomment)
+                    eds_content += ''.ljust(tabsize, ' ') + '    $ {}\n'.format(entry.fcomment)
 
                 # fields
                 tab = 2
 
                 singleline_str = ''
-                singleline_str += "".ljust(tab, ' ') + "{} =".format(entry.name)
+                singleline_str += ''.ljust(tab, ' ') + '{} ='.format(entry.name)
                 if entry.fieldcount == 1:
-                    singleline_str += " "
+                    singleline_str += ' '
                 else: # multiple fields
-                    singleline_str += "\n"
-                    singleline_str += "".ljust(2 * tab, ' ')
+                    singleline_str += '\n'
+                    singleline_str += ''.ljust(2 * tab, ' ')
 
                 for fieldindex, field in enumerate(entry.fields):
 
                     # header comment
                     if field.hcomment != '':
                         for linecomment in field.hcomment.splitlines():
-                            singleline_str +="$ {}\n".format(linecomment.strip()) + "".ljust(tab, ' ')
+                            singleline_str +='$ {}\n'.format(linecomment.strip()) + ''.ljust(tab, ' ')
 
-                    singleline_str += "{}".format(field.value)
+                    singleline_str += '{}'.format(field.value)
 
                     # separator
                     if (fieldindex + 1) == entry.fieldcount:
@@ -732,45 +732,45 @@ class EDS(object):
                     # footer comment
                     if field.fcomment != '':
                         singleline_str = singleline_str.ljust(20, ' ')
-                        singleline_str += " $ {}\n".format(field.fcomment.strip())
-                        edscontent += singleline_str
+                        singleline_str += ' $ {}\n'.format(field.fcomment.strip())
+                        eds_content += singleline_str
                         singleline_str = ''
                         if (fieldindex + 1) != entry.fieldcount:
-                            singleline_str += "".ljust(2 * tab, ' ')
+                            singleline_str += ''.ljust(2 * tab, ' ')
                     #elif field.cr:
-                    #    singleline_str += "\n"
-                    #    edscontent += singleline_str
+                    #    singleline_str += '\n'
+                    #    eds_content += singleline_str
                     #    singleline_str = ''
                     #    if (fieldindex + 1) != entry.fieldcount:
-                    #        singleline_str += "".ljust(2 * tab, ' ')
+                    #        singleline_str += ''.ljust(2 * tab, ' ')
                     #elif (fieldindex + 1) == entry.fieldcount:
-                    #    edscontent += singleline_str
+                    #    eds_content += singleline_str
                     #    singleline_str = ''
-                    #    singleline_str += "\n"
+                    #    singleline_str += '\n'
                     else:
-                        singleline_str += "\n"
-                        edscontent += singleline_str
+                        singleline_str += '\n'
+                        eds_content += singleline_str
                         singleline_str = ''
                         if (fieldindex + 1) != entry.fieldcount:
-                            singleline_str += "".ljust(2 * tab, ' ')
+                            singleline_str += ''.ljust(2 * tab, ' ')
         # end comment
-        if self.endcomment == '':
-            self.endcomment = ENDCOMMENT_TEMPLATE
-        for linecomment in self.endcomment.splitlines():
-            edscontent +="$ {}\n".format(linecomment.strip())
+        if self.end_comment == '':
+            self.end_comment = END_COMMENT_TEMPLATE
+        for linecomment in self.end_comment.splitlines():
+            eds_content +='$ {}\n'.format(linecomment.strip())
         hfile = open(filename, 'w')
-        hfile.write(edscontent)
+        hfile.write(eds_content)
         hfile.close()
 
     def __str__(self):
         Msg = ''
         for section in self.__sections:
-            Msg += "[%s]\n"%(section._name)
+            Msg += '[%s]\n'%(section._name)
             for entry in section.entries:
-                Msg += "     %s = "%(entry.name)
+                Msg += '     %s = '%(entry.name)
                 for entryvalue in entry.fields:
-                    Msg += "%s,"%(entryvalue.data)
-                Msg += "\n"
+                    Msg += '%s,'%(entryvalue.data)
+                Msg += '\n'
         return Msg
 
     def get_cip_section_name(self, classid, protocol=None):
@@ -788,7 +788,7 @@ class Token(object):
         self.col    = col
 
     def __str__(self):
-        return "[idx: {}, ln: {}, col: {}] {} \"{}\"".format( str(self.offset).rjust(5)
+        return '[idx: {}, ln: {}, col: {}] {} \'{}\''.format( str(self.offset).rjust(5)
                                                               , str(self.line).rjust(4)
                                                               , str(self.col).rjust(3)
                                                               , TOKEN_TYPES.Str(self.type).ljust(11)
@@ -822,15 +822,15 @@ class parser(object):
             progress_step = float(float(self.lastoffset) / 100.0)
             self.progress += 1.0
             if self.progress % progress_step < 1.0:
-                sys.stdout.write("Parsing... [%0.0f%%]                          \r" %(self.progress / progress_step) )
+                sys.stdout.write('Parsing... [%0.0f%%]                          \r' %(self.progress / progress_step) )
                 sys.stdout.flush()
-                sys.stdout.write("")
+                sys.stdout.write('')
         if self.offset == self.lastoffset:
             return None
 
         self.offset += 1
         self.col += 1
-        if self.edsstream[self.offset] == "\n":
+        if self.edsstream[self.offset] == '\n':
             self.line += 1
             self.col = 0
         return self.edsstream[self.offset]
@@ -875,9 +875,9 @@ class parser(object):
                 if (not ch.isspace() and not ch.isalpha() and not ch.isdigit()
                     and (ch not in SECTION_NAME_VALID_SYMBOLES)):
 
-                    raise Exception( __name__ + ".lexer:> Invalid section "
-                                   + "identifier. Unexpected char sequence "
-                                   + "@[idx: {}] [ln: {}] [col: {}]"
+                    raise Exception( __name__ + '.lexer:> Invalid section '
+                                   + 'identifier. Unexpected char sequence '
+                                   + '@[idx: {}] [ln: {}] [col: {}]'
                                    .format(self.offset, self.line, self.col))
 
                 # unexpected symbols at the beginning or at the end of the section id
@@ -886,23 +886,23 @@ class parser(object):
                     if ch.isspace():
                         logger.warning('Unexpected character: \' \'.section id @[idx: {}] [ln: {}] [col: {}]'.format(self.offset, self.line, self.col))
                     else:
-                        raise Exception( __name__ + ".lexer:> Invalid section identifier. Unexpected char sequence @[idx: {}] [ln: {}] [col: {}]".format(self.offset, self.line, self.col))
+                        raise Exception( __name__ + '.lexer:> Invalid section identifier. Unexpected char sequence @[idx: {}] [ln: {}] [col: {}]'.format(self.offset, self.line, self.col))
 
                 if ch == ' ' and self.lookahead().isspace(): # consecutive spaces
                     logger.warning('Unexpected character: \' \'.section id @[idx: {}] [ln: {}] [col: {}]'.format(self.offset, self.line, self.col))
 
                 if ch == SYMBOLS.EOF or ch == SYMBOLS.EOL:
-                    raise Exception( __name__ + ".lexer:> Invalid section identifier @[idx: {}] [ln: {}] [col: {}]".format(self.offset, self.line, self.col))
+                    raise Exception( __name__ + '.lexer:> Invalid section identifier @[idx: {}] [ln: {}] [col: {}]'.format(self.offset, self.line, self.col))
                 token.value += ch
 
-        if ch == '\"':
+        if ch == SYMBOLS.QUOTATION:
             token = Token(type = TOKEN_TYPES.STRING, value = '', offset = self.offset, line = self.line, col = self.col)
             while True:
                 ch = self.getchar()
-                if ch == '\"' and self.lookbehind() != '\\':
+                if ch == SYMBOLS.QUOTATION and self.lookbehind() != SYMBOLS.BACKSLASH:
                     return token
                 if ch == SYMBOLS.EOF or ch == SYMBOLS.EOL:
-                    raise Exception( __name__ + ".lexer:> Invalid string value @[idx: {}] [ln: {}] [col: {}]".format(self.offset, self.line, self.col))
+                    raise Exception( __name__ + '.lexer:> Invalid string value @[idx: {}] [ln: {}] [col: {}]'.format(self.offset, self.line, self.col))
                 token.value += ch
 
         if ch in OPERATORS:
@@ -973,13 +973,13 @@ class parser(object):
                 self.addentry()
                 continue
 
-            raise Exception(__name__ + ":> ERROR! Invalid token! {}".format(self.token))
+            raise Exception(__name__ + ':> ERROR! Invalid token! {}'.format(self.token))
 
     def addsection(self):
         self.sectioninuse = self.eds.addsection(self.token.value)
 
         if self.sectioninuse is None:
-            raise Exception(__name__ + ":> ERROR! unable to create section: {}".format(self.token.value))
+            raise Exception(__name__ + ':> ERROR! unable to create section: {}'.format(self.token.value))
         self.actualelement = self.sectioninuse
         self.actualelement.hcomment = self.hcomment
         self.hcomment = ''
@@ -988,7 +988,7 @@ class parser(object):
         self.entryinuse = self.eds.addentry(self.sectioninuse.name, self.token.value)
 
         if self.entryinuse is None:
-            raise Exception(__name__ + ":> ERROR! unable to create entry: {}".format(self.token.value))
+            raise Exception(__name__ + ':> ERROR! unable to create entry: {}'.format(self.token.value))
         self.actualelement = self.entryinuse
         self.actualelement.hcomment = self.hcomment
         self.hcomment = ''
@@ -1013,7 +1013,7 @@ class parser(object):
             self.nexttoken()
 
             if self.token is None:
-                raise Exception(__name__ + ":> ERROR! Unexpected EOF.")
+                raise Exception(__name__ + ':> ERROR! Unexpected EOF.')
 
             if self.match(TOKEN_TYPES.COMMENT):
                 self.addcomment()
@@ -1032,14 +1032,14 @@ class parser(object):
                 elif fieldtype == TOKEN_TYPES.STRING and self.match(TOKEN_TYPES.STRING): # There are two strings literals in one field which should be Concatenated
                     fieldvalue += self.token.value
                 else:
-                    raise Exception(__name__ + ".lexer:> ERROR! Concatenating these literals is not allowed. ({})<{}> + ({})<{}> @({})".format(fieldvalue, TOKEN_TYPES.Str(fieldtype), self.token.value, TOKEN_TYPES.Str(self.token.type), self.token))
+                    raise Exception(__name__ + '.lexer:> ERROR! Concatenating these literals is not allowed. ({})<{}> + ({})<{}> @({})'.format(fieldvalue, TOKEN_TYPES.Str(fieldtype), self.token.value, TOKEN_TYPES.Str(self.token.type), self.token))
                 continue
 
             if self.match(TOKEN_TYPES.SEPARATOR, SYMBOLS.COMMA) or self.match(TOKEN_TYPES.SEPARATOR, SYMBOLS.SEMICOLON):
                 field = self.eds.addfield(self.sectioninuse.name, self.entryinuse.name, fieldvalue, fieldtype)
 
                 if field is None:
-                    raise Exception(__name__ + ".lexer:> ERROR! unable to create field: {} of type: {}".format(self.token.value, self.token.type))
+                    raise Exception(__name__ + '.lexer:> ERROR! unable to create field: {} of type: {}'.format(self.token.value, self.token.type))
 
                 self.actualelement = field
                 self.actualelement.hcomment = self.hcomment
@@ -1049,7 +1049,7 @@ class parser(object):
                 fieldtype  = None
                 break
 
-            raise Exception(__name__ + ".lexer:> ERROR! Unexpected token type. {}".format(self.token))
+            raise Exception(__name__ + '.lexer:> ERROR! Unexpected token type. {}'.format(self.token))
 
     def addcomment(self):
         # the footer comment only appears on the same line after the eds data
@@ -1058,10 +1058,10 @@ class parser(object):
             if self.prevtoken.line == self.token.line:
                 self.actualelement.fcomment = self.token.value.strip()
                 return
-            self.hcomment += self.token.value.strip() + "\n"
+            self.hcomment += self.token.value.strip() + '\n'
 
     def on_EOF(self):
-        self.eds.endcomment = self.hcomment
+        self.eds.end_comment = self.hcomment
         self.hcomment = ''
 
     def expect(self, exptokentype, exptokenval = None):
@@ -1071,7 +1071,7 @@ class parser(object):
         elif self.token.type == exptokentype :
             return True
 
-        raise Exception(__name__ + ".lexer:> ERROR! Unexpected token! Expected: (\"{}\": {}) but received: {}".format(TOKEN_TYPES.Str(exptokentype), exptokenval, self.token))
+        raise Exception(__name__ + '.lexer:> ERROR! Unexpected token! Expected: (\'{}\': {}) but received: {}'.format(TOKEN_TYPES.Str(exptokentype), exptokenval, self.token))
 
     def match(self, exptokentype, exptokenval = None):
         if self.token.type == exptokentype and exptokenval is not None:
@@ -1084,21 +1084,21 @@ class parser(object):
 # ------------------------------------------------------------------------------
 class eds_pie(object):
     @staticmethod
-    def parse(edscontent = "", showprogress = True):
+    def parse(eds_content = '', showprogress = True):
 
-        eds = parser(edscontent, showprogress).parse()
+        eds = parser(eds_content, showprogress).parse()
 
         # setting the protocol
-        sect = eds.getsection("Device Classification")
+        sect = eds.getsection('Device Classification')
         if sect:
             for entry in sect.entries:
                 if entry.getfield().value in entry.getfield().datatype[1]:
                     eds._protocol = entry.getfield().value
                     break
-        if eds._protocol == '': eds._protocol = "Generic"
+        if eds._protocol == '': eds._protocol = 'Generic'
 
         #self.final_rollcall()
-        if showprogress: print ""
+        if showprogress: print ''
         return eds
 
 
