@@ -459,7 +459,7 @@ class EDS(object):
             ref_section = self.ref.get_section(sectionname)
             if ref_section:
                 ref_section_key = ref_section.key
-                ref_id = ref_section.id or 0
+                ref_id = ref_section.id
             if ref_section_key != sectionname:
                 logger.warning('section name: [{}] should be: [{}]'.format(sectionname, ref_keyword))
 
@@ -667,87 +667,73 @@ class EDS(object):
         if os.path.isfile(filename) and overwrite == False:
             raise Exception('Failed to write to file! \"{}\" already exists and overrwite is not enabled.'.format(filename))
 
-        eds_content = self.heading_comment
-        if eds_content == '':
-            for line in HEADING_COMMENT_TEMPLATE.splitlines():
-                eds_content +='$ {}\n'.format(line.strip())
+        if self.heading_comment == '':
+            self.heading_comment = HEADING_COMMENT_TEMPLATE
+        eds_content = ''.join('$ {}\n'.format(line.strip()) for line in self.heading_comment.splitlines())
 
+        tabsize = 4
         # sections
-        std_sections = [section for section in self.sections if section._id > 0x10000]
-        std_sections = sorted(std_sections, key = lambda section: section._id)
-        cip_sections = [section for section in self.sections if section._id < 0x10000]
-        cip_sections = sorted(cip_sections, key = lambda section: section._id)
-        sections = std_sections + cip_sections
+        # Creating a list of standard sections.
+        std_sections = [self.getsection('File')]
+        std_sections.append(self.getsection('Device'))
+        std_sections.append(self.getsection('Device Classification'))
+        for section in self.sections:
+            if section._id is None and section not in std_sections:
+                std_sections.append(section)
+        # Creating a list of protocol specific sections oredred by their ids.
+        protocol_sections = [section for section in self.sections if section._id is not None]
+        protocol_sections = sorted(protocol_sections, key = lambda section: section._id)
+        sections = std_sections + protocol_sections
 
         for section in sections:
-
             if section.hcomment != '':
-                for linecomment in section.hcomment.splitlines():
-                    eds_content += '$ {}\n'.format(linecomment.strip())
-
+                eds_content += ''.join('$ {}\n'.format(line.strip()) for line in section.hcomment.splitlines())
             eds_content += '\n[{}]'.format(section.name)
 
             if section.fcomment != '':
-                for linecomment in section.fcomment.splitlines():
-                    eds_content += '$ {}\n'.format(linecomment.strip())
+                eds_content += ''.join('$ {}\n'.format(line.strip()) for line in section.fcomment.splitlines())
+
             eds_content += '\n'
 
-            # entries
+            # Entries
             entries = sorted(section.entries, key = lambda entry: entry._index)
             for entry in entries:
 
-                tabsize = 4
                 if entry.hcomment != '':
-                    for linecomment in entry.hcomment.splitlines():
-                        eds_content += ''.ljust(tabsize, ' ') + '$ {}\n'.format(linecomment.strip())
-                if entry.fcomment != '':
-                    eds_content += ''.ljust(tabsize, ' ') + '    $ {}\n'.format(entry.fcomment)
+                    eds_content += ''.join(''.ljust(tabsize, ' ') + '$ {}\n'.format(line.strip()) for line in entry.hcomment.splitlines())
+                eds_content += ''.ljust(tabsize, ' ') + '{} ='.format(entry.name)
 
                 # fields
-                tab = 4
-
-                singleline_str = ''
-                singleline_str += ''.ljust(tab, ' ') + '{} ='.format(entry.name)
                 if entry.fieldcount == 1:
-                    singleline_str += ' '
-                else: # multiple fields
-                    singleline_str += '\n'
-                    singleline_str += ''.ljust(2 * tab, ' ')
+                    eds_content += '{};'.format(entry.fields[0]._data)
+                    if entry.fields[0].fcomment != '':
+                        eds_content += ''.join(''.ljust(tabsize, ' ') +
+                            '$ {}\n'.format(line.strip()) for line in entry.fields[0].fcomment.splitlines())
+                    eds_content += '\n'
+                else: # entry has multiple fields
+                    eds_content += '\n'
 
-                for fieldindex, field in enumerate(entry.fields):
+                    for fieldindex, field in enumerate(entry.fields):
+                        singleline_field_str = ''.ljust(2 * tabsize, ' ') + '{}'.format(field._data)
 
-                    # header comment
-                    if field.hcomment != '':
-                        for linecomment in field.hcomment.splitlines():
-                            singleline_str +='$ {}\n'.format(linecomment.strip()) + ''.ljust(tab, ' ')
+                        # separator
+                        if (fieldindex + 1) == entry.fieldcount:
+                            singleline_field_str += ';'
+                        else:
+                            singleline_field_str += ','
 
-                    singleline_str += '{}'.format(field._data)
+                        # footer comment
+                        if field.fcomment != '':
+                            singleline_field_str = singleline_field_str.ljust(30, ' ')
+                            singleline_field_str += ''.join('$ {}'.format(line.strip()) for line in field.fcomment.splitlines())
+                        eds_content += singleline_field_str + '\n'
 
-                    # separator
-                    if (fieldindex + 1) == entry.fieldcount:
-                        singleline_str += ';'
-                    else:
-                        singleline_str += ','
-
-                    # footer comment
-                    if field.fcomment != '':
-                        singleline_str = singleline_str.ljust(20, ' ')
-                        singleline_str += ' $ {}\n'.format(field.fcomment.strip())
-                        eds_content += singleline_str
-                        singleline_str = ''
-                        if (fieldindex + 1) != entry.fieldcount:
-                            singleline_str += ''.ljust(2 * tab, ' ')
-                    else:
-                        singleline_str += '\n'
-                        eds_content += singleline_str
-                        singleline_str = ''
-                        if (fieldindex + 1) != entry.fieldcount:
-                            singleline_str += ''.ljust(2 * tab, ' ')
         # end comment
+        eds_content += '\n'
         if self.end_comment == '':
             self.end_comment = END_COMMENT_TEMPLATE
-        for linecomment in self.end_comment.splitlines():
-            eds_content +='$ {}\n'.format(linecomment.strip())
+        eds_content += ''.join('$ {}\n'.format(line.strip()) for line in self.end_comment.splitlines())
+
         hfile = open(filename, 'w')
         hfile.write(eds_content)
         hfile.close()
@@ -770,7 +756,7 @@ class EDS(object):
 # ---------------------------------------------------------------------------
 class Token(object):
 
-    def __init__(self, type = None, value = None, offset = None, line = None, col = None):
+    def __init__(self, type=None, value=None, offset=None, line=None, col=None):
         self.type   = type
         self.value  = value
         self.offset = offset
@@ -953,7 +939,7 @@ class parser(object):
                 return self.eds
 
             if self.match(TOKEN_TYPES.COMMENT):
-                self.addcomment()
+                self.add_comment()
                 continue
 
             if self.match(TOKEN_TYPES.SECTION):
@@ -1007,7 +993,7 @@ class parser(object):
                 raise Exception(__name__ + ':> ERROR! Unexpected EOF.')
 
             if self.match(TOKEN_TYPES.COMMENT):
-                self.addcomment()
+                self.add_comment()
                 continue
 
             if (self.match(TOKEN_TYPES.IDENTIFIER)  or
@@ -1042,14 +1028,17 @@ class parser(object):
 
             raise Exception(__name__ + '.lexer:> ERROR! Unexpected token type. {}'.format(self.token))
 
-    def addcomment(self):
+    def add_comment(self):
         # the footer comment only appears on the same line after the eds data
         # otherwise the comment is a header comment
+        if self.actualelement is None:
+            self.eds.heading_comment += self.token.value.strip() + '\n'
+            return
         if self.prevtoken:
-            if self.prevtoken.line == self.token.line:
+             if self.prevtoken.line == self.token.line:
                 self.actualelement.fcomment = self.token.value.strip()
                 return
-            self.hcomment += self.token.value.strip() + '\n'
+        self.hcomment += self.token.value.strip() + '\n'
 
     def on_EOF(self):
         self.eds.end_comment = self.hcomment
