@@ -109,7 +109,7 @@ from string      import digits
 from eds_libs import *
 from cip_types import isnumber, ishex
 
-logging.basicConfig(level=logging.DEBUG,
+logging.basicConfig(level=logging.WARNING,
     format='%(asctime)s - %(name)s.%(levelname)-8s %(message)s')
 logger = logging.getLogger(__name__)
 #-------------------------------------------------------------------------------
@@ -323,7 +323,7 @@ class EDS_Field(object):
         error_msg = ('Data_type mismatch! [{}].{}.{} = ({}), should be a type of: {}'
             .format(self._entry._section.name, self._entry.name, self.name, value, types_str))
 
-        raise Exception(__name__ + ':> calling: \'{}()\' {}'.format(str(inspect.stack()[0][3]), error_msg))
+        raise Exception(__name__ + ':> calling: \"{}()\" {}'.format(str(inspect.stack()[0][3]), error_msg))
 
     @property
     def datatype(self):
@@ -331,8 +331,8 @@ class EDS_Field(object):
 
     def __str__(self):
         if self._data is None:
-            return '\'\''
-        return 'FIELD(index: {}, name: \'{}\', value: ({}), type: <{}>{})'.format(self._index, self._name, str(self._data), type(self._data).__name__, self._data.range )
+            return '\"\"'
+        return 'FIELD(index: {}, name: \"{}\", value: ({}), type: <{}>{})'.format(self._index, self._name, str(self._data), type(self._data).__name__, self._data.range)
 
 # ------------------------------------------------------------------------------
 class EDS(object):
@@ -481,12 +481,12 @@ class EDS(object):
         section = self._sections[sectionname.replace(' ', '').lower()]
 
         if entryname == '':
-            logger.error('Invalid Entry name! [{}]\'{}\' contains invalid characters.'
+            logger.error('Invalid Entry name! [{}]\"{}\" contains invalid characters.'
                 .format(sectionname, entryname))
             return None
 
         if entryname.replace(' ', '').lower() in section._entries.keys():
-            logger.error('Duplicated Entry! to serialize \'{}\', set the serialize switch to True'.format(entry))
+            logger.error('Duplicated Entry! to serialize \"{}\", set the serialize switch to True'.format(entry))
 
         if not self.ref.has_entry(sectionname, entryname):
             logger.warning('Unknown Entry [{}].{}'.format(sectionname, entryname))
@@ -498,8 +498,8 @@ class EDS(object):
             ref_keyword = ref_entry.key.rstrip('N').rstrip(digits)
 
         if ref_keyword != entryname.rstrip(digits):
-            logger.warning('Not exact match! in section [{}], entry name: \'{}\' should be:'
-                ' \'{}[N]\''.format(sectionname, entryname, ref_keyword))
+            logger.warning('Not exact match! in section [{}], entry name: \"{}\" should be:'
+                ' \"{}[N]\"'.format(sectionname, entryname, ref_keyword))
 
             entry_nid = entryname[len(ref_keyword):]
             entryname = ref_keyword + entry_nid
@@ -620,7 +620,7 @@ class EDS(object):
         items = path.split()
         for index, item in enumerate(items):
             if len(item) < 2:
-                logger.error('Invalid EPATH format! item[{}]:\'{}\' in [{}]'.format(index, item, path))
+                logger.error('Invalid EPATH format! item[{}]:\"{}\" in [{}]'.format(index, item, path))
 
             if not isnumber(item):
                 if item[0] == '[' and item[-1] == ']':
@@ -629,11 +629,11 @@ class EDS(object):
                     if field:
                         items[index] = int(field.value)
                         continue
-                    logger.error('Entry not found! item[{}]:\'{}\' in [{}]'.format(index, item, path))
-                # ? Error(ERRORS.ERR_INVALID_EPATH_FORMAT, 'item[{}]:\'{}\' in [{}]: '
+                    logger.error('Entry not found! item[{}]:\"{}\" in [{}]'.format(index, item, path))
+                # ? Error(ERRORS.ERR_INVALID_EPATH_FORMAT, 'item[{}]:\"{}\" in [{}]: '
                 # ?      .format(index, item, path))
             elif not ishex(item):
-                logger.error('Invalid EPATH format! item[{}]:\'{}\' in [{}]'.format(index, item, path))
+                logger.error('Invalid EPATH format! item[{}]:\"{}\" in [{}]'.format(index, item, path))
 
             items[index] = int(item, 16)
         return ' '.join('{:02X}'.format(item) for item in items)
@@ -647,13 +647,13 @@ class EDS(object):
         requiredsections = self.ref.get_required_sections()
         for section in requiredsections:
             if self.has_section(section.keyword) == False:
-                logger.error('Missing required section! [{}] \'{}\''.format(section.keyword, section.name))
+                logger.error('Missing required section! [{}] \"{}\"'.format(section.keyword, section.name))
 
         for section in self.sections:
             requiredentries = self.ref.get_required_entries(section.name)
             for entry in requiredentries:
                 if self.has_entry(section.name, entry.keyword) == False:
-                    logger.error('Missing required entry! [{}].\'{}\'{}'
+                    logger.error('Missing required entry! [{}].\"{}\"{}'
                         .format(section.name, entry.keyword, entry.name))
 
             for entry in section.entries:
@@ -665,7 +665,7 @@ class EDS(object):
 
     def save(self, filename, overwrite = False):
         if os.path.isfile(filename) and overwrite == False:
-            raise Exception('Failed to write to file! \'{}\' already exists and overrwite is not enabled.'.format(filename))
+            raise Exception('Failed to write to file! \"{}\" already exists and overrwite is not enabled.'.format(filename))
 
         eds_content = self.heading_comment
         if eds_content == '':
@@ -721,7 +721,7 @@ class EDS(object):
                         for linecomment in field.hcomment.splitlines():
                             singleline_str +='$ {}\n'.format(linecomment.strip()) + ''.ljust(tab, ' ')
 
-                    singleline_str += '{}'.format(field.value)
+                    singleline_str += '{}'.format(field._data)
 
                     # separator
                     if (fieldindex + 1) == entry.fieldcount:
@@ -788,11 +788,12 @@ class Token(object):
         self.col    = col
 
     def __str__(self):
-        return '[idx: {}, ln: {}, col: {}] {} \'{}\''.format( str(self.offset).rjust(5)
-                                                              , str(self.line).rjust(4)
-                                                              , str(self.col).rjust(3)
-                                                              , TOKEN_TYPES.Str(self.type).ljust(11)
-                                                              , self.value)
+        return '[Ln: {}, Col: {}, Pos: {}] {} \"{}\"'.format(
+            str(self.line).rjust(4),
+            str(self.col).rjust(3),
+            str(self.offset).rjust(5),
+            TOKEN_TYPES.Str(self.type).ljust(11),
+            self.value)
 #---------------------------------------------------------------------------
 class parser(object):
     def __init__(self, sourcetext, showprogress = False):
@@ -884,12 +885,12 @@ class parser(object):
                 if ((token.value == '' or self.lookahead() == ']') and
                     (not ch.isalpha() and not ch.isdigit())):
                     if ch.isspace():
-                        logger.warning('Unexpected character: \' \'.section id @[idx: {}] [ln: {}] [col: {}]'.format(self.offset, self.line, self.col))
+                        logger.warning('Unexpected character: \" \".section id @[idx: {}] [ln: {}] [col: {}]'.format(self.offset, self.line, self.col))
                     else:
                         raise Exception( __name__ + '.lexer:> Invalid section identifier. Unexpected char sequence @[idx: {}] [ln: {}] [col: {}]'.format(self.offset, self.line, self.col))
 
                 if ch == ' ' and self.lookahead().isspace(): # consecutive spaces
-                    logger.warning('Unexpected character: \' \'.section id @[idx: {}] [ln: {}] [col: {}]'.format(self.offset, self.line, self.col))
+                    logger.warning('Unexpected character: \" \".section id @[idx: {}] [ln: {}] [col: {}]'.format(self.offset, self.line, self.col))
 
                 if ch == SYMBOLS.EOF or ch == SYMBOLS.EOL:
                     raise Exception( __name__ + '.lexer:> Invalid section identifier @[idx: {}] [ln: {}] [col: {}]'.format(self.offset, self.line, self.col))
@@ -951,7 +952,7 @@ class parser(object):
         self.prevtoken = self.token
         self.token = self.gettoken()
 
-        logger.debug('token: ' + str(self.token))
+        logger.debug('token: {}'.format(self.token))
 
     def parse(self):
         while True:
@@ -1071,7 +1072,7 @@ class parser(object):
         elif self.token.type == exptokentype :
             return True
 
-        raise Exception(__name__ + '.lexer:> ERROR! Unexpected token! Expected: (\'{}\': {}) but received: {}'.format(TOKEN_TYPES.Str(exptokentype), exptokenval, self.token))
+        raise Exception(__name__ + '.lexer:> ERROR! Unexpected token! Expected: (\"{}\": {}) but received: {}'.format(TOKEN_TYPES.Str(exptokentype), exptokenval, self.token))
 
     def match(self, exptokentype, exptokenval = None):
         if self.token.type == exptokentype and exptokenval is not None:
