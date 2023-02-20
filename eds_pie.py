@@ -285,7 +285,7 @@ class EDS_Entry(object):
         return "ENTRY({})".format(self._name)
 # --------------------------------------------------------------------------
 class EDS_Field(object):
-    def __init__(self, entry, name, data, index, cr):
+    def __init__(self, entry, name, data, index):
         self._index     = index
         self._entry     = entry
         self._name      = name
@@ -293,7 +293,7 @@ class EDS_Field(object):
         self._datatypes = []
         self.hcomment  = ''
         self.fcomment  = ''
-        self.cr        = cr
+
     @property
     def index(self):
         return self._index
@@ -579,7 +579,7 @@ class EDS(object):
             fielddata = EDS_EMPTY(fieldvalue)
 
 
-        field = EDS_Field(entry, field_name, fielddata, entry.fieldcount, True)
+        field = EDS_Field(entry, field_name, fielddata, entry.fieldcount)
 
         field._datatypes = datatypes
         entry._fields.append(field)
@@ -643,20 +643,20 @@ class EDS(object):
         return "".join((struct.pack('B', int(item, 16)) for item in items))
 
     def final_rollcall(self):
-        requiredsections = self.ref.getrequired_sections()
+        requiredsections = self.ref.get_required_sections()
         for section in requiredsections:
             if self.has_section(section.keyword) == False:
                 logger.error('Missing required section! [{}] \"{}\"'.format(section.keyword, section.name))
 
         for section in self.sections:
-            requiredentries = self.ref.getrequired_entries(section.name)
+            requiredentries = self.ref.get_required_entries(section.name)
             for entry in requiredentries:
                 if self.has_entry(section.name, entry.keyword) == False:
                     logger.error('Missing required entry! [{}].\"{}\"{}'
                         .format(section.name, entry.keyword, entry.name))
 
             for entry in section.entries:
-                requiredfields = self.ref.getrequired_fields(section.name, entry.name)
+                requiredfields = self.ref.get_required_fields(section.name, entry.name)
                 for field in requiredfields:
                     if self.hasfield(section.name, entry.name, field.placement) == False:
                         logger.error('Missing required field! [{}].{}.{} #{}'
@@ -737,17 +737,22 @@ class EDS(object):
                         singleline_str = ''
                         if (fieldindex + 1) != entry.fieldcount:
                             singleline_str += "".ljust(2 * tab, ' ')
-                    elif field.cr:
+                    #elif field.cr:
+                    #    singleline_str += "\n"
+                    #    edscontent += singleline_str
+                    #    singleline_str = ''
+                    #    if (fieldindex + 1) != entry.fieldcount:
+                    #        singleline_str += "".ljust(2 * tab, ' ')
+                    #elif (fieldindex + 1) == entry.fieldcount:
+                    #    edscontent += singleline_str
+                    #    singleline_str = ''
+                    #    singleline_str += "\n"
+                    else:
                         singleline_str += "\n"
                         edscontent += singleline_str
                         singleline_str = ''
                         if (fieldindex + 1) != entry.fieldcount:
                             singleline_str += "".ljust(2 * tab, ' ')
-                    elif (fieldindex + 1) == entry.fieldcount:
-                        edscontent += singleline_str
-                        singleline_str = ''
-                        singleline_str += "\n"
-
         # end comment
         if self.endcomment == '':
             self.endcomment = ENDCOMMENT_TEMPLATE
