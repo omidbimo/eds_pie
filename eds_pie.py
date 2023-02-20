@@ -109,7 +109,7 @@ from string      import digits
 from eds_libs import *
 from cip_types import isnumber, ishex
 
-logging.basicConfig(level=logging.DEBUG,
+logging.basicConfig(level=logging.WARNING,
     format='%(asctime)s - %(name)s.%(levelname)-8s %(message)s')
 logger = logging.getLogger(__name__)
 #-------------------------------------------------------------------------------
@@ -183,10 +183,14 @@ class SYMBOLS(EDS_PIE_ENUMS):
     SPACE          = ' '
     EOL            = '\n'
     EOF            = None
+    OPERATORS      = [ASSIGNMENT]
+    SEPARATORS     = [COMMA, SEMICOLON]
 
-OPERATORS  = [ SYMBOLS.ASSIGNMENT ]
-SEPARATORS = [ SYMBOLS.COMMA, SYMBOLS.SEMICOLON ]
-
+class PSTATE(EDS_PIE_ENUMS):
+    EXPECT_SECTION = 0
+    EXPECT_ENTRY   = 1
+    EXPECT_SECTION_OR_ENTRY = 2
+    EXPECT_FIELD   = 3
 
 class EDS_Section(object):
     _instancecount = -1
@@ -774,26 +778,24 @@ class Token(object):
 class parser(object):
     def __init__(self, eds_content, showprogress = False):
         self.src_text = eds_content
-        print len(eds_content)
-        l = 0
-        for c in eds_content:
-            l += 1
-        print l
         self.src_len  = len(eds_content)
         self.offset   = -1
         self.line     = 1
         self.col      = 0
 
-        self.eds       = EDS()
+        self.eds = EDS()
+
+        # these two are only to keep track of element comments. A comment on the
+        # same line of a field is the field's footer comment. Otherwise it's the
+        # entry's header comment.
         self.token     = None
         self.prevtoken = None
+        self.comment   = ''
 
-        self.hcomment = ''
-        self.fcomment = ''
-
-        self.sectioninuse  = None
-        self.entryinuse    = None
-        self.actualelement = None
+        self.active_section = None
+        self.active_entry = None
+        self.last_created_element = None
+        self.state = PSTATE.EXPECT_SECTION
 
         self.showprogress = showprogress
         self.progress = 0.0
@@ -863,14 +865,14 @@ class parser(object):
                 if ch == SYMBOLS.POINT or ch == SYMBOLS.MINUS or ch == SYMBOLS.PLUS  or ch.isdigit():
                     token = Token(type=TOKEN_TYPES.NUMBER, value=ch,
                         offset=self.offset, line=self.line, col=self.col)
-                    if self.lookahead() in OPERATORS or self.lookahead() in SEPARATORS:
+                    if self.lookahead() in SYMBOLS.OPERATORS or self.lookahead() in SYMBOLS.SEPARATORS:
                         return token
                     continue
 
                 if ch.isalpha():
                     token = Token(type=TOKEN_TYPES.IDENTIFIER, value=ch,
                         offset=self.offset, line=self.line, col=self.col)
-                    if self.lookahead() in OPERATORS or self.lookahead() in SEPARATORS:
+                    if self.lookahead() in SYMBOLS.OPERATORS or self.lookahead() in SYMBOLS.SEPARATORS:
                         return token
                     continue
 
@@ -879,11 +881,11 @@ class parser(object):
                         offset=self.offset, line=self.line, col=self.col)
                     continue
 
-                if ch in OPERATORS:
+                if ch in SYMBOLS.OPERATORS:
                     return Token(type=TOKEN_TYPES.OPERATOR, value=ch,
                         offset=self.offset, line=self.line, col=self.col)
 
-                if ch in SEPARATORS:
+                if ch in SYMBOLS.SEPARATORS:
                     return Token(type=TOKEN_TYPES.SEPARATOR, value=ch,
                         offset=self.offset, line=self.line, col=self.col)
 
@@ -927,13 +929,13 @@ class parser(object):
             if token.type is TOKEN_TYPES.NUMBER:
                 if ch.isspace():
                     return token
-
-                if   ch is SYMBOLS.COLON: token.type     = TOKEN_TYPES.TIME
-                elif ch is SYMBOLS.MINUS: token.type     = TOKEN_TYPES.DATE
+                # Switching the token type to other types
+                if   ch is SYMBOLS.COLON:     token.type = TOKEN_TYPES.TIME
+                elif ch is SYMBOLS.MINUS:     token.type = TOKEN_TYPES.DATE
                 elif ch is SYMBOLS.UNDERLINE: token.type = TOKEN_TYPES.IDENTIFIER
 
                 token.value += ch
-                if self.lookahead() in OPERATORS or self.lookahead() in SEPARATORS:
+                if self.lookahead() in SYMBOLS.OPERATORS or self.lookahead() in SYMBOLS.SEPARATORS:
                     return token
                 continue
 
@@ -942,7 +944,7 @@ class parser(object):
                     return token
 
                 token.value += ch
-                if self.lookahead() in OPERATORS or self.lookahead() in SEPARATORS:
+                if self.lookahead() in SYMBOLS.OPERATORS or self.lookahead() in SYMBOLS.SEPARATORS:
                     return token
                 continue
 
@@ -975,7 +977,7 @@ class parser(object):
                         + ' Unexpected char sequence @[idx: {}] [ln: {}] [col: {}]'.format(self.offset, self.line, self.col))
                 token.value += ch
 
-                if self.lookahead() in OPERATORS or self.lookahead() in SEPARATORS:
+                if self.lookahead() in SYMBOLS.OPERATORS or self.lookahead() in SYMBOLS.SEPARATORS:
                     return token
                 continue
 
@@ -988,144 +990,171 @@ class parser(object):
                         + ' Unexpected char sequence @[idx: {}] [ln: {}] [col: {}]'.format(self.offset, self.line, self.col))
                 token.value += ch
 
-                if self.lookahead() in OPERATORS or self.lookahead() in SEPARATORS:
+                if self.lookahead() in SYMBOLS.OPERATORS or self.lookahead() in SYMBOLS.SEPARATORS:
                     return token
                 continue
 
-    def nexttoken(self):
+    def next_token(self):
+        token = self.get_token()
         self.prevtoken = self.token
-        self.token = self.get_token()
-
-        logger.debug('token: {}'.format(self.token))
+        self.token = token
+        logger.debug('token: {}'.format(token or 'EOF'))
+        return token
 
     def parse(self):
         while True:
-            self.nexttoken()
+            token = self.next_token()
 
-            if self.token is None:
+            if token is SYMBOLS.EOF:
                 self.on_EOF()
                 return self.eds
 
-            if self.match(TOKEN_TYPES.COMMENT):
-                self.add_comment()
+            if self.match(token, TOKEN_TYPES.COMMENT):
+                self.add_comment(token)
                 continue
 
-            if self.match(TOKEN_TYPES.SECTION):
-                self.addsection()
-                continue
-
-            if self.match(TOKEN_TYPES.IDENTIFIER):
-                self.addentry()
-                continue
-
-            raise Exception(__name__ + ':> ERROR! Invalid token! {}'.format(self.token))
-
-    def addsection(self):
-        self.sectioninuse = self.eds.addsection(self.token.value)
-
-        if self.sectioninuse is None:
-            raise Exception(__name__ + ':> ERROR! unable to create section: {}'.format(self.token.value))
-        self.actualelement = self.sectioninuse
-        self.actualelement.hcomment = self.hcomment
-        self.hcomment = ''
-
-    def addentry(self):
-        self.entryinuse = self.eds.addentry(self.sectioninuse.name, self.token.value)
-
-        if self.entryinuse is None:
-            raise Exception(__name__ + ':> ERROR! unable to create entry: {}'.format(self.token.value))
-        self.actualelement = self.entryinuse
-        self.actualelement.hcomment = self.hcomment
-        self.hcomment = ''
-
-        self.nexttoken()
-        self.expect(TOKEN_TYPES.OPERATOR, SYMBOLS.ASSIGNMENT)
-
-        while True:
-            self.addfield()
-            if self.match(TOKEN_TYPES.SEPARATOR, SYMBOLS.COMMA):
-                continue
-            if self.match(TOKEN_TYPES.SEPARATOR, SYMBOLS.SEMICOLON):
-                break
-
-    def addfield(self):
-        expectingfieldvalue = True
-        fieldvalue = ''
-        fieldtype  = None
-
-        # Fetch tokens in a loop, concatenate the values if possible(to support multi-line strings) and finally create a field if a separator is found
-        while(True):
-            self.nexttoken()
-
-            if self.token is None:
-                raise Exception(__name__ + ':> ERROR! Unexpected EOF.')
-
-            if self.match(TOKEN_TYPES.COMMENT):
-                self.add_comment()
-                continue
-
-            if (self.match(TOKEN_TYPES.IDENTIFIER)  or
-                self.match(TOKEN_TYPES.STRING)      or
-                self.match(TOKEN_TYPES.NUMBER)      or
-                self.match(TOKEN_TYPES.DATE)        or
-                self.match(TOKEN_TYPES.TIME)        or
-                self.match(TOKEN_TYPES.DATASET)):
-
-                if fieldvalue == '' and fieldtype is None:
-                    fieldvalue += self.token.value
-                    fieldtype = self.token.type
-                elif fieldtype == TOKEN_TYPES.STRING and self.match(TOKEN_TYPES.STRING): # There are two strings literals in one field which should be Concatenated
-                    fieldvalue += self.token.value
+            if self.state is PSTATE.EXPECT_SECTION:
+                if self.match(token, TOKEN_TYPES.SECTION):
+                    self.add_section(token)
+                    continue
                 else:
-                    raise Exception(__name__ + '.lexer:> ERROR! Concatenating these literals is not allowed. ({})<{}> + ({})<{}> @({})'.format(fieldvalue, TOKEN_TYPES.Str(fieldtype), self.token.value, TOKEN_TYPES.Str(self.token.type), self.token))
+                    raise Exception(__name__ + ':> Invalid token! Expected a Section token but got: {}'.format(token))
+
+            if self.state is PSTATE.EXPECT_ENTRY:
+                if self.match(token, TOKEN_TYPES.IDENTIFIER):
+                    self.add_entry(token)
+                    continue
+                else:
+                    raise Exception(__name__ + ':> Invalid token! Expected an Entry token but got: {}'.format(token))
+
+            if self.state is PSTATE.EXPECT_FIELD:
+                self.add_field(token)
                 continue
 
-            if self.match(TOKEN_TYPES.SEPARATOR, SYMBOLS.COMMA) or self.match(TOKEN_TYPES.SEPARATOR, SYMBOLS.SEMICOLON):
-                field = self.eds.addfield(self.sectioninuse.name, self.entryinuse.name, fieldvalue, fieldtype)
+            if self.state is PSTATE.EXPECT_SECTION_OR_ENTRY:
+                if self.match(token, TOKEN_TYPES.SECTION):
+                    self.add_section(token)
+                elif self.match(token, TOKEN_TYPES.IDENTIFIER):
+                    self.add_entry(token)
+                else:
+                    raise Exception(__name__ + ':> Invalid token! Expected a Section or an Entry token but got: {}'.format(token))
+                continue
+
+            raise Exception(__name__ + ':> Invalid Parser state! {}'.format(self.state))
+
+    def add_section(self, token):
+        self.active_section = self.eds.addsection(token.value)
+
+        if self.active_section is None:
+            raise Exception(__name__ + ':> ERROR! unable to create section: {}'.format(token.value))
+
+        # If there are cached comments then they are header comments of the new element
+        self.active_section.hcomment = self.comment
+        self.last_created_element = self.active_section
+        self.comment = ''
+
+        # This is a new section. Expecting at least one entry.
+        self.state = PSTATE.EXPECT_ENTRY
+
+    def add_entry(self, token):
+        self.active_entry = self.eds.addentry(self.active_section.name, token.value)
+
+        if self.active_entry is None:
+            raise Exception(__name__ + ':> ERROR! unable to create entry: {}'.format(token.value))
+
+        # If there are cached comments then they are header comments of the new element
+        self.active_entry.hcomment = self.comment
+        self.last_created_element = self.active_entry
+        self.comment = ''
+
+        # This is a new entry. Expecting at least one field.
+        self.expect(self.next_token(), TOKEN_TYPES.OPERATOR, SYMBOLS.ASSIGNMENT)
+        self.state = PSTATE.EXPECT_FIELD
+
+    def add_field(self, token):
+        field_value = ''
+        field_type  = None
+
+        # It's possible that a field value contains multiple tokens. Fetch tokens
+        # in a loop until reaching the end of the field. Concatenate the values
+        # if possible(to support multi-line strings)
+        while True:
+
+            if token is SYMBOLS.EOF:
+                raise Exception(__name__ + ':> Unexpected token. Expected a field token but got EOF.')
+
+            if (self.match(token, TOKEN_TYPES.SEPARATOR, SYMBOLS.COMMA) or
+                self.match(token, TOKEN_TYPES.SEPARATOR, SYMBOLS.SEMICOLON)):
+                field = self.eds.addfield(self.active_section.name, self.active_entry.name, field_value, field_type)
 
                 if field is None:
-                    raise Exception(__name__ + '.lexer:> ERROR! unable to create field: {} of type: {}'.format(self.token.value, self.token.type))
+                    raise Exception(__name__ + ':> ERROR! unable to create field: {} of type: {}'.format(token.value, token.type))
 
-                self.actualelement = field
-                self.actualelement.hcomment = self.hcomment
-                self.hcomment = ''
+                # If there are cached comments then they are header comments of the new element
+                field.hcomment = self.comment
+                self.last_created_element = field
+                self.comment = ''
+                field_value = ''
+                field_type = None
 
-                fieldvalue = ''
-                fieldtype  = None
+                if self.match(token, TOKEN_TYPES.SEPARATOR, SYMBOLS.SEMICOLON):
+                    # The next token might be an entry or a new section
+                    self.state = PSTATE.EXPECT_SECTION_OR_ENTRY
                 break
 
-            raise Exception(__name__ + '.lexer:> ERROR! Unexpected token type. {}'.format(self.token))
+            elif (self.match(token, TOKEN_TYPES.IDENTIFIER)  or
+                  self.match(token, TOKEN_TYPES.STRING)      or
+                  self.match(token, TOKEN_TYPES.NUMBER)      or
+                  self.match(token, TOKEN_TYPES.DATE)        or
+                  self.match(token, TOKEN_TYPES.TIME)        or
+                  self.match(token, TOKEN_TYPES.DATASET)):
 
-    def add_comment(self):
-        # the footer comment only appears on the same line after the eds data
-        # otherwise the comment is a header comment
-        if self.actualelement is None:
-            self.eds.heading_comment += self.token.value.strip() + '\n'
+                if field_value == '' and field_type is None:
+                    field_value += token.value
+                    field_type = token.type
+                elif field_type == TOKEN_TYPES.STRING and self.match(token, TOKEN_TYPES.STRING):
+                    # There are two strings literals in one field that must be Concatenated
+                    field_value += token.value
+                else:
+                    # There are different types of tokens to be concatenated.
+                    raise Exception(__name__ + ':> ERROR! Concatenating these literals is not allowed.'
+                        + '({})<{}> + ({})<{}> @({})'.format(field_value, TOKEN_TYPES.Str(field_type), token.value, TOKEN_TYPES.Str(token.type), token))
+            else:
+                raise Exception(__name__ + '.lexer:> Unexpected token type. Expected a field value token but got: {}'.format(token))
+
+            token = self.next_token()
+
+    def add_comment(self, token):
+        if self.state is PSTATE.EXPECT_SECTION:
+            self.eds.heading_comment += token.value.strip() + '\n'
             return
-        if self.prevtoken:
-             if self.prevtoken.line == self.token.line:
-                self.actualelement.fcomment = self.token.value.strip()
-                return
-        self.hcomment += self.token.value.strip() + '\n'
+        # The footer comment only appears on the same line after the eds item
+        # otherwise the comment is a header comment
+        if self.prevtoken and self.prevtoken.line == token.line:
+            # Footer comment
+            self.last_created_element.fcomment = token.value.strip()
+        else:
+            # Caching the header comment for the next element.
+            self.comment += token.value.strip() + '\n'
 
     def on_EOF(self):
-        self.eds.end_comment = self.hcomment
-        self.hcomment = ''
+        # The rest of cached comments belong to no elements
+        self.eds.end_comment = self.comment
+        self.comment = ''
 
-    def expect(self, exptokentype, exptokenval = None):
-        if self.token.type == exptokentype and exptokenval is not None:
-            if self.token.value == exptokenval:
+    def expect(self, token, expected_type, expected_value=None):
+        if token.type == expected_type:
+            if expected_value is None or token.value == expected_value:
+                return
+
+        raise Exception(__name__ + '.lexer:> ERROR! Unexpected token!'
+            'Expected: (\"{}\": {}) but received: {}'.format(TOKEN_TYPES.Str(exptokentype), exptokenval, self.token))
+
+    def match(self, token, expected_type, expected_value=None):
+        if token.type == expected_type and expected_value is not None:
+            if token.value == expected_value:
                 return True
-        elif self.token.type == exptokentype :
-            return True
-
-        raise Exception(__name__ + '.lexer:> ERROR! Unexpected token! Expected: (\"{}\": {}) but received: {}'.format(TOKEN_TYPES.Str(exptokentype), exptokenval, self.token))
-
-    def match(self, exptokentype, exptokenval = None):
-        if self.token.type == exptokentype and exptokenval is not None:
-            if self.token.value == exptokenval:
-                return True
-        elif self.token.type == exptokentype :
+        elif token.type == expected_type :
             return True
         return False
 
