@@ -109,7 +109,7 @@ from string      import digits
 from eds_libs import *
 from cip_types import isnumber, ishex
 
-logging.basicConfig(level=logging.WARNING,
+logging.basicConfig(level=logging.DEBUG,
     format='%(asctime)s - %(name)s.%(levelname)-8s %(message)s')
 logger = logging.getLogger(__name__)
 #-------------------------------------------------------------------------------
@@ -772,13 +772,17 @@ class Token(object):
             self.value)
 #---------------------------------------------------------------------------
 class parser(object):
-    def __init__(self, sourcetext, showprogress = False):
-
-        self.edsstream  = sourcetext
-        self.lastoffset = len(sourcetext) - 1
-        self.offset     = -1
-        self.line       = 1
-        self.col        = 0
+    def __init__(self, eds_content, showprogress = False):
+        self.src_text = eds_content
+        print len(eds_content)
+        l = 0
+        for c in eds_content:
+            l += 1
+        print l
+        self.src_len  = len(eds_content)
+        self.offset   = -1
+        self.line     = 1
+        self.col      = 0
 
         self.eds       = EDS()
         self.token     = None
@@ -793,140 +797,204 @@ class parser(object):
 
         self.showprogress = showprogress
         self.progress = 0.0
+        self.progress_step = float(self.src_len) / 100.0
 
-    def getchar(self):
+    def get_char(self):
         if self.showprogress:
-            progress_step = float(float(self.lastoffset) / 100.0)
             self.progress += 1.0
-            if self.progress % progress_step < 1.0:
-                sys.stdout.write('Parsing... [%0.0f%%]                          \r' %(self.progress / progress_step) )
+            if self.progress % self.progress_step < 1.0:
+                sys.stdout.write('Parsing... [%0.0f%%]                          \r' %(self.progress / self.progress_step) )
                 sys.stdout.flush()
                 sys.stdout.write('')
-        if self.offset == self.lastoffset:
-            return None
 
         self.offset += 1
+        # EOF
+        if self.offset == self.src_len:
+            return SYMBOLS.EOF
+
+        char = self.src_text[self.offset]
         self.col += 1
-        if self.edsstream[self.offset] == '\n':
+        if char == SYMBOLS.EOL:
             self.line += 1
             self.col = 0
-        return self.edsstream[self.offset]
+        return char
 
     def lookahead(self, offset = 1):
-        if self.offset + offset > self.lastoffset:
+        if self.offset + offset > self.src_len:
             return None
-        return self.edsstream[self.offset + offset]
+        return self.src_text[self.offset + offset]
 
     def lookbehind(self, offset = 1):
         if self.offset - offset < 0:
             return None
-        return self.edsstream[self.offset - offset]
+        return self.src_text[self.offset - offset]
 
-    def gettoken(self):
-        ch = self.getchar()
-        if ch is SYMBOLS.EOF:
-            return None
+    def get_token(self):
 
-        token = Token()
-        while ch.isspace(): # including: space, tab, carriage return, new line
-            ch = self.getchar()
-            if ch is SYMBOLS.EOF:
-                return None
+        token = None
 
-        if ch == '$':
-            token = Token(type = TOKEN_TYPES.COMMENT, value = '', offset = self.offset, line = self.line, col = self.col)
-            while True:
-                ch = self.getchar()
+        while True:
+            ch = self.get_char()
+
+            if token is None:
+
+                if ch is SYMBOLS.EOF:
+                    return SYMBOLS.EOF
+
+                if ch.isspace():
+                    # Ignoring space characters including: space, tab, carriage return
+                    continue
+
+                if ch == SYMBOLS.DOLLAR:
+                    token = Token(type=TOKEN_TYPES.COMMENT, value='',
+                        offset=self.offset, line=self.line, col=self.col)
+                    continue
+
+                if ch == SYMBOLS.OPENINGBRACKET:
+                    token = Token(type=TOKEN_TYPES.SECTION, value='',
+                        offset=self.offset, line=self.line, col=self.col)
+                    continue
+
+                if ch == SYMBOLS.OPENINGBRACE:
+                    token = Token(type=TOKEN_TYPES.DATASET, value=ch,
+                        offset=self.offset, line=self.line, col=self.col)
+                    continue
+
+                if ch == SYMBOLS.POINT or ch == SYMBOLS.MINUS or ch == SYMBOLS.PLUS  or ch.isdigit():
+                    token = Token(type=TOKEN_TYPES.NUMBER, value=ch,
+                        offset=self.offset, line=self.line, col=self.col)
+                    if self.lookahead() in OPERATORS or self.lookahead() in SEPARATORS:
+                        return token
+                    continue
+
+                if ch.isalpha():
+                    token = Token(type=TOKEN_TYPES.IDENTIFIER, value=ch,
+                        offset=self.offset, line=self.line, col=self.col)
+                    if self.lookahead() in OPERATORS or self.lookahead() in SEPARATORS:
+                        return token
+                    continue
+
+                if ch == SYMBOLS.QUOTATION:
+                    token = Token(type=TOKEN_TYPES.STRING, value='',
+                        offset=self.offset, line=self.line, col=self.col)
+                    continue
+
+                if ch in OPERATORS:
+                    return Token(type=TOKEN_TYPES.OPERATOR, value=ch,
+                        offset=self.offset, line=self.line, col=self.col)
+
+                if ch in SEPARATORS:
+                    return Token(type=TOKEN_TYPES.SEPARATOR, value=ch,
+                        offset=self.offset, line=self.line, col=self.col)
+
+            if token.type is TOKEN_TYPES.COMMENT:
                 if ch == SYMBOLS.EOL or ch == SYMBOLS.EOF:
                     return token
                 token.value += ch
+                continue
 
-        if ch == '[':
-            token = Token(type = TOKEN_TYPES.SECTION, value = '', offset = self.offset, line = self.line, col = self.col)
-            while True:
-                ch = self.getchar()
-                if ch == ']':
+            if token.type is TOKEN_TYPES.SECTION:
+                if ch == SYMBOLS.CLOSINGBRACKET:
                     return token
 
                 # filtering invalid symbols in section name
                 if (not ch.isspace() and not ch.isalpha() and not ch.isdigit()
                     and (ch not in SECTION_NAME_VALID_SYMBOLES)):
 
-                    raise Exception( __name__ + '.lexer:> Invalid section '
-                                   + 'identifier. Unexpected char sequence '
+                    raise Exception( __name__ + '.lexer:> Invalid section identifier!'
+                                   + ' Unexpected char sequence '
                                    + '@[idx: {}] [ln: {}] [col: {}]'
                                    .format(self.offset, self.line, self.col))
 
-                # unexpected symbols at the beginning or at the end of the section id
+                # unexpected symbols at the beginning or at the end of the section identifier
                 if ((token.value == '' or self.lookahead() == ']') and
                     (not ch.isalpha() and not ch.isdigit())):
-                    if ch.isspace():
-                        logger.warning('Unexpected character: \" \".section id @[idx: {}] [ln: {}] [col: {}]'.format(self.offset, self.line, self.col))
-                    else:
-                        raise Exception( __name__ + '.lexer:> Invalid section identifier. Unexpected char sequence @[idx: {}] [ln: {}] [col: {}]'.format(self.offset, self.line, self.col))
+                    raise Exception( __name__ + '.lexer:> Invalid section identifier!'
+                        + ' Unexpected char sequence @[idx: {}] [ln: {}] [col: {}]'.format(self.offset, self.line, self.col))
 
-                if ch == ' ' and self.lookahead().isspace(): # consecutive spaces
-                    logger.warning('Unexpected character: \" \".section id @[idx: {}] [ln: {}] [col: {}]'.format(self.offset, self.line, self.col))
+                # Sequential spaces
+                if ch == ' ' and self.lookahead().isspace():
+                    raise Exception( __name__ + '.lexer:> Invalid section identifier! Sequential spaces are not allowed.'
+                        + ' Unexpected char sequence @[idx: {}] [ln: {}] [col: {}]'.format(self.offset, self.line, self.col))
 
                 if ch == SYMBOLS.EOF or ch == SYMBOLS.EOL:
-                    raise Exception( __name__ + '.lexer:> Invalid section identifier @[idx: {}] [ln: {}] [col: {}]'.format(self.offset, self.line, self.col))
-                token.value += ch
+                    raise Exception( __name__ + '.lexer:> Invalid section identifier!'
+                        + ' Unexpected char sequence @[idx: {}] [ln: {}] [col: {}]'.format(self.offset, self.line, self.col))
 
-        if ch == SYMBOLS.QUOTATION:
-            token = Token(type = TOKEN_TYPES.STRING, value = '', offset = self.offset, line = self.line, col = self.col)
-            while True:
-                ch = self.getchar()
+                token.value += ch
+                continue
+
+            if token.type is TOKEN_TYPES.NUMBER:
+                if ch.isspace():
+                    return token
+
+                if   ch is SYMBOLS.COLON: token.type     = TOKEN_TYPES.TIME
+                elif ch is SYMBOLS.MINUS: token.type     = TOKEN_TYPES.DATE
+                elif ch is SYMBOLS.UNDERLINE: token.type = TOKEN_TYPES.IDENTIFIER
+
+                token.value += ch
+                if self.lookahead() in OPERATORS or self.lookahead() in SEPARATORS:
+                    return token
+                continue
+
+            if token.type is TOKEN_TYPES.IDENTIFIER:
+                if ch.isspace():
+                    return token
+
+                token.value += ch
+                if self.lookahead() in OPERATORS or self.lookahead() in SEPARATORS:
+                    return token
+                continue
+
+            if token.type is TOKEN_TYPES.STRING:
                 if ch == SYMBOLS.QUOTATION and self.lookbehind() != SYMBOLS.BACKSLASH:
                     return token
+
                 if ch == SYMBOLS.EOF or ch == SYMBOLS.EOL:
-                    raise Exception( __name__ + '.lexer:> Invalid string value @[idx: {}] [ln: {}] [col: {}]'.format(self.offset, self.line, self.col))
+                    raise Exception( __name__ + '.lexer:> Invalid string value!'
+                        + ' Unexpected char sequence @[idx: {}] [ln: {}] [col: {}]'.format(self.offset, self.line, self.col))
+
                 token.value += ch
+                continue
 
-        if ch in OPERATORS:
-            return Token(type = TOKEN_TYPES.OPERATOR, value = ch, offset = self.offset, line = self.line, col = self.col)
-
-        if ch in SEPARATORS:
-            return Token(type = TOKEN_TYPES.SEPARATOR, value = ch, offset = self.offset, line = self.line, col = self.col)
-
-        if ch == SYMBOLS.POINT or ch == SYMBOLS.MINUS or ch == SYMBOLS.PLUS  or ch.isdigit():
-            token = Token(TOKEN_TYPES.NUMBER, value = ch, offset = self.offset, line = self.line, col = self.col)
-            while True:
-                if ((self.lookahead() in OPERATORS) or
-                    (self.lookahead() in SEPARATORS)):
-                    return token
-                ch = self.getchar()
-                if ch.isspace():
-                    return token
-                if ch == ':': token.type   = TOKEN_TYPES.TIME
-                elif ch == '-': token.type = TOKEN_TYPES.DATE
-                elif ch == '_': token.type = TOKEN_TYPES.IDENTIFIER
-                token.value += ch
-
-        if ch == SYMBOLS.OPENINGBRACE:
-            token = Token(TOKEN_TYPES.DATASET, value = ch, offset = self.offset, line = self.line, col = self.col)
-            while True:
+            if token.type is TOKEN_TYPES.DATASET:
                 if self.lookahead() == SYMBOLS.SEMICOLON:
                     return token
-                ch = self.getchar()
-                token.value += ch
 
+                token.value += ch
                 if ch == SYMBOLS.CLOSINGBRACE:
                     return token
+                continue
 
-        if ch.isalpha():
-            token = Token(TOKEN_TYPES.IDENTIFIER, value = ch, offset = self.offset, line = self.line, col = self.col)
-            while True:
-                ch = self.getchar()
+            if token.type is TOKEN_TYPES.TIME:
                 if ch.isspace():
                     return token
+
+                if not ch.isdigit() and ch is not SYMBOLS.COLON:
+                    raise Exception( __name__ + '.lexer:> Invalid TIME value!'
+                        + ' Unexpected char sequence @[idx: {}] [ln: {}] [col: {}]'.format(self.offset, self.line, self.col))
                 token.value += ch
-                if ((self.lookahead() in OPERATORS) or
-                    (self.lookahead() in SEPARATORS)):
+
+                if self.lookahead() in OPERATORS or self.lookahead() in SEPARATORS:
                     return token
+                continue
+
+            if token.type is TOKEN_TYPES.DATE:
+                if ch.isspace():
+                    return token
+
+                if not ch.isdigit() and ch is not SYMBOLS.MINUS:
+                    raise Exception( __name__ + '.lexer:> Invalid DATE value!'
+                        + ' Unexpected char sequence @[idx: {}] [ln: {}] [col: {}]'.format(self.offset, self.line, self.col))
+                token.value += ch
+
+                if self.lookahead() in OPERATORS or self.lookahead() in SEPARATORS:
+                    return token
+                continue
 
     def nexttoken(self):
         self.prevtoken = self.token
-        self.token = self.gettoken()
+        self.token = self.get_token()
 
         logger.debug('token: {}'.format(self.token))
 
