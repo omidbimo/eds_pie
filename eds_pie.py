@@ -704,7 +704,7 @@ class EDS(object):
                     eds_content += ''.ljust(tabsize, ' ') + '    $ {}\n'.format(entry.fcomment)
 
                 # fields
-                tab = 2
+                tab = 4
 
                 singleline_str = ''
                 singleline_str += ''.ljust(tab, ' ') + '{} ='.format(entry.name)
