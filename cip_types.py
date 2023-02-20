@@ -973,6 +973,8 @@ class EPATH(CIP_DataType):
                 return False
         return True
 
+    def __str__(self):
+        return "\"{}\"".format(self.value)
 
 class REVISION(EDS_DataType):
     def __new__(cls, value, *args):
