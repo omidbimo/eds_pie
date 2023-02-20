@@ -737,16 +737,6 @@ class EDS(object):
                         singleline_str = ''
                         if (fieldindex + 1) != entry.fieldcount:
                             singleline_str += ''.ljust(2 * tab, ' ')
-                    #elif field.cr:
-                    #    singleline_str += '\n'
-                    #    eds_content += singleline_str
-                    #    singleline_str = ''
-                    #    if (fieldindex + 1) != entry.fieldcount:
-                    #        singleline_str += ''.ljust(2 * tab, ' ')
-                    #elif (fieldindex + 1) == entry.fieldcount:
-                    #    eds_content += singleline_str
-                    #    singleline_str = ''
-                    #    singleline_str += '\n'
                     else:
                         singleline_str += '\n'
                         eds_content += singleline_str

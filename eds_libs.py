@@ -755,7 +755,9 @@ protocol_libs = [
             [
             ])
 
-
+        , EDS_SECTION( "LLDP Management Class", "LLDP Management Class", 0x109, False,
+            [
+            ])
         ])
     ]
 
