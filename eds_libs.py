@@ -433,6 +433,25 @@ eds_standard_lib = EDS_LIB("Standard", [
                 ])
             ])
 
+        , EDS_SECTION( "Capacity", "Capacity", None, True,
+            [
+              EDS_ENTRY( "Traffic Spec", "TSpecN", False, 0, [],
+                [ EDS_FIELD("TxRx"            , True, 0, [DT(EDS_KEYWORD, ["Tx", "Rx", "TxRx"])] )
+                , EDS_FIELD("ConnSize"        , True, 1, [DT(CIP_UINT,  [])])
+                , EDS_FIELD("PacketsPerSecond", True, 2, [DT(CIP_UDINT, [])])
+                ])
+            , EDS_ENTRY( "Connection overhead"                       , "ConnOverhead"        , False, 0, [], [EDS_FIELD("Connection overhead"        , True, 0, [DT(CIP_REAL, [])]) ] )
+            , EDS_ENTRY( "Maximum CIP connections"                   , "MaxCIPConnections"   , False, 0, [], [EDS_FIELD("Maximum CIP connections"   , True, 0, [DT(CIP_UINT, [])]) ] )
+            , EDS_ENTRY( "Maximum I/O connections"                   , "MaxIOConnections"    , False, 0, [], [EDS_FIELD("Maximum I/O connections"    , True, 0, [DT(CIP_UINT, [])]) ] )
+            , EDS_ENTRY( "Maximum explicit connections"              , "MaxMsgConnections"   , False, 0, [], [EDS_FIELD("Maximum explicit connections"   , True, 0, [DT(CIP_UINT, [])]) ] )
+            , EDS_ENTRY( "Maximum I/O producers"                     , "MaxIOProducers"      , False, 0, [], [EDS_FIELD("Maximum I/O producers"      , True, 0, [DT(CIP_UINT, [])]) ] )
+            , EDS_ENTRY( "Maximum I/O consumers"                     , "MaxIOConsumers"      , False, 0, [], [EDS_FIELD("Maximum I/O consumers"      , True, 0, [DT(CIP_UINT, [])]) ] )
+            , EDS_ENTRY( "Maximum I/O producers plus consumers"      , "MaxIOProduceConsume" , False, 0, [], [EDS_FIELD("Maximum I/O producers plus consumers" , True, 0, [DT(CIP_UINT, [])]) ] )
+            , EDS_ENTRY( "Maximum I/O multicast producers"           , "MaxIOMcastProducers" , False, 0, [], [EDS_FIELD("Maximum I/O multicast producers" , True, 0, [DT(CIP_UINT, [])]) ] )
+            , EDS_ENTRY( "Maximum I/O multicast consumers"           , "MaxIOMcastConsumers" , False, 0, [], [EDS_FIELD("Maximum I/O multicast consumers" , True, 0, [DT(CIP_UINT, [])]) ] )
+            , EDS_ENTRY( "Maximum consumers per multicast connection", "MaxConsumersPerMcast", False, 0, [], [EDS_FIELD("Maximum consumers per multicast connection", True, 0, [DT(CIP_UINT, [])]) ] )
+            ])
+
         , EDS_SECTION( "Common Object Class", "CommonObjectClass", None, False,
             [
               EDS_ENTRY( "Revision",                            "Revision",                        False, 0, [], [EDS_FIELD("Revision",                            True, 0, [DT(CIP_UINT,   [])]) ])
@@ -693,27 +712,8 @@ protocol_libs = [
             [
             ])
 
-        , EDS_SECTION( "Port", "Port", 0x01, False,
+        , EDS_SECTION( "Port", "Port", 0xF4, False,
             [
-            ])
-
-        , EDS_SECTION( "Capacity", "Capacity", 0x01, True,
-            [
-              EDS_ENTRY( "Traffic Spec", "TSpecN", False, 0, [],
-                [ EDS_FIELD("TxRx"            , True, 0, [DT(EDS_KEYWORD, ["Tx", "Rx", "TxRx"])] )
-                , EDS_FIELD("ConnSize"        , True, 1, [DT(CIP_UINT,  [])])
-                , EDS_FIELD("PacketsPerSecond", True, 2, [DT(CIP_UDINT, [])])
-                ])
-            , EDS_ENTRY( "Connection overhead"                       , "ConnOverhead"        , False, 0, [], [EDS_FIELD("Connection overhead"        , True, 0, [DT(CIP_REAL, [])]) ] )
-            , EDS_ENTRY( "Maximum CIP connections"                   , "MaxCIPConnections"   , False, 0, [], [EDS_FIELD("Maximum CIP connections"   , True, 0, [DT(CIP_UINT, [])]) ] )
-            , EDS_ENTRY( "Maximum I/O connections"                   , "MaxIOConnections"    , False, 0, [], [EDS_FIELD("Maximum I/O connections"    , True, 0, [DT(CIP_UINT, [])]) ] )
-            , EDS_ENTRY( "Maximum explicit connections"              , "MaxMsgConnections"   , False, 0, [], [EDS_FIELD("Maximum explicit connections"   , True, 0, [DT(CIP_UINT, [])]) ] )
-            , EDS_ENTRY( "Maximum I/O producers"                     , "MaxIOProducers"      , False, 0, [], [EDS_FIELD("Maximum I/O producers"      , True, 0, [DT(CIP_UINT, [])]) ] )
-            , EDS_ENTRY( "Maximum I/O consumers"                     , "MaxIOConsumers"      , False, 0, [], [EDS_FIELD("Maximum I/O consumers"      , True, 0, [DT(CIP_UINT, [])]) ] )
-            , EDS_ENTRY( "Maximum I/O producers plus consumers"      , "MaxIOProduceConsume" , False, 0, [], [EDS_FIELD("Maximum I/O producers plus consumers" , True, 0, [DT(CIP_UINT, [])]) ] )
-            , EDS_ENTRY( "Maximum I/O multicast producers"           , "MaxIOMcastProducers" , False, 0, [], [EDS_FIELD("Maximum I/O multicast producers" , True, 0, [DT(CIP_UINT, [])]) ] )
-            , EDS_ENTRY( "Maximum I/O multicast consumers"           , "MaxIOMcastConsumers" , False, 0, [], [EDS_FIELD("Maximum I/O multicast consumers" , True, 0, [DT(CIP_UINT, [])]) ] )
-            , EDS_ENTRY( "Maximum consumers per multicast connection", "MaxConsumersPerMcast", False, 0, [], [EDS_FIELD("Maximum consumers per multicast connection", True, 0, [DT(CIP_UINT, [])]) ] )
             ])
 
         , EDS_SECTION( "Device Level Ring Class", "DLR Class", 0x47, False,
