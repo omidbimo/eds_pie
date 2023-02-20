@@ -341,7 +341,7 @@ class EDS(object):
         self.endcomment = ''
         self._protocol  = None
         self._sections  = {}
-        self.lib = CIP_EDS_lib()
+        self.ref = CIP_EDS_lib()
 
     def list(self, sectionname = None, entryname = None):
         if sectionname is None and entryname is None:
@@ -389,7 +389,7 @@ class EDS(object):
         if isinstance(section, str):
             return self._sections.get(section.replace(' ', '').lower())
         if isinstance(section, numbers.Number):
-            return self._sections.get(self.lib.get_section_name(section, self.protocol).replace(' ', '').lower())
+            return self._sections.get(self.ref.get_section_name(section, self.protocol).replace(' ', '').lower())
         raise TypeError('Inappropriate data type: {}'.format(type(section)))
 
     def getentry(self, sectionname, entryname):
@@ -452,10 +452,10 @@ class EDS(object):
         if sectionkey in self._sections.keys():
             logger.error('DUplicated section! [{}}'.format(sectionname))
 
-        if not self.lib.has_section(sectionname):
+        if not self.ref.has_section(sectionname):
             logger.warning('Unknown Section [{}]'.format(sectionname))
         else:
-            ref_section = self.lib.get_section(sectionname)
+            ref_section = self.ref.get_section(sectionname)
             if ref_section:
                 ref_section_key = ref_section.key
                 ref_id = ref_section.id or 0
@@ -487,12 +487,12 @@ class EDS(object):
         if entryname.replace(' ', '').lower() in section._entries.keys():
             logger.error('Duplicated Entry! to serialize \"{}\", set the serialize switch to True'.format(entry))
 
-        if not self.lib.has_entry(sectionname, entryname):
+        if not self.ref.has_entry(sectionname, entryname):
             logger.warning('Unknown Entry [{}].{}'.format(sectionname, entryname))
 
         # Correcting entry name
         ref_keyword = ''
-        ref_entry = self.lib.get_entry(sectionname, entryname)
+        ref_entry = self.ref.get_entry(sectionname, entryname)
         if ref_entry:
             ref_keyword = ref_entry.key.rstrip('N').rstrip(digits)
 
@@ -520,18 +520,18 @@ class EDS(object):
         fielddata = None
 
         # getting the type info from eds dictionary
-        ref_field = self.lib.get_field(section._name, entry.name, (entry.fieldcount))
+        ref_field = self.ref.get_field(section._name, entry.name, (entry.fieldcount))
         if ref_field:
             field_name = ref_field.name or entry.name
         else:
             field_name = "field{}".format(entry.fieldcount)
 
-        datatypes = self.lib.get_field_datatypes(section._name, entry.name, field_name)
+        datatypes = self.ref.get_field_datatypes(section._name, entry.name, field_name)
         if not datatypes:
             logger.warning('Unknown Field [{}].{}.{} = {}'.format(section._name, entry.name, field_name, fieldvalue))
 
         # Validating field value
-        if fieldvalue != '' or self.lib.ismandatory(section._name, entry.name, field_name):
+        if fieldvalue != '' or self.ref.ismandatory(section._name, entry.name, field_name):
             for dtype, typeinfo in datatypes: # Getting the listed data types and their acceptable ranges
                 if dtype.validate(fieldvalue, typeinfo):
 
@@ -542,7 +542,7 @@ class EDS(object):
 
                         typeid = self.getfield(sectionname, entryname, fieldname = typeinfo[0]).value
                         try:
-                            dtype = self.lib.gettype(typeid)
+                            dtype = self.ref.gettype(typeid)
                             if dtype.validate(fieldvalue, []):
                                 fielddata = dtype(fieldvalue, [])
                                 break
@@ -564,7 +564,7 @@ class EDS(object):
                     'Switched to VENDOR_SPECIFIC type.'.format(section._name, entry.name, field_name, fieldvalue, types_str))
 
                     fielddata = EDS_VENDORSPEC(fieldvalue)
-                elif self.lib.ismandatory(section._name, entry.name, field_name):
+                elif self.ref.ismandatory(section._name, entry.name, field_name):
                     typelist = [(type, "") for type, typeinfo in datatypes if not typeinfo]
                     typelist += [(type, typeinfo) for type, typeinfo in datatypes if typeinfo]
                     types_str = ", ".join("<{}{}>".format(type[0].__name__, type[1]) for type in typelist)
@@ -643,20 +643,20 @@ class EDS(object):
         return "".join((struct.pack('B', int(item, 16)) for item in items))
 
     def final_rollcall(self):
-        requiredsections = self.lib.getrequired_sections()
+        requiredsections = self.ref.getrequired_sections()
         for section in requiredsections:
             if self.has_section(section.keyword) == False:
                 logger.error('Missing required section! [{}] \"{}\"'.format(section.keyword, section.name))
 
         for section in self.sections:
-            requiredentries = self.lib.getrequired_entries(section.name)
+            requiredentries = self.ref.getrequired_entries(section.name)
             for entry in requiredentries:
                 if self.has_entry(section.name, entry.keyword) == False:
                     logger.error('Missing required entry! [{}].\"{}\"{}'
                         .format(section.name, entry.keyword, entry.name))
 
             for entry in section.entries:
-                requiredfields = self.lib.getrequired_fields(section.name, entry.name)
+                requiredfields = self.ref.getrequired_fields(section.name, entry.name)
                 for field in requiredfields:
                     if self.hasfield(section.name, entry.name, field.placement) == False:
                         logger.error('Missing required field! [{}].{}.{} #{}'
@@ -771,7 +771,7 @@ class EDS(object):
     def get_cip_section_name(self, classid, protocol=None):
         if protocol is None:
             protocol = self.protocol
-        return self.lib.get_section_name(classid, protocol)
+        return self.ref.get_section_name(classid, protocol)
 # ---------------------------------------------------------------------------
 class Token(object):
 
