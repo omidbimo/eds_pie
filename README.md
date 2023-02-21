@@ -67,7 +67,7 @@ if eds.protocol == 'EtherNetIP':
     if entry.value == 12:
         print 'This is an EtherNet/IP Communication adapter device.'
 
-    if eds.hassection(eds.get_cip_section_name(0x5D)):
+    if eds.hassection(0x5D):
         eds.list(eds.get_cip_section_name(0x5D))
         '''
         The device is capable of CIP security.
