@@ -75,7 +75,7 @@ if eds.protocol == 'EtherNetIP':
         '''
     else:
         print 'Device doesn\'t support CIP security'
-         
+
 
 ```
 
@@ -144,7 +144,7 @@ if eds.protocol == 'EtherNetIP':
 - field.value            to get / set the value of the field
 - field.datatype     to get the data-type object of this field
 
-  
+
 
 **All object are printable using the print instruction**
 
@@ -154,8 +154,8 @@ if eds.protocol == 'EtherNetIP':
 
 ## Debug mode
 
-To retrieve the maximum information about the parsing process, set the logging level of eds_pie to DEBUG. In the debug mode, a list of parsed tokens will be displayed. 
+To retrieve the maximum information about the parsing process, set the logging level of eds_pie to DEBUG. In the debug mode, a list of parsed tokens will be displayed.
 
 
-![image-demo1_verbosemode](readme-images/image-demo1_debug mode.png)
+![image-debugmode](readme-images/image-debug-mode.png)
 
