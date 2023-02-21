@@ -25,7 +25,7 @@ SOFTWARE.
 """
 from eds_pie import eds_pie
 
-with open('demo.eds', 'r') as srcfile:
+with open('netx.eds', 'r') as srcfile:
     eds_content = srcfile.read()
 eds = eds_pie.parse(eds_content, showprogress = True)
 
@@ -38,7 +38,7 @@ if eds.protocol == 'EtherNetIP':
     if entry.value == 12:
         print 'This is an EtherNet/IP Communication adapter device.'
 
-    if eds.hassection(eds.get_cip_section_name(0x5D)):
+    if eds.hassection(0x5D):
         eds.list(eds.get_cip_section_name(0x5D))
         '''
         The device is capable of CIP security.

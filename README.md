@@ -86,12 +86,12 @@ if eds.protocol == 'EtherNetIP':
 ### EDS object functions
 
 - EDS.list( *[sectionname],* *[entryname]*) To print out a list of EDS elements (sections, entries, fields)
-- EDS.getsection( sectionname ) To get a specific section element
+- EDS.getsection( sectionname/cip_class_id ) To get a specific section element
 - EDS.getentry( sectionname, entryname ) To get a sepecific entry element
 - EDS.getfield( sectionname, entryname, fieldindex / fieldname ) To get a sepecific field element
 - EDS.getvalue( sectionname, entryname, fieldindex / fieldname ) To get the value of an addressed field
 - EDS.setvalue( sectionname, entryname, fieldindex, value ) To set value of an addressed field
-- EDS.hassection( sectionname )
+- EDS.hassection( sectionname/cip_class_id )
 - EDS.hasenry( sectionname, entryname )
 - EDS.hasfield( sectionname, entryname, fieldindex )
 - EDS.addsection( sectionname )
