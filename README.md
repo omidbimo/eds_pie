@@ -156,6 +156,19 @@ if eds.protocol == 'EtherNetIP':
 
 To retrieve the maximum information about the parsing process, set the logging level of eds_pie to DEBUG. In the debug mode, a list of parsed tokens will be displayed.
 
+```python
+import logging
+
+logging.basicConfig(level=logging.DEBUG,
+    format='%(asctime)s - %(name)s.%(levelname)-8s %(message)s')
+logger = logging.getLogger(__name__)
+
+from eds_pie import eds_pie
+
+with open('demo.eds', 'r') as srcfile:
+    eds_content = srcfile.read()
+eds = eds_pie.parse(eds_content, showprogress = True)
+```
 
 ![image-debugmode](readme-images/image-debug-mode.png)
 
