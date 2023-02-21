@@ -435,10 +435,15 @@ class EDS(object):
         if entry_:
             entry_.fields[fieldindex].value = value
 
-    def hassection(self, sectionname):
-        if sectionname.replace(' ', '').lower() in self._sections.keys():
-            return True
-        return False
+    def hassection(self, section):
+        '''
+        To check if the EDS contains a section by its EDS keyword or by its CIP classID.
+        '''
+        if isinstance(section, str):
+            return self._sections.get(section.replace(' ', '').lower()) is not None
+        if isinstance(section, numbers.Number):
+            return self._sections.get(self.ref.get_section_name(section, self.protocol).replace(' ', '').lower()) is not None
+        raise TypeError('Inappropriate data type: {}'.format(type(section)))
 
     def hasentry(self, sectionname, entryname):
         section = self.getsection(sectionname)
