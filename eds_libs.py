@@ -392,9 +392,9 @@ eds_standard_lib = EDS_LIB("Standard", [
         , EDS_SECTION( "Device Classification", "Device Classification", None, True,
             [
               EDS_ENTRY( "Classification 1"  , "Class1"   , True    , 0, [1],
-                    [EDS_FIELD("Class1", True, 0, [DT(EDS_KEYWORD, ["CompoNet", "ControlNet", "DeviceNet", "EtherNetIP", "ModbusSL", "ModbusTCP", "Safety"])]) ] ),
+                    [EDS_FIELD("Class1", True, 0, [DT(EDS_KEYWORD, ["CompoNet", "ControlNet", "DeviceNet", "EtherNetIP", "EtherNetIP_In_Cabinet", "EtherNetIP_UDP_Only", "ModbusSL", "ModbusTCP", "Safety", "HART", "IOLink"])]) ] ),
               EDS_ENTRY( "Classification N"  , "ClassN"   , False    , 1, [1],
-                    [EDS_FIELD("ClassN", True, 0, [DT(EDS_KEYWORD, ["CompoNet", "ControlNet", "DeviceNet", "EtherNetIP", "ModbusSL", "ModbusTCP", "Safety"])]) ] )
+                    [EDS_FIELD("ClassN", True, 0, [DT(EDS_KEYWORD, ["CompoNet", "ControlNet", "DeviceNet", "EtherNetIP", "EtherNetIP_In_Cabinet", "EtherNetIP_UDP_Only", "ModbusSL", "ModbusTCP", "Safety", "HART", "IOLink"])]) ] )
             ])
 
         , EDS_SECTION( "Parameters", "Params", None, False,
@@ -752,6 +752,22 @@ protocol_libs = [
             ])
 
         , EDS_SECTION( "Certificate Management Class", "Certificate Management Class", 0x5F, False,
+            [
+            ])
+
+        , EDS_SECTION( "Authority Class", "Authority Class", 0x60, False,
+            [
+            ])
+
+        , EDS_SECTION( "Password Authenticator Class", "Password Authenticator Class", 0x61, False,
+            [
+            ])
+
+        , EDS_SECTION( "Certificate Authenticator Class", "Certificate Authenticator Class", 0x62, False,
+            [
+            ])
+
+        , EDS_SECTION( "Ingress Egress Class", "Ingress Egress Class", 0x63, False,
             [
             ])
 
