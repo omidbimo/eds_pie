@@ -38,7 +38,7 @@ $ ****************************************************************************
         HomeURL = "https://github.com/omidbimo/eds_pie";
 
 [Device]
-        VendCode = 0;
+        VendCode = 65535;
         VendName = "omidbimo";
         ProdType = 12;
         ProdTypeStr = "Communications Adapter";

@@ -23,14 +23,26 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 """
-from eds_pie import *
+from eds_pie import eds_pie
 
-print "{}\n".format(__file__)
-
-with open('demo.eds', 'r') as edssourcefile:
-    eds_content = edssourcefile.read()
+with open('demo.eds', 'r') as srcfile:
+    eds_content = srcfile.read()
 eds = eds_pie.parse(eds_content, showprogress = True)
 
-eds.list("file")
+if eds.protocol == 'EtherNetIP':
+    entry = eds.getentry('device', 'ProdType')
+    field = entry.fields[0]
+    if field.value == 12:
+        print 'This is an EtherNet/IP Communication adapter device.'
+    # Alternate way: The value attribute of an entry always returns its first field value.
+    if entry.value == 12:
+        print 'This is an EtherNet/IP Communication adapter device.'
 
-
+    if eds.hassection(eds.get_cip_section_name(0x5D)):
+        eds.list(eds.get_cip_section_name(0x5D))
+        '''
+        The device is capable of CIP security.
+        Do some stuff with security objects.
+        '''
+    else:
+        print 'Device doesn\'t support CIP security'

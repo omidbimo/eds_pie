@@ -23,11 +23,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 """
-from eds_pie import *
 
-print "{}\n".format(__file__)
+from eds_pie import eds_pie
 
-with open('demo.eds', 'r') as edssourcefile:
-    eds_content = edssourcefile.read()
+with open('demo.eds', 'r') as srcfile:
+    eds_content = srcfile.read()
 eds = eds_pie.parse(eds_content, showprogress = True)
-print eds.protocol
+
+print 'EDS protocol:', eds.protocol
+
+for section in eds.sections:
+    print section
+    for entry in section.entries:
+        print '   ', entry
+        for field in entry.fields:
+            print '       ', field
+## Alternate API: Using the list method of the eds object
+# eds.list()
+# eds.list('file')
+# eds.list('file', 'DescText')

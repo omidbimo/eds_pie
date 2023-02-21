@@ -273,6 +273,7 @@ class EDS_Entry(object):
         if fieldindex < self.fieldcount:
             return self.fields[fieldindex]
         return None
+
     @property
     def name(self):
         return self._name
@@ -284,6 +285,12 @@ class EDS_Entry(object):
     @property
     def fields(self):
         return tuple(self._fields)
+
+    @property
+    def value(self):
+        if len(self._fields) > 1:
+            logger.warning('Entry has multiple fields. Only the first field is returned.')
+        return self._fields[0].value
 
     def __str__(self):
         return 'ENTRY({})'.format(self._name)
@@ -428,12 +435,12 @@ class EDS(object):
         if entry_:
             entry_.fields[fieldindex].value = value
 
-    def has_section(self, sectionname):
+    def hassection(self, sectionname):
         if sectionname.replace(' ', '').lower() in self._sections.keys():
             return True
         return False
 
-    def has_entry(self, sectionname, entryname):
+    def hasentry(self, sectionname, entryname):
         section = self.getsection(sectionname)
         if section:
             if entryname.replace(' ', '').lower() in section._entries.keys():
@@ -742,6 +749,11 @@ class EDS(object):
         hfile.write(eds_content)
         hfile.close()
 
+    def get_cip_section_name(self, classid, protocol=None):
+        if protocol is None:
+            protocol = self.protocol
+        return self.ref.get_section_name(classid, protocol)
+
     def __str__(self):
         Msg = ''
         for section in self.__sections:
@@ -753,10 +765,7 @@ class EDS(object):
                 Msg += '\n'
         return Msg
 
-    def get_cip_section_name(self, classid, protocol=None):
-        if protocol is None:
-            protocol = self.protocol
-        return self.ref.get_section_name(classid, protocol)
+
 # ---------------------------------------------------------------------------
 class Token(object):
 

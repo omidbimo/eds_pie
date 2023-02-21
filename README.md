@@ -2,7 +2,7 @@
 
 **An EDS(Electronic Data Sheet) parser library for ODVA's CIP protocol family(EthereNetIP, DeviceNet,...)**
 
-
+python 2.7
 
 ### Who may need an EDS parser library
 
@@ -21,17 +21,28 @@ Use cases:
 
 
 
-
-
 ## Usage
 
 ```python
 # Demo1.py
-from eds_pie import *
+from eds_pie import eds_pie
 
-eds = eds_pie.parse(edsfile = "demo.eds", showprogress = True)
+with open('demo.eds', 'r') as srcfile:
+    eds_content = srcfile.read()
+eds = eds_pie.parse(eds_content, showprogress = True)
+
 print eds.protocol
 
+for section in eds.sections:
+    print section
+    for entry in section.entries:
+        print '   ', entry
+        for field in entry.fields:
+            print '       ', field
+## or use the list method of the eds object
+eds.list()
+eds.list('file')
+eds.list('file', 'DescText')
 ```
 
 ![image-demo1](readme-images/image-demo1.png)
@@ -41,63 +52,43 @@ print eds.protocol
 ```python
 # Demo2.py
 
-from eds_pie import *
+from eds_pie import eds_pie
 
-eds = eds_pie.parse(edsfile = "demo.eds", showprogress = True)
-eds.list("file")
+with open('demo.eds', 'r') as srcfile:
+    eds_content = srcfile.read()
+eds = eds_pie.parse(eds_content, showprogress = True)
+
+if eds.protocol == 'EtherNetIP':
+    entry = eds.getentry('device', 'ProdType')
+    field = entry.fields[0]
+    if field.value == 12:
+        print 'This is an EtherNet/IP Communication adapter device.'
+    # Alternate way: The value attribute of an entry always returns its first field value.
+    if entry.value == 12:
+        print 'This is an EtherNet/IP Communication adapter device.'
+
+    if eds.hassection(eds.get_cip_section_name(0x5D)):
+        eds.list(eds.get_cip_section_name(0x5D))
+        '''
+        The device is capable of CIP security.
+        Do some stuff with security objects.
+        '''
+    else:
+        print 'Device doesn\'t support CIP security'
+         
+
 ```
 
-![image-demo2](readme-images/image-demo2.png)
 
 
-
-```python
-# Demo3.py
-from eds_pie import *
-
-eds = eds_pie.parse(edsfile = "demo.eds", showprogress = True)
-
-print eds.getfield("file", "DescText")
-print "\"{}\"".format(eds.getfield("file", "DescText").value)
-
-```
-
-![image-demo3](readme-images/image-demo3.png)
-
-
-
-```python
-# Demo4.py
-
-from eds_pie import *
-
-eds = eds_pie.parse(edsfile = "demo.eds", showprogress = True)
-
-if eds.protocol == "EtherNetIP":
-    sec = eds.getsection("device")
-    if sec is not None:
-        ProductType = sec.getfield("ProdType").value
-        if ProductType == 12:
-            print "This is an EtherNet/IP Communication adapter device."
-```
-
-![image-demo4](readme-images/image-demo4.png)
-
-
-
-
-
-
-
-## API
+## API Reference
 
 ### EDS object functions
 
-- EDS.list( *[sectionname],* *[entryname]*) To print a list of attributes (sections, entries, fields)
-
-- EDS.getsection( sectionname ) To get the addressed section object
-- EDS.getentry( sectionname, entryname ) To get the addressed entry object
-- EDS.getfield( sectionname, entryname, fieldindex / fieldname ) To get the addressed field object
+- EDS.list( *[sectionname],* *[entryname]*) To print out a list of EDS elements (sections, entries, fields)
+- EDS.getsection( sectionname ) To get a specific section element
+- EDS.getentry( sectionname, entryname ) To get a sepecific entry element
+- EDS.getfield( sectionname, entryname, fieldindex / fieldname ) To get a sepecific field element
 - EDS.getvalue( sectionname, entryname, fieldindex / fieldname ) To get the value of an addressed field
 - EDS.setvalue( sectionname, entryname, fieldindex, value ) To set value of an addressed field
 - EDS.hassection( sectionname )
@@ -109,12 +100,13 @@ if eds.protocol == "EtherNetIP":
 - EDS.removesection( sectionname )
 - EDS.removeentry( sectionname, entryname )
 - EDS.removefield( sectionname, entryname, fieldindex )
-- EDS.save( *[filename], [overwrite]* )	To save an eds file ( it works but it doesn't beatifulize the output like the EZeds does!)
+- EDS.get_cip_section_name(classid, protocol=None) To get the section_kay for a CIP object specified by its CIP Class ID
+- EDS.save( *[filename], [overwrite]* )	To save the EDS contents into a file
 
 ### EDS object properties
 
 - EDS.protocol 	To get the string protocol name of the eds file (generic, EtherNetIP, ...)
-- EDS.sections      To get the list of eds sections
+- EDS.sections  An iterable list of EDS sections
 
 ### Section object functions
 
@@ -127,34 +119,29 @@ if eds.protocol == "EtherNetIP":
 
 - section.name			to get string name of the section
 - section.entrycount   to get the number of entries for this section
-- section.entries          to get a list of this section entries
+- section.entries         An iterable list of Section Entries
 
 ### Entry object functions
 
 - entry.getfield( fieldindex / fieldname )
-
 - entry.addfield( fieldvalue, *[datatype]* )
 
 ### Entry object properties
 
 - entry.name			to get string name of the entry
 - entry.fieldcount   to get the number of fields for this entry
-- entry.fields           to get a list of this entry fields
+- entry.fields          An iterable list of Entry Fields
 
 ### Field object functions
 
 - field.getfield( fieldindex / fieldname )
-
 - filed.addfield( fieldvalue, *[datatype]* )
 
 ### Field object properties
 
 - field.name			to get string name of the field
-
 - field.index            to get the index of this field in the of parent entry fields
-
 - field.value            to get / set the value of the field
-
 - field.datatype     to get the data-type object of this field
 
   
@@ -169,11 +156,6 @@ if eds.protocol == "EtherNetIP":
 
 To retrieve the maximum information about the parsing process, set the logging level of eds_pie to DEBUG. In the debug mode, a list of parsed tokens will be displayed. 
 
-```python
-from eds_pie import *
-
-eds = eds_pie.parse(edsfile = "demo.eds", showprogress = True)
-```
 
 ![image-demo1_verbosemode](readme-images/image-demo1_debug mode.png)
 
