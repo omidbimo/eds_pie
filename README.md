@@ -1,16 +1,20 @@
 # EDS pie
 
-**An EDS(Electronic Data Sheet) parser library for ODVA's CIP protocol family(EthereNetIP, DeviceNet,...)**
+**An EDS(Electronic Data Sheet) parser library for ODVA's CIP® protocol family(EtherNet/IP®, DeviceNet®,...)**
 
 ![python version](readme-images/py27-badge.svg "python version")
+
+### The following are trademarks of ODVA:
+CIP, CIP Energy, CIP Motion, CIP Security, CIP Safety, CIP Sync, CompoNet, ControlNet, DeviceNet,
+EtherNet/IP, ODVA CONFORMANT, QuickConnect.
 
 ### Who may need an EDS parser library
 
 Use cases:
 
 - ​	Batch processing of EDS files
-  - To find out which devices are supporting a specific CIP object or service (i.e. CIP Security)
-  - To change contents of a range of EDS files (i.e. Add a new section to all EDSs with a specific ProductCode)
+  - To find out which devices are supporting a specific CIP object or feature (i.e. CIP Security)
+  - To change contents of multiple of EDS files (i.e. Add a new section to all EDSs with a specific ProductCode)
 - Automation
   - To implement automated scripts/tests
     - The test script uses EDS_pie to parse the IO assembly path and starts an IO communication
