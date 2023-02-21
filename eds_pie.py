@@ -102,7 +102,6 @@ import struct
 import logging
 import numbers
 
-from collections import namedtuple
 from datetime    import datetime, date, time
 from string      import digits
 
@@ -526,30 +525,43 @@ class EDS(object):
 
         return entry
 
-    def addfield(self, sectionname, entryname, fieldvalue, fielddatatype = None):
+    def addfield(self, sectionname, entryname, fieldvalue, field_datatype = None):
         section = self.getsection(sectionname)
         if section is None:
-            logger.error('Section not found! [{}]'.format(section._name))
+            raise Exception('Section not found! [{}]'.format(section._name))
 
-        entry   = section.getentry(entryname)
+        entry = section.getentry(entryname)
         if entry is None:
-            logger.error('Entry not found! [{}].{}'.format(sectionname, entryname))
-        fielddata = None
+            raise Exception('Entry not found! [{}]'.format(Entry._name))
 
-        # getting the type info from eds dictionary
+        field_data = None
+
+        # getting field's info from eds reference library
+        ref_datatypes = []
         ref_field = self.ref.get_field(section._name, entry.name, (entry.fieldcount))
         if ref_field:
             field_name = ref_field.name or entry.name
+            ref_datatypes = ref_field.datatypes
         else:
             field_name = 'field{}'.format(entry.fieldcount)
 
-        datatypes = self.ref.get_field_datatypes(section._name, entry.name, field_name)
-        if not datatypes:
-            logger.warning('Unknown Field [{}].{}.{} = {}'.format(section._name, entry.name, field_name, fieldvalue))
+        if not ref_datatypes:
+            '''
+            The filed is unknown and no ref_types are in hand. Keep the urrent field type.
+            '''
+            if fieldvalue != '' and EDS_VENDORSPEC.validate(fieldvalue):
+                logger.warning('Unknown Field [{}].{}.{} = {}. Switched to VENDOR_SPECIFIC field.'.format(section._name, entry.name, field_name, fieldvalue))
+                field_data = EDS_VENDORSPEC(fieldvalue)
+            elif fieldvalue != '' and EDS_UNDEFINED.validate(fieldvalue):
+                logger.warning('Unknown Field [{}].{}.{} = {}. Switched to EDS_UNDEFINED field.'.format(section._name, entry.name, field_name, fieldvalue))
+                field_data = EDS_UNDEFINED(fieldvalue)
+            else:
+                logger.warning('Unknown Field [{}].{}.{} = {}. Switched to EDS_EMPTY field.'.format(section._name, entry.name, field_name, fieldvalue))
+                field_data = EDS_EMPTY(fieldvalue)
 
         # Validating field value
-        if fieldvalue != '' or self.ref.ismandatory(section._name, entry.name, field_name):
-            for dtype, typeinfo in datatypes: # Getting the listed data types and their acceptable ranges
+        elif fieldvalue != '' or self.ref.ismandatory(section._name, entry.name, field_name):
+            for dtype, typeinfo in ref_datatypes: # Getting the listed data types and their acceptable ranges
                 if dtype.validate(fieldvalue, typeinfo):
 
                     if dtype == EDS_TYPEREF:
@@ -561,44 +573,35 @@ class EDS(object):
                         try:
                             dtype = self.ref.gettype(typeid)
                             if dtype.validate(fieldvalue, []):
-                                fielddata = dtype(fieldvalue, [])
+                                field_data = dtype(fieldvalue, [])
                                 break
                         except:
-
-                            fielddata = EDS_UNDEFINED(fieldvalue)
+                            field_data = EDS_UNDEFINED(fieldvalue)
 
                     else: # No TYPEREF
                         # creating type instance with field value
 
-                        fielddata = dtype(fieldvalue, typeinfo)
+                        field_data = dtype(fieldvalue, typeinfo)
 
-            if fielddata is None: # No proper type was found
-                if EDS_VENDORSPEC.validate(fieldvalue):
-                    typelist = [(type, '') for type, typeinfo in datatypes if not typeinfo]
-                    typelist += [(type, typeinfo) for type, typeinfo in datatypes if typeinfo]
-                    types_str = ', '.join('<{}{}>'.format(type[0].__name__, type[1]) for type in typelist)
-                    logger.warning('Type mismatch! [{}].{}.{} = ({}), should be a type of: {}. '
-                    'Switched to VENDOR_SPECIFIC type.'.format(section._name, entry.name, field_name, fieldvalue, types_str))
-
-                    fielddata = EDS_VENDORSPEC(fieldvalue)
-                elif self.ref.ismandatory(section._name, entry.name, field_name):
-                    typelist = [(type, '') for type, typeinfo in datatypes if not typeinfo]
-                    typelist += [(type, typeinfo) for type, typeinfo in datatypes if typeinfo]
+            if field_data is None: # No proper type was found
+                if self.ref.ismandatory(section._name, entry.name, field_name):
+                    typelist = [(type, '') for type, typeinfo in ref_datatypes if not typeinfo]
+                    typelist += [(type, typeinfo) for type, typeinfo in ref_datatypes if typeinfo]
                     types_str = ', '.join('<{}{}>'.format(type[0].__name__, type[1]) for type in typelist)
                     logger.error('Data_type mismatch! [{}].{}.{} = ({}), should be a type of: {}'
                          .format(section._name, entry.name, field_name, fieldvalue, types_str))
 
                 elif fieldvalue == '':
-                    fielddata = EDS_EMPTY(fieldvalue)
+                    field_data = EDS_EMPTY(fieldvalue)
                 else:
-                    fielddata = EDS_UNDEFINED(fieldvalue)
+                    field_data = EDS_UNDEFINED(fieldvalue)
         else: # fieldvalue == ''
-            fielddata = EDS_EMPTY(fieldvalue)
+            field_data = EDS_EMPTY(fieldvalue)
 
 
-        field = EDS_Field(entry, field_name, fielddata, entry.fieldcount)
+        field = EDS_Field(entry, field_name, field_data, entry.fieldcount)
 
-        field._datatypes = datatypes
+        field._datatypes = ref_datatypes
         entry._fields.append(field)
 
         return field
