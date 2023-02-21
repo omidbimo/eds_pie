@@ -447,15 +447,13 @@ class EDS(object):
     def hasentry(self, sectionname, entryname):
         section = self.getsection(sectionname)
         if section:
-            if entryname.replace(' ', '').lower() in section._entries.keys():
-                return True
+            return entryname.replace(' ', '').lower() in section._entries.keys()
         return False
 
     def hasfield(self, sectionname, entryname, fieldindex):
         entry = self.getentry(sectionname, entryname)
         if entry:
-            if fieldindex < entry.fieldcount:
-                return True
+            return fieldindex < entry.fieldcount
         return False
 
     def addsection(self, sectionname):
@@ -640,34 +638,9 @@ class EDS(object):
                 'Remove the fields first or use removetree = True'.format(section._name, entry.name))
 
     def removefield(self, sectionname, sentryname, fieldindex):
+        # TODO
         pass
 
-    def resolvepath(self, path):
-        items = path.split()
-        for index, item in enumerate(items):
-            if len(item) < 2:
-                logger.error('Invalid EPATH format! item[{}]:\"{}\" in [{}]'.format(index, item, path))
-
-            if not isnumber(item):
-                if item[0] == '[' and item[-1] == ']':
-                    entryname = item.strip('[]').lower()
-                    field = self.getfield('Params', entryname, fieldname = 'Default Value') #TODO: requires improvement
-                    if field:
-                        items[index] = int(field.value)
-                        continue
-                    logger.error('Entry not found! item[{}]:\"{}\" in [{}]'.format(index, item, path))
-                # ? Error(ERRORS.ERR_INVALID_EPATH_FORMAT, 'item[{}]:\"{}\" in [{}]: '
-                # ?      .format(index, item, path))
-            elif not ishex(item):
-                logger.error('Invalid EPATH format! item[{}]:\"{}\" in [{}]'.format(index, item, path))
-
-            items[index] = int(item, 16)
-        return ' '.join('{:02X}'.format(item) for item in items)
-
-    def packpath(self, path):
-        path = self.resolve_path(path)
-        items = path.split()
-        return ''.join((struct.pack('B', int(item, 16)) for item in items))
 
     def final_rollcall(self):
         requiredsections = self.ref.get_required_sections()
@@ -1197,7 +1170,6 @@ class eds_pie(object):
         entries = sorted(sect.entries, key = lambda entry: entry.name) # sorting is only in python2 required
         for entry in entries:
             field = entry.getfield()
-            print field
             if not field: break
 
             dt, valid_range = field.datatype
