@@ -2,7 +2,7 @@
 
 **An EDS(Electronic Data Sheet) parser library for ODVA's CIP protocol family(EthereNetIP, DeviceNet,...)**
 
-python 2.7
+![python version](readme-images/py27-badge.svg "python version")
 
 ### Who may need an EDS parser library
 
