@@ -503,7 +503,7 @@ class EDS(object):
         if entryname.replace(' ', '').lower() in section._entries.keys():
             logger.error('Duplicated Entry! to serialize \"{}\", set the serialize switch to True'.format(entry))
 
-        # Correcting entry name
+        # Finding a name for the new entry
         ref_keyword = ''
         ref_entry = self.ref.get_entry(sectionname, entryname)
         if ref_entry:
@@ -1192,12 +1192,18 @@ class eds_pie(object):
 
         # setting the protocol
         eds._protocol = 'Generic'
+
         sect = eds.getsection('Device Classification')
-        if sect:
-            for entry in sect.entries:
-                if entry.getfield().value in entry.getfield().datatype[1]:
-                    eds._protocol = entry.getfield().value
-                    break
+        entries = sorted(sect.entries, key = lambda entry: entry.name) # sorting is only in python2 required
+        for entry in entries:
+            field = entry.getfield()
+            print field
+            if not field: break
+
+            dt, valid_range = field.datatype
+            if field.value in valid_range:
+                eds._protocol = field.value
+                break
 
         #self.final_rollcall()
         if showprogress: print ''
