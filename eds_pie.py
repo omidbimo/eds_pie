@@ -566,8 +566,8 @@ class EDS(object):
                     if dtype == EDS_TYPEREF:
                         ''' A referenced-type has to be validated. Type this
                             filed comes from another field which is here named
-                            The linked field contains a CIP type id '''
-
+                            The linked field contains a CIP type id
+                        '''
                         typeid = self.getfield(sectionname, entryname, fieldname = typeinfo[0]).value
                         try:
                             dtype = self.ref.gettype(typeid)
@@ -579,21 +579,29 @@ class EDS(object):
 
                     else: # No TYPEREF
                         # creating type instance with field value
-
                         field_data = dtype(fieldvalue, typeinfo)
 
             if field_data is None: # No proper type was found
-                if self.ref.ismandatory(section._name, entry.name, field_name):
+                #if self.ref.ismandatory(section._name, entry.name, field_name):
+
+                if fieldvalue != '':
                     typelist = [(type, '') for type, typeinfo in ref_datatypes if not typeinfo]
                     typelist += [(type, typeinfo) for type, typeinfo in ref_datatypes if typeinfo]
                     types_str = ', '.join('<{}{}>'.format(type[0].__name__, type[1]) for type in typelist)
-                    logger.error('Data_type mismatch! [{}].{}.{} = ({}), should be a type of: {}'
-                         .format(section._name, entry.name, field_name, fieldvalue, types_str))
 
-                elif fieldvalue == '':
-                    field_data = EDS_EMPTY(fieldvalue)
+                    if self.ref.ismandatory(section._name, entry.name, field_name):
+                        raise Exception('Data_type mismatch! [{}].{}.{} = ({}), should be a type of: {}'
+                             .format(section._name, entry.name, field_name, fieldvalue, types_str))
+                    else:
+                        logger.error('Data_type mismatch! [{}].{}.{} = ({}), should be a type of: {}'
+                             .format(section._name, entry.name, field_name, fieldvalue, types_str))
+                        if EDS_VENDORSPEC.validate(fieldvalue):
+                            field_data = EDS_VENDORSPEC(fieldvalue)
+                        else:
+                            field_data = EDS_UNDEFINED(fieldvalue)
                 else:
-                    field_data = EDS_UNDEFINED(fieldvalue)
+                    field_data = EDS_EMPTY(fieldvalue)
+
         else: # fieldvalue == ''
             field_data = EDS_EMPTY(fieldvalue)
 
@@ -1176,19 +1184,20 @@ class parser(object):
 
 # ------------------------------------------------------------------------------
 class eds_pie(object):
+
     @staticmethod
     def parse(eds_content = '', showprogress = True):
 
         eds = parser(eds_content, showprogress).parse()
 
         # setting the protocol
+        eds._protocol = 'Generic'
         sect = eds.getsection('Device Classification')
         if sect:
             for entry in sect.entries:
                 if entry.getfield().value in entry.getfield().datatype[1]:
                     eds._protocol = entry.getfield().value
                     break
-        if eds._protocol == '': eds._protocol = 'Generic'
 
         #self.final_rollcall()
         if showprogress: print ''
