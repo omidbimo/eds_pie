@@ -25,7 +25,7 @@ SOFTWARE.
 """
 from eds_pie import eds_pie
 
-with open('netx.eds', 'r') as srcfile:
+with open('demo.eds', 'r') as srcfile:
     eds_content = srcfile.read()
 eds = eds_pie.parse(eds_content, showprogress = True)
 
