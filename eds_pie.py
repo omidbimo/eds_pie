@@ -503,21 +503,20 @@ class EDS(object):
         if entryname.replace(' ', '').lower() in section._entries.keys():
             logger.error('Duplicated Entry! to serialize \"{}\", set the serialize switch to True'.format(entry))
 
-        if not self.ref.has_entry(sectionname, entryname):
-            logger.warning('Unknown Entry [{}].{}'.format(sectionname, entryname))
-
         # Correcting entry name
         ref_keyword = ''
         ref_entry = self.ref.get_entry(sectionname, entryname)
         if ref_entry:
             ref_keyword = ref_entry.key.rstrip('N').rstrip(digits)
+            if ref_keyword != entryname.rstrip(digits):
+                logger.warning('Not exact match! in section [{}], entry name: \"{}\" should be:'
+                    ' \"{}[N]\"'.format(sectionname, entryname, ref_keyword))
+        else:
+            logger.warning('Unknown Entry [{}].{}'.format(sectionname, entryname))
 
-        if ref_keyword != entryname.rstrip(digits):
-            logger.warning('Not exact match! in section [{}], entry name: \"{}\" should be:'
-                ' \"{}[N]\"'.format(sectionname, entryname, ref_keyword))
 
-            entry_nid = entryname[len(ref_keyword):]
-            entryname = ref_keyword + entry_nid
+        entry_nid = entryname[len(ref_keyword):]
+        entryname = ref_keyword + entry_nid
 
         entry = EDS_Entry(section, entryname, section.entrycount)
 
