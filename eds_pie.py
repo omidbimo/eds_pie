@@ -476,10 +476,10 @@ class EDS(object):
             if ref_section_key != sectionname:
                 logger.warning('section name: [{}] should be: [{}]'.format(sectionname, ref_keyword))
 
-            ## TODO: is it helpful?
-            if ((ref_section_key == 'File' and len(self._sections) != 0) or
-                (ref_section_key == 'Device' and len(self._sections) != 1)):
-                logger.warning('Unexpected order of sections. Section [{}] found at '.format(sectionname))
+            if sectionkey == 'file' and len(self._sections) != 0:
+                logger.warning('Unexpected order of sections. Section [File] must be the first section of the EDS.')
+            elif sectionkey == 'device' and len(self._sections) != 1:
+                logger.warning('Unexpected order of sections. Section [Device] must be the second section of the EDS.')
 
             sectionname = ref_section.key
 
