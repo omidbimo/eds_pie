@@ -128,8 +128,8 @@ HEADING_COMMENT_TEMPLATE = ( ' Electronic Data Sheet Generated with EDS-pie Vers
                          +   ' Changes in this file may cause configuration or '
                          +   'communication problems.\n\n' + ' '.ljust(79, '-')
                          +   '\n' )
-
 # ------------------------------------------------------------------------------
+
 class EDS_PIE_ENUMS(object):
 
     def Str(self, enum):
@@ -238,7 +238,6 @@ class EDS_Section(object):
     def __str__(self):
         return 'SECTION({})'.format(self._name)
 
-# --------------------------------------------------------------------------
 class EDS_Entry(object):
 
     def __init__(self, section, name, index):
@@ -297,7 +296,7 @@ class EDS_Entry(object):
 
     def __str__(self):
         return 'ENTRY({})'.format(self._name)
-# --------------------------------------------------------------------------
+
 class EDS_Field(object):
     def __init__(self, entry, name, data, index):
         self._index     = index
@@ -346,10 +345,10 @@ class EDS_Field(object):
     def __str__(self):
         if self._data is None:
             return '\"\"'
+        # TODO: If a field of STRING contains multi lines of string, print each line as a seperate string.
         return 'FIELD(index: {}, name: \"{}\", value: ({}), type: <{}>{})'.format(
             self._index, self._name, str(self._data), type(self._data).__name__, self._data.range)
 
-# ------------------------------------------------------------------------------
 class EDS(object):
 
     def __init__(self):
@@ -756,8 +755,6 @@ class EDS(object):
                 Msg += '\n'
         return Msg
 
-
-# ---------------------------------------------------------------------------
 class Token(object):
 
     def __init__(self, type=None, value=None, offset=None, line=None, col=None):
@@ -774,7 +771,7 @@ class Token(object):
             str(self.offset).rjust(5),
             TOKEN_TYPES.Str(self.type).ljust(11),
             self.value)
-#---------------------------------------------------------------------------
+
 class parser(object):
     def __init__(self, eds_content, showprogress = False):
         self.src_text = eds_content
@@ -1158,7 +1155,6 @@ class parser(object):
             return True
         return False
 
-# ------------------------------------------------------------------------------
 class eds_pie(object):
 
     @staticmethod
