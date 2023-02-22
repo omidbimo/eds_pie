@@ -223,17 +223,16 @@ class EDS_Section(object):
             return True
         return False
 
-    def getentry(self, entryname = None, entryindex = None):
+    def getentry(self, entryname):
         return self._entries.get(entryname.replace(' ', '').lower())
 
-    def getfield(self, entryname, fieldindex = 0, fieldname = ''):
+    def getfield(self, entryname, field):
+        '''
+        To get a section.entry.field using the entry name + (ield name or field index.
+        '''
         entry = self._entries.get(entryname.replace(' ', '').lower())
         if entry:
-            if fieldname is not None and fieldname != '':
-                for field in entry.fields:
-                    if field.name.replace(' ', '').lower() == fieldname.replace(' ', '').lower():
-                        return field
-            if fieldindex < entry.fieldcount: return entry.fields[fieldindex] # TODO: test
+            return entry.getfield(field)
         return None
 
     def __str__(self):
@@ -246,31 +245,36 @@ class EDS_Entry(object):
         self._index   = index
         self._section = section
         self._name    = name
-        self._fields  = [] # Fields are implemented as a list. Not the same as sections and entries
+        self._fields  = [] # Unlike the _sections and _entries, _fields are implemented as a list.
+                           # One reason is entry fields with the same name which doesn't easily fit to a dictionary.
         self.hcomment = ''
         self.fcomment = ''
 
     def addfield(self, fieldvalue, datatype = None):
         return self._section._eds.addfield(self._section.name, self._name, fieldvalue, datatype)
 
-    def hasfield(self, fieldindex = 0, fieldname = ''):
-        if fieldname != '':
+    def hasfield(self, field):
+        if isinstance(field, str): # field name
+            fieldname = field.replace(' ', '').lower()
             for field in self._fields:
-                if fieldname.replace(' ', '').lower() == field.name.replace(' ', '').lower():
+                if fieldname == field.name.replace(' ', '').lower():
                     return True
-            return False
-        if fieldindex < self.fieldcount:
-            return True
-        return False
+        elif isinstance(field, numbers.Number): # field index
+            return field < entry.fieldcount
+        else:
+            raise TypeError('Inappropriate data type: {}'.format(type(field)))
 
-    def getfield(self, fieldindex = 0, fieldname = ''):
-        if fieldname != '':
+    def getfield(self, field):
+        if isinstance(field, str): # field name
+            fieldname = field.replace(' ', '').lower()
             for field in self._fields:
-                if fieldname.replace(' ', '').lower() == field.name.replace(' ', '').lower():
+                if fieldname == field.name.replace(' ', '').lower():
                     return field
-            return None
-        if fieldindex < self.fieldcount:
-            return self.fields[fieldindex]
+        elif isinstance(field, numbers.Number): # field index
+            if field < self.fieldcount:
+                return self.fields[field]
+        else:
+            raise TypeError('Inappropriate data type: {}'.format(type(field)))
         return None
 
     @property
@@ -299,8 +303,8 @@ class EDS_Field(object):
         self._index     = index
         self._entry     = entry
         self._name      = name
-        self._data      = data
-        self._datatypes = []
+        self._data      = data # datatype object. Actually is the Field value containing also its type information
+        self._datatypes = [] # Valid datatypes a field supports
         self.hcomment  = ''
         self.fcomment  = ''
 
@@ -318,22 +322,22 @@ class EDS_Field(object):
 
     @value.setter
     def value(self, value):
-        #TODO: requires improvements
         if type(self._data) != EMPTY or type(self._data) != EDS_UNDEFINED:
             if type(self._data).validate(value, self._data.range):
                 self._data._value = value
                 return
+        # Setting with the actual datatype is failed. Try other supported types.
         if self._datatypes:
             for datatype, valid_data in self._datatypes:
                 if datatype.validate(value, valid_data):
                     del self._data
                     self._data = datatype(value, valid_data)
                     return
-        types_str = ', '.join('<{}>{}'.format(datatype.__name__, valid_data) for datatype, valid_data in self._datatypes)
-        error_msg = ('Data_type mismatch! [{}].{}.{} = ({}), should be a type of: {}'
+        types_str = ', '.join('<{}>{}'.format(datatype.__name__, valid_data)
+                                for datatype, valid_data in self._datatypes)
+        raise Exception('Unable to set Field value! Data_type mismatch!'
+            ' [{}].{}.{} = ({}), should be a type of: {}'
             .format(self._entry._section.name, self._entry.name, self.name, value, types_str))
-
-        raise Exception(__name__ + ':> calling: \"{}()\" {}'.format(str(inspect.stack()[0][3]), error_msg))
 
     @property
     def datatype(self):
@@ -342,7 +346,8 @@ class EDS_Field(object):
     def __str__(self):
         if self._data is None:
             return '\"\"'
-        return 'FIELD(index: {}, name: \"{}\", value: ({}), type: <{}>{})'.format(self._index, self._name, str(self._data), type(self._data).__name__, self._data.range)
+        return 'FIELD(index: {}, name: \"{}\", value: ({}), type: <{}>{})'.format(
+            self._index, self._name, str(self._data), type(self._data).__name__, self._data.range)
 
 # ------------------------------------------------------------------------------
 class EDS(object):
@@ -391,7 +396,7 @@ class EDS(object):
 
     @property
     def sections(self):
-        return list(self._sections.values())
+        return tuple(self._sections.values())
 
     def getsection(self, section):
         '''
@@ -403,55 +408,55 @@ class EDS(object):
             return self._sections.get(self.ref.get_section_name(section, self.protocol).replace(' ', '').lower())
         raise TypeError('Inappropriate data type: {}'.format(type(section)))
 
-    def getentry(self, sectionname, entryname):
-        if sectionname.replace(' ', '').lower() in self._sections.keys():
-            return self._sections[sectionname.replace(' ', '').lower()].getentry(entryname)
+    def getentry(self, section, entryname):
+        '''
+        To get an entry by its section name/section id and its entry name.
+        '''
+        sec = self.getsection(section)
+        if sec:
+            return sec.getentry(entryname)
         return None
 
-    def getfield(self, sectionname, entryname, fieldindex = 0, fieldname = ''):
-        entry = self.getentry(sectionname, entryname)
-        if entry is not None:
-            if fieldname is not None and fieldname != '':
-                for field in entry.fields:
-                    if field.name.replace(' ', '').lower() == fieldname.replace(' ', '').lower():
-                        return field
-            if fieldindex < entry.fieldcount:
-                return entry.fields[fieldindex]
-        return None
-
-    def getvalue(self, sectionname, entryname, fieldindex = 0, fieldname = ''):
-        entry = self.getentry(sectionname, entryname)
+    def getfield(self, section, entryname, field):
+        '''
+        To get an field by its section name/section id, its entry name and its field anme/field index
+        '''
+        entry = self.getentry(section, entryname)
         if entry:
-            if fieldname is not None and fieldname != '':
-                for field in entry.fields:
-                    if field.name.replace(' ', '').lower() == fieldname.replace(' ', '').lower():
-                        return field.value
-            return entry.fields[fieldindex].value
+            return entry.getfield(field)
         return None
 
-    def setvalue(self, sectionname, entryname, fieldindex, value):
-        entry_ = self.getentry(sectionname, entryname)
-        if entry_:
-            entry_.fields[fieldindex].value = value
+    def getvalue(self, section, entryname, field):
+        field = self.getfield(section, entryname, field)
+        if field:
+            return field.value
+        return None
+
+    def setvalue(self, section, entryname, field, value):
+        field = self.getfield(section, entryname, field)
+        if field is None:
+            raise Exception('Not a valid field! Unable to set the field value.')
+        field.value = value
+
 
     def hassection(self, section):
         '''
         To check if the EDS contains a section by its EDS keyword or by its CIP classID.
         '''
         if isinstance(section, str):
-            return self._sections.get(section.replace(' ', '').lower()) is not None
+            return section.replace(' ', '').lower() in self._sections.keys()
         if isinstance(section, numbers.Number):
-            return self._sections.get(self.ref.get_section_name(section, self.protocol).replace(' ', '').lower()) is not None
+            return self.ref.get_section_name(section, self.protocol).replace(' ', '').lower() in self._sections.keys()
         raise TypeError('Inappropriate data type: {}'.format(type(section)))
 
-    def hasentry(self, sectionname, entryname):
-        section = self.getsection(sectionname)
+    def hasentry(self, section, entryname):
+        section = self.getsection(section)
         if section:
             return entryname.replace(' ', '').lower() in section._entries.keys()
         return False
 
-    def hasfield(self, sectionname, entryname, fieldindex):
-        entry = self.getentry(sectionname, entryname)
+    def hasfield(self, section, entryname, field):
+        entry = self.getentry(section, entryname)
         if entry:
             return fieldindex < entry.fieldcount
         return False
@@ -517,7 +522,6 @@ class EDS(object):
         entryname = ref_keyword + entry_nid
 
         entry = EDS_Entry(section, entryname, section.entrycount)
-
         section._entries[entryname.replace(' ', '').lower()] = entry
 
         return entry
@@ -560,13 +564,15 @@ class EDS(object):
         elif fieldvalue != '' or self.ref.ismandatory(section._name, entry.name, field_name):
             for dtype, typeinfo in ref_datatypes: # Getting the listed data types and their acceptable ranges
                 if dtype.validate(fieldvalue, typeinfo):
-
                     if dtype == EDS_TYPEREF:
-                        ''' A referenced-type has to be validated. Type this
-                            filed comes from another field which is here named
-                            The linked field contains a CIP type id
                         '''
-                        typeid = self.getfield(sectionname, entryname, fieldname = typeinfo[0]).value
+                        Type of a field is determined by value of another field. A referenced-type has to be validated.
+                        The name of the ref field that contains the a data_type, is listed in the primary field's
+                        datatype.valid_ranges(typeinfo) which itself is a list of names
+                        Example: The datatype of Params.Param1.MinimumValue is determined by Params.Param1.DataType
+                        '''
+                        # TODO: here we read only the first item of the reference field list. Iterating the list might be a better way
+                        typeid = self.getfield(sectionname, entryname, typeinfo[0]).value
                         try:
                             dtype = self.ref.gettype(typeid)
                             if dtype.validate(fieldvalue, []):
@@ -580,8 +586,6 @@ class EDS(object):
                         field_data = dtype(fieldvalue, typeinfo)
 
             if field_data is None: # No proper type was found
-                #if self.ref.ismandatory(section._name, entry.name, field_name):
-
                 if fieldvalue != '':
                     typelist = [(type, '') for type, typeinfo in ref_datatypes if not typeinfo]
                     typelist += [(type, typeinfo) for type, typeinfo in ref_datatypes if typeinfo]
@@ -602,7 +606,6 @@ class EDS(object):
 
         else: # fieldvalue == ''
             field_data = EDS_EMPTY(fieldvalue)
-
 
         field = EDS_Field(entry, field_name, field_data, entry.fieldcount)
 
@@ -1169,7 +1172,7 @@ class eds_pie(object):
         sect = eds.getsection('Device Classification')
         entries = sorted(sect.entries, key = lambda entry: entry.name) # sorting is only in python2 required
         for entry in entries:
-            field = entry.getfield()
+            field = entry.getfield(0)
             if not field: break
 
             dt, valid_range = field.datatype
