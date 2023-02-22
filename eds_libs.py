@@ -53,16 +53,6 @@ class CIP_EDS_lib(object):
         for prot_lib in protocol_libs:
             self.import_lib(src=prot_lib)
 
-        #lib = self.libs.get('standard')
-        #for sec_key, sec in lib.items():
-        #    print '---------------------'
-        #    print sec_key, sec
-        #for lib_key, lib in self.libs.items():
-        #    print '---------------------'
-        #    print lib_key
-        #    for sec_key, sec in lib.items():
-        #        print '---------------------'
-        #        print sec_key, sec
         self.cipdatatypes = { 0xC1: cip_types.BOOL
                             , 0xC2: cip_types.SINT
                             , 0xC3: cip_types.INT
