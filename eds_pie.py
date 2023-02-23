@@ -538,13 +538,16 @@ class EDS(object):
 
         # getting field's info from eds reference library
         ref_datatypes = []
-        ref_field = self.ref.get_field(section._name, entry.name, (entry.fieldcount))
+        ref_field = self.ref.get_field(section._name, entry.name, entry.fieldcount)
         if ref_field:
             field_name = ref_field.name or entry.name
+            # Serialize the field name if there can be multiple fields with the same name
+            if self.ref.get_entry(section._name, entry.name).Nthfields:
+                field_name = field_name.rstrip('N') + str(entry.fieldcount + 1)
             ref_datatypes = ref_field.datatypes
         else:
             field_name = 'field{}'.format(entry.fieldcount)
-
+        print entry.name, entry.fieldcount, field_name, fieldvalue
         if not ref_datatypes:
             '''
             The filed is unknown and no ref_types are in hand. Keep the urrent field type.
@@ -558,7 +561,6 @@ class EDS(object):
             else:
                 logger.warning('Unknown Field [{}].{}.{} = {}. Switched to EDS_EMPTY field.'.format(section._name, entry.name, field_name, fieldvalue))
                 field_data = EDS_EMPTY(fieldvalue)
-
         # Validating field value
         elif fieldvalue != '' or self.ref.ismandatory(section._name, entry.name, field_name):
             for dtype, typeinfo in ref_datatypes: # Getting the listed data types and their acceptable ranges
