@@ -274,10 +274,7 @@ class USINT(CIP_DataType):
     @classmethod
     def validate(cls, value, *args):
         value = getnumber(value)
-        if value >= cls.__range[0] and value <= cls.__range[1]:
-            return True
-        return False
-
+        return value is not None and value >= cls.__range[0] and value <= cls.__range[1]
 
 class UINT(CIP_DataType):
     TYPE_MIN = 0
@@ -303,10 +300,7 @@ class UINT(CIP_DataType):
     @classmethod
     def validate(cls, value, *args):
         value = getnumber(value)
-        if value >= cls.__range[0] and value <= cls.__range[1]:
-            return True
-        return False
-
+        return value is not None and value >= cls.__range[0] and value <= cls.__range[1]
 
 class UDINT(CIP_DataType):
     TYPE_MIN = 0
@@ -332,9 +326,7 @@ class UDINT(CIP_DataType):
     @classmethod
     def validate(cls, value, *args):
         value = getnumber(value)
-        if value >= cls.__range[0] and value <= cls.__range[1]:
-            return True
-        return False
+        return value is not None and value >= cls.__range[0] and value <= cls.__range[1]
 
 
 class ULINT(CIP_DataType):
@@ -361,9 +353,7 @@ class ULINT(CIP_DataType):
     @classmethod
     def validate(cls, value, *args):
         value = getnumber(value)
-        if value >= cls.__range[0] and value <= cls.__range[1]:
-            return True
-        return False
+        return value is not None and value >= cls.__range[0] and value <= cls.__range[1]
 
 
 class SINT(CIP_DataType):
@@ -390,9 +380,7 @@ class SINT(CIP_DataType):
     @classmethod
     def validate(cls, value, *args):
         value = getnumber(value)
-        if value >= cls.__range[0] and value <= cls.__range[1]:
-            return True
-        return False
+        return value is not None and value >= cls.__range[0] and value <= cls.__range[1]
 
 
 class INT(CIP_DataType):
@@ -419,9 +407,7 @@ class INT(CIP_DataType):
     @classmethod
     def validate(cls, value, *args):
         value = getnumber(value)
-        if value >= cls.__range[0] and value <= cls.__range[1]:
-            return True
-        return False
+        return value is not None and value >= cls.__range[0] and value <= cls.__range[1]
 
 
 class DINT(CIP_DataType):
@@ -448,10 +434,7 @@ class DINT(CIP_DataType):
     @classmethod
     def validate(cls, value, *args):
         value = getnumber(value)
-        if value >= cls.__range[0] and value <= cls.__range[1]:
-            return True
-        return False
-
+        return value is not None and value >= cls.__range[0] and value <= cls.__range[1]
 
 class LINT(CIP_DataType):
     TYPE_MIN = -9223372036854775808
@@ -477,9 +460,7 @@ class LINT(CIP_DataType):
     @classmethod
     def validate(cls, value, *args):
         value = getnumber(value)
-        if value >= cls.__range[0] and value <= cls.__range[1]:
-            return True
-        return False
+        return value is not None and value >= cls.__range[0] and value <= cls.__range[1]
 
 
 class BYTE(CIP_DataType):
@@ -506,9 +487,7 @@ class BYTE(CIP_DataType):
     @classmethod
     def validate(cls, value, *args):
         value = getnumber(value)
-        if value >= cls.__range[0] and value <= cls.__range[1]:
-            return True
-        return False
+        return value is not None and value >= cls.__range[0] and value <= cls.__range[1]
 
 
 class WORD(CIP_DataType):
@@ -535,10 +514,7 @@ class WORD(CIP_DataType):
     @classmethod
     def validate(cls, value, *args):
         value = getnumber(value)
-        if value >= cls.__range[0] and value <= cls.__range[1]:
-            return True
-        return False
-
+        return value is not None and value >= cls.__range[0] and value <= cls.__range[1]
 
 class DWORD(CIP_DataType):
     TYPE_MIN = 0
@@ -564,10 +540,7 @@ class DWORD(CIP_DataType):
     @classmethod
     def validate(cls, value, *args):
         value = getnumber(value)
-        if value >= cls.__range[0] and value <= cls.__range[1]:
-            return True
-        return False
-
+        return value is not None and value >= cls.__range[0] and value <= cls.__range[1]
 
 class LWORD(CIP_DataType):
     TYPE_MIN = 0
@@ -593,10 +566,7 @@ class LWORD(CIP_DataType):
     @classmethod
     def validate(cls, value, *args):
         value = getnumber(value)
-        if value >= cls.__range[0] and value <= cls.__range[1]:
-            return True
-        return False
-
+        return value is not None and value >= cls.__range[0] and value <= cls.__range[1]
 
 class REAL(CIP_DataType):
     TYPE_MIN = 0
