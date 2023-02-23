@@ -696,7 +696,13 @@ class EDS(object):
 
                 # fields
                 if entry.fieldcount == 1:
-                    eds_content += '{};'.format(entry.fields[0]._data)
+                    if '\n' in str(entry.fields[0]._data):
+                        eds_content += '\n'
+                        eds_content += '\n'.join(''.ljust(2 * tabsize, ' ') + line
+                            for line in str(entry.fields[0]._data).splitlines())
+                        eds_content += ';'
+                    else:
+                        eds_content += '{};'.format(entry.fields[0]._data)
                     if entry.fields[0].fcomment != '':
                         eds_content += ''.join(''.ljust(tabsize, ' ') +
                             '$ {}\n'.format(line.strip()) for line in entry.fields[0].fcomment.splitlines())
