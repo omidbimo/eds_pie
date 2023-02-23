@@ -696,14 +696,8 @@ class STRING(CIP_DataType):
         return False
 
     def __str__(self):
-        string = ''
-        if len(self.value) > 60:
-            for offset in range(0, len(self.value), 60):
-                string += self.value[offset : offset + 60] + '\n'
-        else:
-            string = self.value
-        return "\"{}\"".format(string)
-
+        return '\n'.join('\"{}\"'.format(self.value[offset : offset + 60])
+            for offset in range(0, len(self.value), 60))
 
 class STRINGI(CIP_DataType):
     cip_typeid = 0xDE
