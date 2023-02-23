@@ -247,7 +247,7 @@ class EDS_Entry(object):
         self._fields  = [] # Unlike the _sections and _entries, _fields are implemented as a list.
                            # One reason is entry fields with the same name which doesn't easily fit to a dictionary.
         self.hcomment = ''
-        self.fcomment = ''
+        # Entries don't have fcomment attribute. The fcomments belongs to fields
 
     def addfield(self, fieldvalue, datatype = None):
         return self._section._eds.addfield(self._section.name, self._name, fieldvalue, datatype)
@@ -304,7 +304,7 @@ class EDS_Field(object):
         self._name      = name
         self._data      = data # datatype object. Actually is the Field value containing also its type information
         self._datatypes = [] # Valid datatypes a field supports
-        self.hcomment  = ''
+        # Fields don't have hcomment attribute. The hcomments belongs to entries
         self.fcomment  = ''
 
     @property
