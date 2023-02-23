@@ -547,7 +547,6 @@ class EDS(object):
             ref_datatypes = ref_field.datatypes
         else:
             field_name = 'field{}'.format(entry.fieldcount)
-        print entry.name, entry.fieldcount, field_name, fieldvalue
         if not ref_datatypes:
             '''
             The filed is unknown and no ref_types are in hand. Keep the urrent field type.
