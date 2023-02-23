@@ -671,7 +671,7 @@ class STRING(CIP_DataType):
 
     def __new__(cls, value, *args):
         if cls.validate(value):
-            return super(STRING, cls).__new__(cls, *args)
+            return super(STRING, cls).__new__(cls)
         else:
             raise Exception(__name__ + ":> Invalid value: {} for ".format(value)
                                      + "<{} (CIP typeID: 0x{:X})> data type."
