@@ -744,6 +744,34 @@ class EDS(object):
             protocol = self.protocol
         return self.ref.get_section_name(classid, protocol)
 
+    def resolve_epath(self, epath):
+        '''
+        EPATH data types can contain references to param entries in params section.
+        This method validates the path and resolves the referenced items inside the epath.
+        input EPATH in string format. example \'20 04 24 [Param1] 30 03\'
+        return: EPATH in string format
+        '''
+        items = path.split()
+        for i in range(len(items)):
+            item = items[i]
+            if len(item) < 2:
+                raise Exception('Invalid EPATH format! item[{}]:\"{}\" in [{}]'.format(index, item, path))
+
+            if not isnumber(item):
+                item = item.strip('[]')
+                if 'Param' == item.rstrip(digits) or 'ProxyParam' == item.rstrip(digits):
+                    entry_name = item
+                    field = self.getfield('Params', entry_name, 'Default Value')
+                    if field:
+                        items[i] = '{:02X}'.format(field.value)
+                        continue
+                    raise Exception('Entry not found! tem[\'{}\'] in [{}]'.format(item, path))
+                raise Exception('Invalid path format! tem[\'{}\'] in [{}]'.format(item, path))
+            elif not ishex(item):
+                raise Exception('Invalid EPATH format! item[\'{}\'] in [{}]'.format(item, path))
+
+        return ' '.join(item for item in items)
+
     def __str__(self):
         Msg = ''
         for section in self.__sections:
