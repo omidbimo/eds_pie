@@ -381,15 +381,13 @@ eds_standard_lib = EDS_LIB("Standard", [
 
         , EDS_SECTION( "Device Classification", "Device Classification", None, True,
             [
-              EDS_ENTRY( "Classification 1"  , "Class1"   , True    , 0, [1],
-                    [EDS_FIELD("Class1", True, 0, [DT(EDS_KEYWORD, ["CompoNet", "ControlNet", "DeviceNet", "EtherNetIP", "EtherNetIP_In_Cabinet", "EtherNetIP_UDP_Only", "ModbusSL", "ModbusTCP", "Safety", "HART", "IOLink"])]) ] ),
-              EDS_ENTRY( "Classification N"  , "ClassN"   , False    , 1, [1],
-                    [EDS_FIELD("ClassN", True, 0, [DT(EDS_KEYWORD, ["CompoNet", "ControlNet", "DeviceNet", "EtherNetIP", "EtherNetIP_In_Cabinet", "EtherNetIP_UDP_Only", "ModbusSL", "ModbusTCP", "Safety", "HART", "IOLink"])]) ] )
+              EDS_ENTRY( "Class", "ClassN", True, 0, [1],
+                    [EDS_FIELD("Classification N", True, 0, [DT(EDS_VENDORSPEC, []), DT(EDS_KEYWORD, ["CompoNet", "ControlNet", "DeviceNet", "EtherNetIP", "EtherNetIP_In_Cabinet", "EtherNetIP_UDP_Only", "ModbusSL", "ModbusTCP", "Safety", "HART", "IOLink"])]) ] ),
             ])
 
         , EDS_SECTION( "Parameters", "Params", None, False,
             [
-              EDS_ENTRY( "Parameter", "ParamN", False, 0, [],
+            EDS_ENTRY( "Parameter", "ParamN", False, 0, [],
                 [ EDS_FIELD("Reserved"                       , True,  0, [DT(CIP_USINT,    [])])
                 , EDS_FIELD("Link Path Size"                 , False, 0, [DT(CIP_USINT,   []), DT(EDS_EMPTY, [])])
                 , EDS_FIELD("Link Path"                      , False, 0, [DT(CIP_EPATH,   []), DT(EDS_KEYWORD, ["SYMBOL_ANSI"]), DT(EDS_EMPTY, []) ])
@@ -414,8 +412,9 @@ eds_standard_lib = EDS_LIB("Standard", [
                 , EDS_FIELD("International Parameter Name"   , False, 0, [DT(CIP_STRINGI, [])])
                 , EDS_FIELD("International Engineering Units", False, 0, [DT(CIP_STRINGI, [])])
                 , EDS_FIELD("International Help String"      , False, 0, [DT(CIP_STRINGI, [])])
-                ])
-            , EDS_ENTRY( "Enumeration", "EnumN", False, 0, [3, 4],
+                ]),
+
+            EDS_ENTRY( "Enumeration", "EnumN", False, 0, [3, 4],
                 [ EDS_FIELD("First Enum"       , False, 0, [DT(CIP_USINT,  []), DT(EDS_DATAREF, ["ParamN"])])
                 , EDS_FIELD("First Enum String", False, 0, [DT(CIP_STRING, [])])
                 , EDS_FIELD("Nth Enum"         , False, 0, [DT(CIP_USINT,  []), DT(EDS_DATAREF, ["ParamN"])])
