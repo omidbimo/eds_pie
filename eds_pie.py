@@ -358,36 +358,25 @@ class EDS(object):
         self._sections  = {}
         self.ref = CIP_EDS_lib()
 
-    def list(self, sectionname = None, entryname = None):
-        if sectionname is None and entryname is None:
-            sections = sorted(self.sections, key = lambda section: section._index)
-            for section in sections:
-                print section
-                entries = sorted(section.entries, key = lambda entry: entry._index)
-                for entry in entries:
-                    print '    ', entry
-                    for field in entry.fields:
-                        print '        ', field
-            return
+    def list(self, section_name='', entry_name=''):
+        if section_name:
+            self.list_section(self.getsection(section_name), entry_name)
+        else:
+            for section in sorted(self.sections, key = lambda section: section._index):
+                self.list_section(section, entry_name)
 
-        if sectionname is not None and entryname is not None:
-            entry = self.getentry(sectionname, entryname)
-            if entry:
-                print entry
-                for field in entry.fields:
-                    print '    ', field
-            return
+    def list_section(self, section, entry_name=''):
+        print section
+        if entry_name:
+            self.list_entry(section.getentry(entry_name))
+        else:
+            for entry in sorted(section.entries, key = lambda entry: entry._index):
+                self.list_entry(entry)
 
-        if sectionname is not None and entryname is None:
-            section = self.getsection(sectionname)
-            if section:
-                print section
-                entries = sorted(section.entries, key = lambda entry: entry._index)
-                for entry in entries:
-                    print '    ', entry
-                    for field in entry.fields:
-                        print '        ', field
-            return
+    def list_entry(self, entry):
+        print '   ', entry
+        for field in entry.fields:
+            print '       ', field
 
     @property
     def protocol(self):
