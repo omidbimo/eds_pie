@@ -23,6 +23,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 """
+
+import logging
+
+logging.basicConfig(level=logging.ERROR,
+    format='%(asctime)s - %(name)s.%(levelname)-8s %(message)s')
+logger = logging.getLogger(__name__)
+
 from eds_pie import eds_pie
 
 with open('demo.eds', 'r') as srcfile:
@@ -33,10 +40,10 @@ if eds.protocol == 'EtherNetIP':
     entry = eds.getentry('device', 'ProdType')
     field = entry.fields[0]
     if field.value == 12:
-        print 'This is an EtherNet/IP Communication adapter device.'
+        print('This is an EtherNet/IP Communication adapter device.')
     # Alternate way: The value attribute of an entry always returns its first field value.
-    if entry.value == 12:
-        print 'This is an EtherNet/IP Communication adapter device.'
+    #if entry.value == 12:
+    #    print('This is an EtherNet/IP Communication adapter device.')
 
     if eds.hassection(0x5D):
         eds.list(eds.get_cip_section_name(0x5D))
@@ -45,4 +52,4 @@ if eds.protocol == 'EtherNetIP':
         Do some stuff with security objects.
         '''
     else:
-        print 'Device doesn\'t support CIP security'
+        print('Device doesn\'t support CIP security')

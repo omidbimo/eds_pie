@@ -24,20 +24,26 @@ SOFTWARE.
 
 """
 
+import logging
+
+logging.basicConfig(level=logging.ERROR,
+    format='%(asctime)s - %(name)s.%(levelname)-8s %(message)s')
+logger = logging.getLogger(__name__)
+
 from eds_pie import eds_pie
 
 with open('demo.eds', 'r') as srcfile:
     eds_content = srcfile.read()
 eds = eds_pie.parse(eds_content, showprogress = True)
 
-print 'EDS protocol:', eds.protocol
+print('EDS protocol: {}'.format(eds.protocol))
 
 for section in eds.sections:
-    print section
+    print(section)
     for entry in section.entries:
-        print '   ', entry
+        print('    {}'.format(entry))
         for field in entry.fields:
-            print '       ', field
+            print('       {}'.format(field))
 ## Alternate API: Using the list method of the eds object
 # eds.list()
 # eds.list('file')
