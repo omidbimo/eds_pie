@@ -2,7 +2,8 @@
 
 **An EDS(Electronic Data Sheet) parser library for ODVA's CIP® protocol family(EtherNet/IP®, DeviceNet®,...)**
 
-![python version](readme-images/py27-badge.svg "python version")
+![python version3](readme-images/py3-badge.svg "python version 3") ![python version27](readme-images/py27-badge.svg "python version 2.7")
+
 
 ### The following are trademarks of ODVA:
 CIP, CIP Energy, CIP Motion, CIP Security, CIP Safety, CIP Sync, CompoNet, ControlNet, DeviceNet,
