@@ -366,7 +366,7 @@ class EDS(object):
                 self.list_section(section, entry_name)
 
     def list_section(self, section, entry_name=''):
-        print section
+        print(section)
         if entry_name:
             self.list_entry(section.getentry(entry_name))
         else:
@@ -374,9 +374,9 @@ class EDS(object):
                 self.list_entry(entry)
 
     def list_entry(self, entry):
-        print '   ', entry
+        print ('    {}'.format(entry))
         for field in entry.fields:
-            print '       ', field
+            print ('        {}'.format(field))
 
     @property
     def protocol(self):
@@ -830,7 +830,9 @@ class parser(object):
                 sys.stdout.flush()
                 sys.stdout.write('')
 
+        assert self.offset <= self.src_len
         self.offset += 1
+
         # EOF
         if self.offset == self.src_len:
             return SYMBOLS.EOF
@@ -840,10 +842,11 @@ class parser(object):
         if char == SYMBOLS.EOL:
             self.line += 1
             self.col = 0
+
         return char
 
     def lookahead(self, offset = 1):
-        if self.offset + offset > self.src_len:
+        if self.offset + offset >= self.src_len:
             return None
         return self.src_text[self.offset + offset]
 
@@ -911,7 +914,7 @@ class parser(object):
                         offset=self.offset, line=self.line, col=self.col)
 
             if token.type is TOKEN_TYPES.COMMENT:
-                if ch == SYMBOLS.EOL or ch == SYMBOLS.EOF:
+                if ch == SYMBOLS.EOL or self.lookahead() == SYMBOLS.EOF:
                     return token
                 token.value += ch
                 continue
@@ -1201,7 +1204,7 @@ class eds_pie(object):
                 break
 
         #self.final_rollcall()
-        if showprogress: print ''
+        if showprogress: print('')
         return eds
 
 
