@@ -1193,16 +1193,18 @@ class eds_pie(object):
         eds._protocol = 'Generic'
 
         sect = eds.getsection('Device Classification')
-        entries = sorted(sect.entries, key = lambda entry: entry.name) # sorting is only in python2 required
-        for entry in entries:
-            field = entry.getfield(0)
-            if not field: break
+        if sect:
+            entries = sorted(sect.entries, key = lambda entry: entry.name) # sorting is only in python2 required
+            for entry in entries:
+                field = entry.getfield(0)
+                if not field: break
 
-            dt, valid_range = field.datatype
-            if field.value in valid_range:
-                eds._protocol = field.value
-                break
-
+                dt, valid_range = field.datatype
+                if field.value in valid_range:
+                    eds._protocol = field.value
+                    break
+        else:
+            logger.error('Missing required section [Device Classification]!')
         #self.final_rollcall()
         if showprogress: print('')
         return eds
