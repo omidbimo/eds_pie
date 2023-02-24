@@ -747,7 +747,7 @@ class EDS(object):
         input EPATH in string format. example \'20 04 24 [Param1] 30 03\'
         return: EPATH in string format
         '''
-        items = path.split()
+        items = epath.split()
         for i in range(len(items)):
             item = items[i]
             if len(item) < 2:
