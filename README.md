@@ -5,9 +5,11 @@
 ![python version3](readme-images/py3-badge.svg "python version 3") ![python version27](readme-images/py27-badge.svg "python version 2.7")
 
 
-### The following are trademarks of ODVA:
+### The following are trademarks of ODVA (http://www.odva.org):
 CIP, CIP Energy, CIP Motion, CIP Security, CIP Safety, CIP Sync, CompoNet, ControlNet, DeviceNet,
-EtherNet/IP, ODVA CONFORMANT, QuickConnect.
+EtherNet/IP, QuickConnect.
+
+Visit http://www.odva.org for product information and publications
 
 ### Who may need an EDS parser library
 
