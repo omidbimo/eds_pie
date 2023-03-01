@@ -164,7 +164,7 @@ def isbin(data):
 
 def isdate(data):
     if data is None:  return False
-    data = data.split(MINUS)
+    data = data.split('-')
     if len(data) != 3:
         return False
     try:
@@ -181,7 +181,7 @@ def isdate(data):
         if len(yyyy) == 2:
             pass
         elif len(yyyy) == 4:
-            if int(yyyy) < 1900 or int(yyyy) > 2048:
+            if int(yyyy) < 1972 or int(yyyy) > 2151:
                 return False
         else:
             return False
@@ -230,7 +230,7 @@ def cast2date(val):
     '''
     Converts a 16-bit value to a valid DATE string between 01.01.1972 and 06.06.2151
     '''
-    return datetime.strftime(datetime.strptime('01.01.1972', "%m.%d.%Y") + timedelta(days=val), "%m.%d.%Y")
+    return datetime.strftime(datetime.strptime('01-01-1972', "%m-%d-%Y") + timedelta(days=val), "%m-%d-%Y")
 
 class CIP_EDS_BASE_TYPE(object):
     _typeid = None
@@ -256,7 +256,7 @@ class CIP_EDS_BASE_TYPE(object):
         return "{}({})".format(self.__class__.__name__, self.__value)
 
     def __str__(self):
-        return "{}".format(self._value)
+        return '{}'.format(self._value)
 
 class CIP_EDS_BASE_INT(CIP_EDS_BASE_TYPE):
 
@@ -639,6 +639,8 @@ class DATE(CIP_EDS_BASE_TYPE):
 
     @staticmethod
     def validate(value, *args): # TODO improve validate
+        return isdate(value) or UINT.validate(value)
+
         try:
             data = value.split('-')
         except:
@@ -670,7 +672,10 @@ class DATE(CIP_EDS_BASE_TYPE):
             return False
         return True
 
-
+    def __str__(self):
+        if UINT.validate(self._value):
+            return cast2date(getnumber(self._value))
+        return '{}'.format(self._value)
 
 class TIME(CIP_EDS_BASE_TYPE):
     _typeid = CIP_STD_TYPES.CIP_EDS_TIME

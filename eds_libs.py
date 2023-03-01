@@ -355,9 +355,9 @@ eds_standard_lib = EDS_LIB("Standard", [
         EDS_SECTION( "File Description", "File", None, True,
             [
               EDS_ENTRY( "File Description Text" , "DescText"  , True , 0, [], [EDS_FIELD("File Description Text" , True, 0, [DT(CIP_STRING, None)]) ] )
-            , EDS_ENTRY( "File Creation Date"    , "CreateDate", True , 0, [], [EDS_FIELD("File Creation Date"    , True, 0, [DT(CIP_DATE,     []), DT(CIP_UINT, [])]) ] )
+            , EDS_ENTRY( "File Creation Date"    , "CreateDate", True , 0, [], [EDS_FIELD("File Creation Date"    , True, 0, [DT(CIP_DATE,     [])]) ] )
             , EDS_ENTRY( "File Creation Time"    , "CreateTime", True , 0, [], [EDS_FIELD("File Creation Time"    , True, 0, [DT(CIP_TIME,     [])]) ] )
-            , EDS_ENTRY( "Last Modification Date", "ModDate"   , False, 0, [], [EDS_FIELD("Last Modification Date", True, 0, [DT(CIP_DATE,     []), DT(CIP_UINT, [])]) ] )
+            , EDS_ENTRY( "Last Modification Date", "ModDate"   , False, 0, [], [EDS_FIELD("Last Modification Date", True, 0, [DT(CIP_DATE,     [])]) ] )
             , EDS_ENTRY( "Last Modification Time", "ModTime"   , False, 0, [], [EDS_FIELD("Last Modification Time", True, 0, [DT(CIP_TIME,     [])]) ] )
             , EDS_ENTRY( "EDS Revision"          , "Revision"  , True , 0, [], [EDS_FIELD("EDS Revision"          , True, 0, [DT(EDS_REVISION, [])]) ] )
             , EDS_ENTRY( "Home URL"              , "HomeURL"   , False, 0, [], [EDS_FIELD("Home URL"              , True, 0, [DT(CIP_STRING,   [])]) ] )
