@@ -27,7 +27,7 @@ SOFTWARE.
 from collections import namedtuple
 from calendar    import monthrange
 from string      import digits
-from datetime    import datetime
+from datetime    import datetime, timedelta
 import inspect
 
 
@@ -55,7 +55,6 @@ class ENUMS(object):
         return ''
 
 class CIP_STD_TYPES(ENUMS):
-    __slots__ = ()
     CIP_EDS_UTIME         = 0xC0
     CIP_EDS_BOOL          = 0xC1
     CIP_EDS_SINT          = 0xC2
@@ -227,6 +226,11 @@ def gettime():
     ss = format(datetime.now().second, '02')
     return "%s:%s:%s" %(hh, mm, ss)
 
+def cast2date(val):
+    '''
+    Converts a 16-bit value to a valid DATE string between 01.01.1972 and 06.06.2151
+    '''
+    return datetime.strftime(datetime.strptime('01.01.1972', "%m.%d.%Y") + timedelta(days=val), "%m.%d.%Y")
 
 class CIP_EDS_BASE_TYPE(object):
     _typeid = None
