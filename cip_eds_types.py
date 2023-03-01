@@ -30,10 +30,13 @@ from string      import digits
 from datetime    import datetime, timedelta
 import inspect
 
-
 from collections import namedtuple
 RANGE = namedtuple('RANGE', 'min max')
 
+import logging
+logging.basicConfig(level=logging.WARNING,
+    format='%(asctime)s - %(name)s.%(levelname)-8s %(message)s')
+logger = logging.getLogger(__name__)
 
 class ENUMS(object):
 
@@ -163,29 +166,30 @@ def isbin(data):
 
 
 def isdate(data):
-    if data is None:  return False
-    data = data.split('-')
-    if len(data) != 3:
+    if data is None:
         return False
+
     try:
-        mm = data[0]
-        dd = data[1]
-        yyyy = data[2]
+        m, d, y = data.split('-')
 
-        if len(mm) != 2 or len(dd) != 2:
+        if len(m) != 2 or len(d) != 2 or int(m) < 1 or int(m) > 12:
+            logger.error('Invalid EDS_DATE month length or month value!')
             return False
 
-        if int(mm) < 1 or  int(mm) > 12:
-            return False
-
-        if len(yyyy) == 2:
-            pass
-        elif len(yyyy) == 4:
-            if int(yyyy) < 1972 or int(yyyy) > 2151:
+        if len(y) == 4:
+            if int(y) < 1994:
+                logger.error('Invalid EDS_DATE yyyy value!')
+                return False
+        elif len(y) == 2:
+            if int(y) < 94:
+                logger.error('Invalid EDS_DATE yy value!')
                 return False
         else:
+            logger.error('Invalid EDS_DATE year format!')
             return False
-        if int(dd) < 1 or (int(dd) > (monthrange(int(yyyy), int(mm))[1]) ):
+
+        if int(d) < 1 or (int(d) > (monthrange(int(y), int(m))[1]) ):
+            logger.error('Invalid EDS_DATE day value!')
             return False
     except:
         return False
@@ -193,11 +197,13 @@ def isdate(data):
 
 
 def getdate():
-    mm = format(date.today().month, '02')
-    dd = format(date.today().day, '02')
-    yyyy = format(date.today().year, '04')
-    return "%s-%s-%s" %(mm, dd, yyyy)
+    return datetime.strftime(datetime.now(), "%m-%d-%Y")
 
+def cast2date(val):
+    '''
+    Converts a 16-bit value to a valid DATE string between 01.01.1972 and 06.06.2151
+    '''
+    return datetime.strftime(datetime.strptime('01-01-1972', "%m-%d-%Y") + timedelta(days=val), "%m-%d-%Y")
 
 def istime(data):
     if data is None: return False
@@ -226,11 +232,7 @@ def gettime():
     ss = format(datetime.now().second, '02')
     return "%s:%s:%s" %(hh, mm, ss)
 
-def cast2date(val):
-    '''
-    Converts a 16-bit value to a valid DATE string between 01.01.1972 and 06.06.2151
-    '''
-    return datetime.strftime(datetime.strptime('01-01-1972', "%m-%d-%Y") + timedelta(days=val), "%m-%d-%Y")
+
 
 class CIP_EDS_BASE_TYPE(object):
     _typeid = None
@@ -608,6 +610,7 @@ class STRINGI(CIP_EDS_BASE_TYPE):
                                        .format(cls.__name__, cls._typeid))
 
     def __init__(self, value, *args):
+        self._range = ['mm-dd-yyyy']
         super(STRINGI, self).__init__(value)
 
     @classmethod
@@ -620,7 +623,8 @@ class STRINGI(CIP_EDS_BASE_TYPE):
 
 
 class DATE(CIP_EDS_BASE_TYPE):
-    _typeid = CIP_STD_TYPES.CIP_EDS_DATE
+    # EDS_DATE mm.dd.yyyy from 1994 to 9999
+    _range = ['mm.dd.yyyy', 'mm.dd.yy']
 
     def __new__(cls, value, *args):
         if cls.validate(value):
@@ -633,49 +637,10 @@ class DATE(CIP_EDS_BASE_TYPE):
     def __init__(self, value, *args):
         super(DATE, self).__init__(value)
 
-    @property
-    def range(self):
-        return ['mm.dd.yyyy']
-
     @staticmethod
-    def validate(value, *args): # TODO improve validate
-        return isdate(value) or UINT.validate(value)
+    def validate(value, *args):
+        return isdate(value)
 
-        try:
-            data = value.split('-')
-        except:
-            return False
-
-        if len(data) != 3:
-            return False
-
-        mm = data[0]
-        dd = data[1]
-        yyyy = data[2]
-
-        # Tolerate no leading zeros
-        #if len(mm) != 2 or len(dd) != 2:
-        #    return False
-
-        # Tolerate short year form
-        #if len(yyyy) < 4:
-        #    return False
-
-        if ((len(yyyy) < 1 or len(yyyy) > 4) or
-            (len(mm) < 1 or len(mm) > 2) or
-            (len(dd) < 1 or len(dd) > 2)):
-            return False
-
-        try:
-            datetime(year = int(yyyy), month = int(mm), day = int(dd))
-        except:
-            return False
-        return True
-
-    def __str__(self):
-        if UINT.validate(self._value):
-            return cast2date(getnumber(self._value))
-        return '{}'.format(self._value)
 
 class TIME(CIP_EDS_BASE_TYPE):
     _typeid = CIP_STD_TYPES.CIP_EDS_TIME

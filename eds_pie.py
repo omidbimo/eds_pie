@@ -557,9 +557,9 @@ class EDS(object):
 
             if field_data is None: # No proper type was found
                 if fieldvalue != '':
-                    typelist = [(type, '') for type, typeinfo in ref_datatypes if not typeinfo]
-                    typelist += [(type, typeinfo) for type, typeinfo in ref_datatypes if typeinfo]
-                    types_str = ', '.join('<{}{}>'.format(type[0].__name__, type[1]) for type in typelist)
+                    typelist = [(type_, type_._range) for type_, typeinfo in ref_datatypes if not typeinfo]
+                    typelist += [(type_, typeinfo) for type_, typeinfo in ref_datatypes if typeinfo]
+                    types_str = ', '.join('<{}({})>'.format(type_[0].__name__, type_[1]) for type_ in typelist)
 
                     if self.ref.ismandatory(section._name, entry.name, field_name):
                         raise Exception('Data_type mismatch! [{}].{}.{} = ({}), should be a type of: {}'

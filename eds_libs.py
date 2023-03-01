@@ -23,7 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 """
-from abc         import ABCMeta, abstractmethod, abstractproperty
+
 from collections import namedtuple
 from calendar    import monthrange
 from string      import digits
@@ -325,7 +325,7 @@ CIP_LREAL   = mytypes.LREAL
 CIP_BYTE    = mytypes.BYTE
 CIP_STRING  = mytypes.STRING
 CIP_STRINGI = mytypes.STRINGI
-CIP_DATE    = mytypes.DATE
+EDS_DATE    = mytypes.DATE
 CIP_TIME    = mytypes.TIME
 CIP_EPATH   = mytypes.EPATH
 
@@ -345,7 +345,7 @@ EDS_SECTION = namedtuple('EDS_SECTION' , 'name key id mandatory entries')
     # Note: if an entry has recurring fields(Nth fields) first field number of these fields should be listed in the Nthfields of the entry.
     #   example: Section:Assembly entry:Assem the 7th, 9th, 11th... fields can present the members size field. then 7 sould be listed as Nth field
 EDS_ENTRY   = namedtuple('EDS_ENTRY'   , 'name key mandatory placement Nthfields fields')
-DT          = namedtuple('DT'          , 'type typeinfo')
+DT          = namedtuple('DT'          , 'type_ typeinfo')
 EDS_FIELD   = namedtuple('EDS_FIELD'   , 'name mandatory placement datatypes')
 
 ## *****************************************************************************
@@ -355,9 +355,9 @@ eds_standard_lib = EDS_LIB("Standard", [
         EDS_SECTION( "File Description", "File", None, True,
             [
               EDS_ENTRY( "File Description Text" , "DescText"  , True , 0, [], [EDS_FIELD("File Description Text" , True, 0, [DT(CIP_STRING, None)]) ] )
-            , EDS_ENTRY( "File Creation Date"    , "CreateDate", True , 0, [], [EDS_FIELD("File Creation Date"    , True, 0, [DT(CIP_DATE,     [])]) ] )
+            , EDS_ENTRY( "File Creation Date"    , "CreateDate", True , 0, [], [EDS_FIELD("File Creation Date"    , True, 0, [DT(EDS_DATE,     [])]) ] )
             , EDS_ENTRY( "File Creation Time"    , "CreateTime", True , 0, [], [EDS_FIELD("File Creation Time"    , True, 0, [DT(CIP_TIME,     [])]) ] )
-            , EDS_ENTRY( "Last Modification Date", "ModDate"   , False, 0, [], [EDS_FIELD("Last Modification Date", True, 0, [DT(CIP_DATE,     [])]) ] )
+            , EDS_ENTRY( "Last Modification Date", "ModDate"   , False, 0, [], [EDS_FIELD("Last Modification Date", True, 0, [DT(EDS_DATE,     [])]) ] )
             , EDS_ENTRY( "Last Modification Time", "ModTime"   , False, 0, [], [EDS_FIELD("Last Modification Time", True, 0, [DT(CIP_TIME,     [])]) ] )
             , EDS_ENTRY( "EDS Revision"          , "Revision"  , True , 0, [], [EDS_FIELD("EDS Revision"          , True, 0, [DT(EDS_REVISION, [])]) ] )
             , EDS_ENTRY( "Home URL"              , "HomeURL"   , False, 0, [], [EDS_FIELD("Home URL"              , True, 0, [DT(CIP_STRING,   [])]) ] )
