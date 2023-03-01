@@ -631,10 +631,10 @@ class DATE(CIP_EDS_BASE_TYPE):
 
     @property
     def range(self):
-        return ['mm.dd.yyyy', 'yyyy.mm.dd']
+        return ['mm.dd.yyyy']
 
     @staticmethod
-    def validate(value, *args):
+    def validate(value, *args): # TODO improve validate
         try:
             data = value.split('-')
         except:
@@ -661,7 +661,7 @@ class DATE(CIP_EDS_BASE_TYPE):
             return False
 
         try:
-            datetime.datetime(year = int(yyyy), month = int(mm), day = int(dd))
+            datetime(year = int(yyyy), month = int(mm), day = int(dd))
         except:
             return False
         return True
