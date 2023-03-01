@@ -29,7 +29,7 @@ from calendar    import monthrange
 from string      import digits
 
 import inspect
-import cip_types
+import cip_eds_types as mytypes
 
 
 EXCLUDE_CHARS = [' ', '_', '\\']
@@ -53,37 +53,38 @@ class CIP_EDS_lib(object):
         for prot_lib in protocol_libs:
             self.import_lib(src=prot_lib)
 
-        self.cipdatatypes = { 0xC1: cip_types.BOOL
-                            , 0xC2: cip_types.SINT
-                            , 0xC3: cip_types.INT
-                            , 0xC4: cip_types.DINT
-                            , 0xC5: cip_types.LINT
-                            , 0xC6: cip_types.USINT
-                            , 0xC7: cip_types.UINT
-                            , 0xC8: cip_types.UDINT
-                            , 0xC9: cip_types.ULINT
-                            , 0xCA: cip_types.REAL
-                            , 0xCB: cip_types.LREAL
-                            , 0xCC: cip_types.STIME
-                            , 0xCD: cip_types.DATE
-                            #, 0xCE: cip_types.TIME_OF_DAY
-                            #, 0xCF: cip_types.DATE_AND_TIME
-                            , 0xD0: cip_types.STRING
-                            , 0xD1: cip_types.BYTE
-                            , 0xD2: cip_types.WORD
-                            , 0xD3: cip_types.DWORD
-                            , 0xD4: cip_types.LWORD
-                            #, 0xD5: cip_types.STRING2
-                            #, 0xD6: cip_types.FTIME
-                            #, 0xD7: cip_types.LTIME
-                            #, 0xD8: cip_types.ITIME
-                            #, 0xD9: cip_types.STRINGN
-                            #, 0xDA: cip_types.SHORT_STRING
-                            , 0xDB: cip_types.TIME
-                            , 0xDC: cip_types.EPATH
-                            #, 0xDD: cip_types.ENGUNIT
-                            , 0xDE: cip_types.STRINGI
-                            }
+        self.supported_datatypes = {
+            0xC1: mytypes.BOOL,
+            0xC2: mytypes.SINT,
+            0xC3: mytypes.INT,
+            0xC4: mytypes.DINT,
+            0xC5: mytypes.LINT,
+            0xC6: mytypes.USINT,
+            0xC7: mytypes.UINT,
+            0xC8: mytypes.UDINT,
+            0xC9: mytypes.ULINT,
+            0xCA: mytypes.REAL,
+            0xCB: mytypes.LREAL,
+            0xCC: mytypes.STIME,
+            0xCD: mytypes.DATE,
+            #, 0xCE: mytypes.TIME_OF_DAY
+            #, 0xCF: mytypes.DATE_AND_TIME
+            0xD0: mytypes.STRING,
+            0xD1: mytypes.BYTE,
+            0xD2: mytypes.WORD,
+            0xD3: mytypes.DWORD,
+            0xD4: mytypes.LWORD,
+            #, 0xD5: mytypes.STRING2
+            #, 0xD6: mytypes.FTIME
+            #, 0xD7: mytypes.LTIME
+            #, 0xD8: mytypes.ITIME
+            #, 0xD9: mytypes.STRINGN
+            #, 0xDA: mytypes.SHORT_STRING
+            0xDB: mytypes.TIME,
+            0xDC: mytypes.EPATH,
+            #, 0xDD: mytypes.ENGUNIT
+            0xDE: mytypes.STRINGI,
+            }
 
     def import_lib(self, src):
         lib_key = src.name.lower()
@@ -306,37 +307,37 @@ class CIP_EDS_lib(object):
         return False
 
     def gettype(self, cip_typeid):
-        return self.cipdatatypes[cip_typeid]
+        return self.supported_datatypes[cip_typeid]
 
-CIP_BOOL    = cip_types.BOOL
-CIP_USINT   = cip_types.USINT
-CIP_UINT    = cip_types.UINT
-CIP_UDINT   = cip_types.UDINT
-CIP_ULINT   = cip_types.ULINT
-CIP_SINT    = cip_types.SINT
-CIP_INT     = cip_types.INT
-CIP_DINT    = cip_types.DINT
-CIP_LINT    = cip_types.LINT
-CIP_WORD    = cip_types.WORD
-CIP_DWORD   = cip_types.DWORD
-CIP_REAL    = cip_types.REAL
-CIP_LREAL   = cip_types.LREAL
-CIP_BYTE    = cip_types.BYTE
-CIP_STRING  = cip_types.STRING
-CIP_STRINGI = cip_types.STRINGI
-CIP_DATE    = cip_types.DATE
-CIP_TIME    = cip_types.TIME
-CIP_EPATH   = cip_types.EPATH
+CIP_BOOL    = mytypes.BOOL
+CIP_USINT   = mytypes.USINT
+CIP_UINT    = mytypes.UINT
+CIP_UDINT   = mytypes.UDINT
+CIP_ULINT   = mytypes.ULINT
+CIP_SINT    = mytypes.SINT
+CIP_INT     = mytypes.INT
+CIP_DINT    = mytypes.DINT
+CIP_LINT    = mytypes.LINT
+CIP_WORD    = mytypes.WORD
+CIP_DWORD   = mytypes.DWORD
+CIP_REAL    = mytypes.REAL
+CIP_LREAL   = mytypes.LREAL
+CIP_BYTE    = mytypes.BYTE
+CIP_STRING  = mytypes.STRING
+CIP_STRINGI = mytypes.STRINGI
+CIP_DATE    = mytypes.DATE
+CIP_TIME    = mytypes.TIME
+CIP_EPATH   = mytypes.EPATH
 
-EDS_REVISION   = cip_types.REVISION
-EDS_KEYWORD    = cip_types.KEYWORD
-EDS_DATAREF    = cip_types.REF
-EDS_VENDORSPEC = cip_types.VENDOR_SPECIFIC
-EDS_TYPEREF    = cip_types.DATATYPE_REF # Reference to another field which contains a cip_dtypeid
-EDS_MAC_ADDR   = cip_types.ETH_MAC_ADDR
-EDS_EMPTY      = cip_types.EMPTY
-EDS_UNDEFINED  = cip_types.UNDEFINED
-EDS_SERVICE    = cip_types.EDS_SERVICE
+EDS_REVISION   = mytypes.REVISION
+EDS_KEYWORD    = mytypes.KEYWORD
+EDS_DATAREF    = mytypes.REF
+EDS_VENDORSPEC = mytypes.VENDOR_SPECIFIC
+EDS_TYPEREF    = mytypes.DATATYPE_REF # Reference to another field which contains a cip_dtypeid
+EDS_MAC_ADDR   = mytypes.ETH_MAC_ADDR
+EDS_EMPTY      = mytypes.EMPTY
+EDS_UNDEFINED  = mytypes.UNDEFINED
+EDS_SERVICE    = mytypes.EDS_SERVICE
 
     # Note: the key "public" determines if a class is a public class and may contain entries from common object class.
 EDS_LIB     = namedtuple('EDS_LIB'     , 'name sections')

@@ -102,11 +102,11 @@ import struct
 import logging
 import numbers
 
-from datetime    import datetime, date, time
-from string      import digits
+from datetime import datetime, date, time
+from string   import digits
 
 from eds_libs import *
-from cip_types import isnumber, ishex
+from cip_eds_types import *
 
 logging.basicConfig(level=logging.WARNING,
     format='%(asctime)s - %(name)s.%(levelname)-8s %(message)s')
@@ -130,26 +130,7 @@ HEADING_COMMENT_TEMPLATE = ( ' Electronic Data Sheet Generated with EDS-pie Vers
                          +   '\n' )
 # ------------------------------------------------------------------------------
 
-class EDS_PIE_ENUMS(object):
-
-    def Str(self, enum):
-        for attr in vars(self.__class__):
-            if isinstance(self.__class__.__dict__[attr], int) and self.__class__.__dict__[attr] == enum: return '{}'.format(attr)
-        for base in self.__class__.__bases__:
-            for attr in vars(base):
-                if isinstance(base.__dict__[attr], int) and base.__dict__[attr] == enum: return '{}'.format(attr)
-        return ''
-
-    @classmethod
-    def Str(cls, enum):
-        for attr in vars(cls):
-            if isinstance(cls.__dict__[attr], int) and cls.__dict__[attr] == enum: return '{}'.format(attr)
-        for base in cls.__bases__:
-            for attr in vars(base):
-                if isinstance(base.__dict__[attr], int) and base.__dict__[attr] == enum: return '{}'.format(attr)
-        return ''
-
-class TOKEN_TYPES(EDS_PIE_ENUMS):
+class TOKEN_TYPES(ENUMS):
     DATE       =  1
     TIME       =  2
     NUMBER     =  3
@@ -161,7 +142,7 @@ class TOKEN_TYPES(EDS_PIE_ENUMS):
     IDENTIFIER =  9
     DATASET    =  10
 
-class SYMBOLS(EDS_PIE_ENUMS):
+class SYMBOLS(ENUMS):
     ASSIGNMENT     = '='
     COMMA          = ','
     SEMICOLON      = ';'
@@ -185,7 +166,7 @@ class SYMBOLS(EDS_PIE_ENUMS):
     OPERATORS      = [ASSIGNMENT]
     SEPARATORS     = [COMMA, SEMICOLON]
 
-class PSTATE(EDS_PIE_ENUMS):
+class PSTATE(ENUMS):
     EXPECT_SECTION = 0
     EXPECT_ENTRY   = 1
     EXPECT_SECTION_OR_ENTRY = 2
@@ -793,7 +774,7 @@ class Token(object):
             str(self.line).rjust(4),
             str(self.col).rjust(3),
             str(self.offset).rjust(5),
-            TOKEN_TYPES.Str(self.type).ljust(11),
+            TOKEN_TYPES.stringify(self.type).ljust(11),
             self.value)
 
 class parser(object):
@@ -1142,7 +1123,7 @@ class parser(object):
                 else:
                     # There are different types of tokens to be concatenated.
                     raise Exception(__name__ + ':> ERROR! Concatenating these literals is not allowed.'
-                        + '({})<{}> + ({})<{}> @({})'.format(field_value, TOKEN_TYPES.Str(field_type), token.value, TOKEN_TYPES.Str(token.type), token))
+                        + '({})<{}> + ({})<{}> @({})'.format(field_value, TOKEN_TYPES.stringify(field_type), token.value, TOKEN_TYPES.stringify(token.type), token))
             else:
                 raise Exception(__name__ + '.lexer:> Unexpected token type. Expected a field value token but got: {}'.format(token))
 
@@ -1172,7 +1153,7 @@ class parser(object):
                 return
 
         raise Exception(__name__ + '.lexer:> ERROR! Unexpected token!'
-            'Expected: (\"{}\": {}) but received: {}'.format(TOKEN_TYPES.Str(exptokentype), exptokenval, self.token))
+            'Expected: (\"{}\": {}) but received: {}'.format(TOKEN_TYPES.stringify(exptokentype), exptokenval, self.token))
 
     def match(self, token, expected_type, expected_value=None):
         if token.type == expected_type and expected_value is not None:
