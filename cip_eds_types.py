@@ -32,7 +32,7 @@ import inspect
 
 
 from collections import namedtuple
-INT_RANGE = namedtuple('INT_RANGE', 'min max')
+RANGE = namedtuple('RANGE', 'min max')
 
 
 class ENUMS(object):
@@ -316,7 +316,7 @@ class CIP_EDS_BASE_INT(CIP_EDS_BASE_TYPE):
 
 class BOOL(CIP_EDS_BASE_TYPE):
     _typeid = CIP_STD_TYPES.CIP_EDS_BOOL
-    _range = INT_RANGE(0, 1)
+    _range = RANGE(0, 1)
 
     def __new__(cls, value, *args):
         if cls.validate(value):
@@ -335,7 +335,7 @@ class BOOL(CIP_EDS_BASE_TYPE):
 
 class USINT(CIP_EDS_BASE_INT):
     _typeid = CIP_STD_TYPES.CIP_EDS_USINT
-    _range = INT_RANGE(0, 255)
+    _range = RANGE(0, 255)
 
     def __new__(cls, value, *args):
         if cls.validate(value):
@@ -351,7 +351,7 @@ class USINT(CIP_EDS_BASE_INT):
 
 class SINT(CIP_EDS_BASE_INT):
     _typeid = CIP_STD_TYPES.CIP_EDS_USINT
-    _range = INT_RANGE(0, 255)
+    _range = RANGE(0, 255)
 
     def __new__(cls, value, *args):
         if cls.validate(value):
@@ -367,7 +367,7 @@ class SINT(CIP_EDS_BASE_INT):
 
 class UINT(CIP_EDS_BASE_INT):
     _typeid = CIP_STD_TYPES.CIP_EDS_UINT
-    _range = INT_RANGE(0, 65535)
+    _range = RANGE(0, 65535)
 
     def __new__(cls, value, *args):
         if cls.validate(value):
@@ -383,7 +383,7 @@ class UINT(CIP_EDS_BASE_INT):
 
 class INT(CIP_EDS_BASE_INT):
     _typeid = CIP_STD_TYPES.CIP_EDS_INT
-    _range = INT_RANGE(-32768, 32767)
+    _range = RANGE(-32768, 32767)
 
     def __new__(cls, value, *args):
         if cls.validate(value):
@@ -399,7 +399,7 @@ class INT(CIP_EDS_BASE_INT):
 
 class UDINT(CIP_EDS_BASE_INT):
     _typeid = CIP_STD_TYPES.CIP_EDS_UDINT
-    _range = INT_RANGE(0, 4294967295)
+    _range = RANGE(0, 4294967295)
 
     def __new__(cls, value, *args):
         if cls.validate(value):
@@ -415,7 +415,7 @@ class UDINT(CIP_EDS_BASE_INT):
 
 class DINT(CIP_EDS_BASE_INT):
     _typeid = CIP_STD_TYPES.CIP_EDS_DINT
-    _range = INT_RANGE(-2147483648, 2147483647)
+    _range = RANGE(-2147483648, 2147483647)
 
     def __new__(cls, value, *args):
         if cls.validate(value):
@@ -432,7 +432,7 @@ class DINT(CIP_EDS_BASE_INT):
 
 class ULINT(CIP_EDS_BASE_INT):
     _typeid = CIP_STD_TYPES.CIP_EDS_ULINT
-    _range = INT_RANGE(0, 18446744073709551615)
+    _range = RANGE(0, 18446744073709551615)
 
     def __new__(cls, value, *args):
         if cls.validate(value):
@@ -448,7 +448,7 @@ class ULINT(CIP_EDS_BASE_INT):
 
 class LINT(CIP_EDS_BASE_INT):
     _typeid = CIP_STD_TYPES.CIP_EDS_LINT
-    _range = INT_RANGE(-9223372036854775808, 9223372036854775807)
+    _range = RANGE(-9223372036854775808, 9223372036854775807)
     def __new__(cls, value, *args):
         if cls.validate(value):
             return super(LINT, cls).__new__(cls)
@@ -463,7 +463,7 @@ class LINT(CIP_EDS_BASE_INT):
 
 class BYTE(CIP_EDS_BASE_INT):
     _typeid = CIP_STD_TYPES.CIP_EDS_BYTE
-    _range = INT_RANGE(0, 255)
+    _range = RANGE(0, 255)
 
     def __new__(cls, value, *args):
         if cls.validate(value):
@@ -479,7 +479,7 @@ class BYTE(CIP_EDS_BASE_INT):
 
 class WORD(CIP_EDS_BASE_INT):
     _typeid = CIP_STD_TYPES.CIP_EDS_WORD
-    _range = INT_RANGE(0, 65535)
+    _range = RANGE(0, 65535)
 
     def __new__(cls, value, *args):
         if cls.validate(value):
@@ -495,7 +495,7 @@ class WORD(CIP_EDS_BASE_INT):
 
 class DWORD(CIP_EDS_BASE_INT):
     _typeid = CIP_STD_TYPES.CIP_EDS_DWORD
-    _range = INT_RANGE(0, 4294967295)
+    _range = RANGE(0, 4294967295)
 
     def __new__(cls, value, *args):
         if cls.validate(value):
@@ -511,7 +511,7 @@ class DWORD(CIP_EDS_BASE_INT):
 
 class LWORD(CIP_EDS_BASE_INT):
     _typeid = CIP_STD_TYPES.CIP_EDS_LWORD
-    _range = INT_RANGE(0, 18446744073709551615)
+    _range = RANGE(0, 18446744073709551615)
 
     def __new__(cls, value, *args):
         if cls.validate(value):
@@ -524,9 +524,9 @@ class LWORD(CIP_EDS_BASE_INT):
     def __init__(self, value, *args):
         super(LWORD, self).__init__(value)
 
-class REAL(CIP_EDS_BASE_INT): #  dummy type! TODO
+class REAL(CIP_EDS_BASE_INT): # TODO: improve validate
     _typeid = CIP_STD_TYPES.CIP_EDS_REAL
-    _range = INT_RANGE(0, 0)
+    _range = RANGE(-16777216.0, 16777216.0)
 
     def __new__(cls, value, *args):
         if cls.validate(value):
@@ -539,9 +539,9 @@ class REAL(CIP_EDS_BASE_INT): #  dummy type! TODO
     def __init__(self, value, *args):
         super(REAL, self).__init__(value)
 
-class LREAL(CIP_EDS_BASE_INT): #  dummy type! TODO
+class LREAL(CIP_EDS_BASE_INT): # TODO: improve validate
     _typeid = CIP_STD_TYPES.CIP_EDS_LREAL
-    _range = INT_RANGE(0, 0)
+    _range = RANGE(-9007199254740992.0, 9007199254740992.0)
 
     def __new__(cls, value, *args):
         if cls.validate(value):
@@ -553,6 +553,7 @@ class LREAL(CIP_EDS_BASE_INT): #  dummy type! TODO
 
     def __init__(self, value, *args):
         super(LREAL, self).__init__(value)
+
 
 class STIME(CIP_EDS_BASE_TYPE): #  dummy type! TODO
     _typeid = CIP_STD_TYPES.CIP_EDS_STIME
