@@ -168,10 +168,6 @@ def gettime():
     ss = format(datetime.now().second, '02')
     return "%s:%s:%s" %(hh, mm, ss)
 
-
-
-
-
 class EDS_DT(object):
     __metaclass__ = ABCMeta
 

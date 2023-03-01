@@ -1,0 +1,874 @@
+$ EZ-EDS Version 3.27.1.20191218 Generated Electronic Data Sheet
+
+$ Template EDS file provided by Hilscher Gesellschaft fuer Systemautomation mbH
+$ Template fingerprint: $Id: HILSCHER NETX 90-RE EIS V1.1.EDS 100830 2021-06-10 08:14:41Z KMichel $
+$ Please provide the above fingerprint for reference in any support requests towards Hilscher.
+$
+$ This file should be changed by the device manufacturer only.
+$ Incompatible changes may lead to communication errors in the EtherNet/IP network
+$
+$ The metafields ModDate and ModTime in section [File] are set to arbitrary values in this template.
+$ The customer will have to modify these in the development process along with the actual content.
+
+[File]
+        DescText = "EDS-File for netX 90-RE EtherNet/IP Adapter";
+        CreateDate = 01-01-1994;
+        CreateTime = 00:00:00;
+        ModDate = 01-01-1994;
+        ModTime = 00:00:00;
+        Revision = 1.0;
+        HomeURL = "www.hilscher.com";
+
+[Device]
+        VendCode = 283;
+        VendName = "Hilscher GmbH";
+        ProdType = 12;
+        ProdTypeStr = "Communications Adapter";
+        ProdCode = 297;
+        MajRev = 1;
+        MinRev = 1;
+        ProdName = "NETX 90 RE/EIS+CIP-security";
+        Catalog = "2270.000";
+        Icon = "netX.ico";
+
+[Device Classification]
+        Class1 = EtherNetIP;
+
+
+[Params]
+        Param1 =
+                0,
+                ,,
+                0x0000,
+                0xC7,
+                2,
+                "Assembly Output Size",
+                "",
+                "",
+                0,504,32,
+                ,,,,
+                ,,,,
+                0;
+
+        Param2 =
+                0,
+                ,,
+                0x0000,
+                0xC7,
+                2,
+                "Assembly Input Size",
+                "",
+                "",
+                0,504,32,
+                ,,,,
+                ,,,,
+                0;
+
+        Param3 =
+                0,
+                ,,
+                0x0010,
+                0xC7,
+                2,
+                "Input Data",
+                "",
+                "",
+                0,255,0,
+                ,,,,
+                ,,,,
+                0;
+        Param4 =
+                0,
+                ,,
+                0x0000,
+                0xC7,
+                2,
+                "Output Data",
+                "",
+                "",
+                0,255,0,
+                ,,,,
+                ,,,,
+                0;
+
+        Param5 =
+                0,                      $ reserved, shall equal 0
+                ,,                      $ Link Path Size, Link Path
+                0x0000,                 $ Descriptor
+                0xC6,                   $ Data Type
+                1,                      $ Data Size in bytes
+                "Input_CP",             $ name
+                "",                     $ units
+                "Input Connection Point",    $ help string
+                101,101,101,            $ min, max, default data values
+                ,,,,                    $ mult, div, base, offset scaling
+                ,,,,                    $ mult, div, base, offset links
+                ;                       $ decimal places
+        Param6 =
+                0,                      $ reserved, shall equal 0
+                ,,                      $ Link Path Size, Link Path
+                0x0000,                 $ Descriptor
+                0xC6,                   $ Data Type
+                1,                      $ Data Size in bytes
+                "Output_CP",            $ name
+                "",                     $ units
+                "Output Connection Point",    $ help string
+                100,100,100,            $ min, max, default data values
+                ,,,,                    $ mult, div, base, offset scaling
+                ,,,,                    $ mult, div, base, offset links
+                ;                       $ decimal places
+        Param7 =
+                0,                      $ reserved, shall equal 0
+                ,,                      $ Link Path Size, Link Path
+                0x0000,                 $ Descriptor
+                0xC6,                   $ Data Type
+                1,                      $ Data Size in bytes
+                "InputOnly_CP",         $ name
+                "",                     $ units
+                "Input Only Connection Point",    $ help string
+                193,193,193,            $ min, max, default data values
+                ,,,,                    $ mult, div, base, offset scaling
+                ,,,,                    $ mult, div, base, offset links
+                ;                       $ decimal places
+        Param8 =
+                0,                      $ reserved, shall equal 0
+                ,,                      $ Link Path Size, Link Path
+                0x0000,                 $ Descriptor
+                0xC6,                   $ Data Type
+                1,                      $ Data Size in bytes
+                "ListenOnly_CP",        $ name
+                "",                     $ units
+                "Listen Only Connection Point",    $ help string
+                192,192,192,            $ min, max, default data values
+                ,,,,                    $ mult, div, base, offset scaling
+                ,,,,                    $ mult, div, base, offset links
+                ;                       $ decimal places
+
+[Assembly]
+        Object_Name = "Assembly Object";
+        Object_Class_Code = 0x04;
+        Assem100 =
+                "Bytes Out",
+                ,
+                504,
+                0x0000,
+                ,,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4,
+                16,Param4;
+
+
+        Assem101 =
+                "Bytes In",
+                ,
+                504,
+                0x0000,
+                ,,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3,
+                16,Param3;
+
+[Connection Manager]
+        Object_Name = "Connection Manager Object";
+        Object_Class_Code = 0x06;
+        PITNS = Yes;                    $ Support of Network Segment: Production Inhibit Time Milliseconds
+        PITNS_usec = No;                $ Support of Network Segment: Production Inhibit Time Microseconds
+        Connection1 =
+                0x04070002,             $ Trigger and Transport
+                0x44644405,             $ Point Multicast
+                ,Param1,Assem100,       $ OT RPI Size format
+                ,Param2,Assem101,       $ TO rpi size format
+                ,,                      $ config 1
+                ,,                      $ config 2
+                "Exclusive Owner ",     $ connection name
+                "",                     $ help string
+                "20 04 24 01 2C [Param6] 2C [Param5]";    $ path
+
+        Connection2 =
+                0x01070002,             $ Trigger and Transport
+                0x44644305,             $ Point Multicast
+                ,0,,                    $ OT RPI Size format
+                ,Param2,Assem101,       $ TO rpi size format
+                ,,                      $ config 1
+                ,,                      $ config 2
+                "Listen only",          $ connection name
+                "",                     $ help string
+                "20 04 24 01 2C [Param8] 2C [Param5]";    $ path
+
+        Connection3 =
+                0x02070002,             $ Trigger and Transport
+                0x44644305,             $ Point Multicast
+                ,0,,                    $ OT RPI Size format
+                ,Param2,Assem101,       $ TO rpi size format
+                ,,                      $ config 1
+                ,,                      $ config 2
+                "Input Only",           $ connection name
+                "",                     $ help string
+                "20 04 24 01 2C [Param7] 2C [Param5]";    $ path
+
+[Capacity]
+        ConnOverhead = .004;            $ Connection Overhead
+        MaxIOConnections = 5;           $ Maximum number of Class 1 Connections
+        MaxMsgConnections = 8;          $ Maximum number of Class 3 Connections
+        TSpec1 = TxRx, 10, 4000;        $ packets per sec @ 10 bytes
+        TSpec2 = TxRx, 504, 3000;       $ packets per sec @ 504 bytes
+
+[DLR Class]
+        Revision = 3;
+        Object_Name = "Device Level Ring Object";
+        Object_Class_Code = 0x47;
+        MaxInst = 1;
+        Number_Of_Static_Instances = 1;
+        Max_Number_Of_Dynamic_Instances = 0;
+
+[TCP/IP Interface Class]
+        Revision = 4;
+        Object_Name = "TCP/IP Interface Object";
+        Object_Class_Code = 0xF5;
+        MaxInst = 1;
+        Number_Of_Static_Instances = 1;
+        Max_Number_Of_Dynamic_Instances = 0;
+
+[Ethernet Link Class]
+        Revision = 4;
+        Object_Name = "Ethernet Link Object";
+        Object_Class_Code = 0xF6;
+        MaxInst = 2;
+        Number_Of_Static_Instances = 2;
+        Max_Number_Of_Dynamic_Instances = 0;
+        InterfaceLabel1 = "Port1";
+        InterfaceLabel2 = "Port2";
+
+[File Class]
+        Revision = 3;
+        Object_Name = "File Object";
+        Object_Class_Code = 0x37;
+        MaxInst = 0x117;
+        Number_Of_Static_Instances = 5;
+        Max_Number_Of_Dynamic_Instances = 5;
+        Class_Services =
+                0x08,
+                0x0E,
+                0x10;
+        Instance_Services =
+                0x09,
+                0x10,
+                0x0E,
+                0x4B,                   $ Initiate_Upload
+                0x4C,                   $ Initiate_Download
+                0x4F,                   $ Upload_Transfer
+                0x50,                   $ Download_Transfer
+                0x51;                   $ Clear_File
+
+[QoS Class]
+        Revision = 1;
+        Object_Name = "QoS Object";
+        Object_Class_Code = 0x48;
+        MaxInst = 1;
+        Number_Of_Static_Instances = 1;
+        Max_Number_Of_Dynamic_Instances = 0;
+
+[CIP Security Class]
+        Revision = 4;
+        Object_Name = "CIP Security Object";
+        Object_Class_Code = 0x5D;
+        MaxInst = 1;
+        Number_Of_Static_Instances = 1;
+        Max_Number_Of_Dynamic_Instances = 0;
+        Class_Services =
+                0x0E,
+                0x4E;                   $ Object_Cleanup
+        Instance_Services =
+                0x01,
+                0x05,
+                0x0E,
+                0x4B,                   $ Begin_Config
+                0x4C,                   $ Kick_Timer
+                0x4D;                   $ End_Config
+
+[EtherNet/IP Security Class]
+        Revision = 4;
+        Object_Name = "EtherNet/IP Security Object";
+        Object_Class_Code = 0x5E;
+        MaxInst = 1;
+        Number_Of_Static_Instances = 1;
+        Max_Number_Of_Dynamic_Instances = 0;
+        Class_Services =
+                0x01,
+                0x0E;
+        Instance_Services =
+                0x01,
+                0x05,
+                0x10,
+                0x0E,
+                0x4B,                   $ Begin_Config
+                0x4C,                   $ Kick_Timer
+                0x4D,                   $ Apply_Config
+                0x4E;                   $ Abort_Config
+
+[Certificate Management Class]
+        Revision = 1;
+        Object_Name = "Certificate Management Object";
+        Object_Class_Code = 0x5F;
+        MaxInst = 3;
+        Number_Of_Static_Instances = 1;
+        Max_Number_Of_Dynamic_Instances = 2;
+        Class_Services =
+                0x08,
+                0x0E;
+        Instance_Services =
+                0x01,
+                0x09,
+                0x10,
+                0x0E,
+                0x4B,                   $ Create_CSR
+                0x4C;                   $ Verify_Certificate
+
+[LLDP Management Class]
+        Revision = 1;
+        Object_Name = "LLDP Management Object";
+        Object_Class_Code = 0x109;
+        MaxInst = 1;
+        Number_Of_Static_Instances = 1;
+        Max_Number_Of_Dynamic_Instances = 0;
+
+[Class940_Vendor1]
+        Revision = 1;
+        Object_Name = "Ingress Egress Object";
+        Object_Class_Code = 0x3AC;
+        MaxInst = 1;
+        Number_Of_Static_Instances = 1;
+        Max_Number_Of_Dynamic_Instances = 0;
+        1_Ingress_TCP_Ports =
+                0,
+                2220,
+                2223,
+                44817,
+                44819,
+                65535;
+        1_Ingress_UDP_Ports =
+                0,
+                2220,
+                2223,
+                44817,
+                44819,
+                65535;
+        1_Ingress_Egress_Rules =
+                8,
+                128,
+                Yes;
+
+        Class_Services =
+                0x01,
+                0x05,
+                0x0E;
+        Instance_Services =
+                0x01,
+                0x0E,
+                0x4B;                   $ Set_Rules
+
+$ ****************************************************************************
+$ EOF
+$ ****************************************************************************

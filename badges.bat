@@ -1,0 +1,1 @@
+python -m pybadges  --left-text="python"  --right-text="3" --left-color=grey  --right-color=blue        --whole-title="Badge Title"     --left-title="Left Title"     --right-title="Right Title" --browser
