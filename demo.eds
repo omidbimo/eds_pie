@@ -49,9 +49,5 @@ $ ****************************************************************************
 
 [Device Classification]
         Class1 = EtherNetIP;
-        Class2 =
-                283_RSNetWorx_1756,
-                283_RSNetWorx_Adapter;
-        Class3 = 283_RSLinx_CLGateway_Tool;
 
 
