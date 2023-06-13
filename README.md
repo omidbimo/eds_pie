@@ -1,6 +1,6 @@
 # EDS pie
 
-**An EDS(Electronic Data Sheet) parser library for ODVA's CIP® protocol family(EtherNet/IP®, DeviceNet®,...)**
+**EDS parser library for ODVA's CIP® protocol family(EtherNet/IP®, DeviceNet®,...)**
 
 ![python version3](readme-images/py3-badge.svg "python version 3") ![python version27](readme-images/py27-badge.svg "python version 2.7")
 
@@ -10,6 +10,10 @@ CIP, CIP Energy, CIP Motion, CIP Security, CIP Safety, CIP Sync, CompoNet, Contr
 EtherNet/IP, QuickConnect.
 
 Visit http://www.odva.org for product information and publications
+
+### What is an EDS
+EDS stands for Electronic Data Sheet and is a set of data that provides all of the information necessary to access and alter the configurable
+parameters of a device (CIP, CANopen, ...).
 
 ### Who may need an EDS parser library
 
