@@ -24,7 +24,7 @@ Use cases:
   - To change contents of multiple of EDS files (i.e. Add a new section to all EDSs with a specific ProductCode)
 - Automation
   - To implement automated scripts/tests
-    - The test script uses EDS_pie to parse the IO assembly path and starts an IO communication
+    - Automated establishment of IO connections or other types of connections
     - To implement QA scripts to make sure the EDS file matches a device configuration
     - To Create new EDS files
 - Format conversion
