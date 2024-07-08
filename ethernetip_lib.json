@@ -1,0 +1,1411 @@
+{
+  "schema_verison": 1,
+  "schema_file": "edslib_schema.json",
+  "project": "eds_pie",
+  "lib_name": "EtherNet/IP",
+  "sections": {
+    "Identity Class": {
+      "name": "Identity Class",
+      "required": false,
+      "class_id": 1,
+      "entries": {}
+    },
+    "Message Router Class": {
+      "name": "Message Router Class",
+      "required": false,
+      "class_id": 2,
+      "entries": {}
+    },
+    "DeviceNet Class": {
+      "name": "DeviceNet Class",
+      "required": false,
+      "class_id": 3,
+      "entries": {}
+    },
+    "Assembly": {
+      "name": "Assembly",
+      "required": false,
+      "class_id": 4,
+      "entries": {
+        "AssemN": {
+          "name": "Assem",
+          "required": false,
+          "enumerated_fields": {
+            "field_number": 7,
+            "enum_member_count": 2
+          },
+          "fields": [
+            {
+              "name": "Name",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            },
+            {
+              "name": "Path",
+              "required": false,
+              "data_types": {
+                "EPATH": [],
+                "KEYWORD": [
+                  "SYMBOL_ANSI"
+                ]
+              }
+            },
+            {
+              "name": "Size",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            },
+            {
+              "name": "Descriptor",
+              "required": false,
+              "data_types": {
+                "WORD": []
+              }
+            },
+            {
+              "name": "Reserved",
+              "required": false,
+              "data_types": {
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Reserved",
+              "required": false,
+              "data_types": {
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Member Size",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            },
+            {
+              "name": "Member Reference",
+              "required": false,
+              "data_types": {
+                "UDINT": [],
+                "EPATH": [],
+                "REF": [
+                  "AssemN",
+                  "ParamN",
+                  "ProxyAssemN",
+                  "ProxyParamN"
+                ],
+                "EMPTY": []
+              }
+            }
+          ]
+        },
+        "ProxyAssemN": {
+          "name": "Assem",
+          "required": false,
+          "enumerated_fields": {
+            "field_number": 7,
+            "enum_member_count": 2
+          },
+          "fields": [
+            {
+              "name": "Name",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            },
+            {
+              "name": "Path",
+              "required": false,
+              "data_types": {
+                "EPATH": [],
+                "KEYWORD": [
+                  "SYMBOL_ANSI"
+                ]
+              }
+            },
+            {
+              "name": "Size",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            },
+            {
+              "name": "Descriptor",
+              "required": false,
+              "data_types": {
+                "WORD": []
+              }
+            },
+            {
+              "name": "Reserved",
+              "required": false,
+              "data_types": {
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Reserved",
+              "required": false,
+              "data_types": {
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Member Size",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            },
+            {
+              "name": "Member Reference",
+              "required": false,
+              "data_types": {
+                "UDINT": [],
+                "EPATH": [],
+                "REF": [
+                  "AssemN",
+                  "ParamN"
+                ],
+                "EMPTY": []
+              }
+            }
+          ]
+        },
+        "ProxiedAssemN": {
+          "name": "Assem",
+          "required": false,
+          "enumerated_fields": {
+            "field_number": 7,
+            "enum_member_count": 2
+          },
+          "fields": [
+            {
+              "name": "Name",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            },
+            {
+              "name": "Path",
+              "required": false,
+              "data_types": {
+                "EPATH": [],
+                "KEYWORD": [
+                  "SYMBOL_ANSI"
+                ]
+              }
+            },
+            {
+              "name": "Size",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            },
+            {
+              "name": "Descriptor",
+              "required": false,
+              "data_types": {
+                "WORD": []
+              }
+            },
+            {
+              "name": "Reserved",
+              "required": false,
+              "data_types": {
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Reserved",
+              "required": false,
+              "data_types": {
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Member Size",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            },
+            {
+              "name": "Member Reference",
+              "required": false,
+              "data_types": {
+                "UDINT": [],
+                "EPATH": [],
+                "REF": [
+                  "AssemN",
+                  "ParamN"
+                ],
+                "EMPTY": []
+              }
+            }
+          ]
+        },
+        "AssemExaN": {
+          "name": "Assem",
+          "required": false,
+          "enumerated_fields": {
+            "field_number": 7,
+            "enum_member_count": 2
+          },
+          "fields": [
+            {
+              "name": "Name",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            },
+            {
+              "name": "Path",
+              "required": false,
+              "data_types": {
+                "EPATH": [],
+                "KEYWORD": [
+                  "SYMBOL_ANSI"
+                ]
+              }
+            },
+            {
+              "name": "Size",
+              "required": false,
+              "data_types": {
+                "UINT": [],
+                "REF": [
+                  "ParamN"
+                ]
+              }
+            },
+            {
+              "name": "Descriptor",
+              "required": false,
+              "data_types": {
+                "WORD": []
+              }
+            },
+            {
+              "name": "Reserved",
+              "required": false,
+              "data_types": {
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Reserved",
+              "required": false,
+              "data_types": {
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Member Size",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            },
+            {
+              "name": "Member Reference",
+              "required": false,
+              "data_types": {
+                "UDINT": [],
+                "EPATH": [],
+                "REF": [
+                  "AssemN",
+                  "ParamN",
+                  "AssemExaN",
+                  "VariantN",
+                  "BitStringVariantN",
+                  "VariantExaN",
+                  "ArrayN",
+                  "ConstructedParamN"
+                ],
+                "EMPTY": []
+              }
+            }
+          ]
+        },
+        "ProxyAssemExaN": {
+          "name": "Assem",
+          "required": false,
+          "enumerated_fields": {
+            "field_number": 7,
+            "enum_member_count": 2
+          },
+          "fields": [
+            {
+              "name": "Name",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            },
+            {
+              "name": "Path",
+              "required": false,
+              "data_types": {
+                "EPATH": [],
+                "KEYWORD": [
+                  "SYMBOL_ANSI"
+                ]
+              }
+            },
+            {
+              "name": "Size",
+              "required": false,
+              "data_types": {
+                "UINT": [],
+                "REF": [
+                  "ParamN"
+                ]
+              }
+            },
+            {
+              "name": "Descriptor",
+              "required": false,
+              "data_types": {
+                "WORD": []
+              }
+            },
+            {
+              "name": "Reserved",
+              "required": false,
+              "data_types": {
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Reserved",
+              "required": false,
+              "data_types": {
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Member Size",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            },
+            {
+              "name": "Member Reference",
+              "required": false,
+              "data_types": {
+                "UDINT": [],
+                "EPATH": [],
+                "REF": [
+                  "AssemN",
+                  "ParamN",
+                  "AssemExaN",
+                  "VariantN",
+                  "BitStringVariantN",
+                  "VariantExaN",
+                  "ArrayN",
+                  "ConstructedParamN"
+                ],
+                "EMPTY": []
+              }
+            }
+          ]
+        },
+        "ProxiedAssemExaN": {
+          "name": "Assem",
+          "required": false,
+          "enumerated_fields": {
+            "field_number": 7,
+            "enum_member_count": 2
+          },
+          "fields": [
+            {
+              "name": "Name",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            },
+            {
+              "name": "Path",
+              "required": false,
+              "data_types": {
+                "EPATH": [],
+                "KEYWORD": [
+                  "SYMBOL_ANSI"
+                ]
+              }
+            },
+            {
+              "name": "Size",
+              "required": false,
+              "data_types": {
+                "UINT": [],
+                "REF": [
+                  "ParamN"
+                ]
+              }
+            },
+            {
+              "name": "Descriptor",
+              "required": false,
+              "data_types": {
+                "WORD": []
+              }
+            },
+            {
+              "name": "Reserved",
+              "required": false,
+              "data_types": {
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Reserved",
+              "required": false,
+              "data_types": {
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Member Size",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            },
+            {
+              "name": "Member Reference",
+              "required": false,
+              "data_types": {
+                "UDINT": [],
+                "EPATH": [],
+                "REF": [
+                  "AssemN",
+                  "ParamN",
+                  "AssemExaN",
+                  "VariantN",
+                  "BitStringVariantN",
+                  "VariantExaN",
+                  "ArrayN",
+                  "ConstructedParamN"
+                ],
+                "EMPTY": []
+              }
+            }
+          ]
+        },
+        "VariantN": {
+          "name": "Variant",
+          "required": false,
+          "enumerated_fields": {
+            "field_number": 11,
+            "enum_member_count": 2
+          },
+          "fields": [
+            {
+              "name": "Name",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            },
+            {
+              "name": "Help String",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            },
+            {
+              "name": "Reserved",
+              "required": false,
+              "data_types": {
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Reserved",
+              "required": false,
+              "data_types": {
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Reserved",
+              "required": false,
+              "data_types": {
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "switch selector",
+              "required": false,
+              "data_types": {
+                "REF": [
+                  "ParamN",
+                  "AssemN"
+                ]
+              }
+            },
+            {
+              "name": "First selection value",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            },
+            {
+              "name": "First selection entry",
+              "required": false,
+              "data_types": {
+                "REF": [
+                  "ParamN"
+                ]
+              }
+            },
+            {
+              "name": "Second Selection value",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            },
+            {
+              "name": "Second Selection entry",
+              "required": false,
+              "data_types": {
+                "REF": [
+                  "ParamN"
+                ]
+              }
+            },
+            {
+              "name": "Subsequent Selection values",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            },
+            {
+              "name": "Subsequent Selection entries",
+              "required": false,
+              "data_types": {
+                "REF": [
+                  "ParamN"
+                ]
+              }
+            }
+          ]
+        },
+        "VariantExaN": {
+          "name": "Variant",
+          "required": false,
+          "enumerated_fields": {
+            "field_number": 11,
+            "enum_member_count": 2
+          },
+          "fields": [
+            {
+              "name": "Name",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            },
+            {
+              "name": "Help String",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            },
+            {
+              "name": "Reserved",
+              "required": false,
+              "data_types": {
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Reserved",
+              "required": false,
+              "data_types": {
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Reserved",
+              "required": false,
+              "data_types": {
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "switch selector",
+              "required": false,
+              "data_types": {
+                "REF": [
+                  "ParamN",
+                  "AssemN",
+                  "AssemExaN"
+                ]
+              }
+            },
+            {
+              "name": "First selection value",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            },
+            {
+              "name": "First selection entry",
+              "required": false,
+              "data_types": {
+                "REF": [
+                  "ParamN",
+                  "AssemN",
+                  "AssemExaN",
+                  "ArrayN",
+                  "ConstructedParamN"
+                ]
+              }
+            },
+            {
+              "name": "Second Selection value",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            },
+            {
+              "name": "Second Selection entry",
+              "required": false,
+              "data_types": {
+                "REF": [
+                  "ParamN",
+                  "AssemN",
+                  "AssemExaN",
+                  "ArrayN",
+                  "ConstructedParamN"
+                ]
+              }
+            },
+            {
+              "name": "Subsequent Selection values",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            },
+            {
+              "name": "Subsequent Selection entries",
+              "required": false,
+              "data_types": {
+                "REF": [
+                  "ParamN",
+                  "AssemN",
+                  "AssemExaN",
+                  "ArrayN",
+                  "ConstructedParamN"
+                ]
+              }
+            }
+          ]
+        },
+        "BitStringVariantN": {
+          "name": "Variant",
+          "required": false,
+          "enumerated_fields": {
+            "field_number": 10,
+            "enum_member_count": 3
+          },
+          "fields": [
+            {
+              "name": "Name",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            },
+            {
+              "name": "Help String",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            },
+            {
+              "name": "Reserved",
+              "required": false,
+              "data_types": {
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Reserved",
+              "required": false,
+              "data_types": {
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Reserved",
+              "required": false,
+              "data_types": {
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Bit switch selector",
+              "required": false,
+              "data_types": {
+                "REF": [
+                  "AssemN",
+                  "ParamN",
+                  "AssemExaN"
+                ]
+              }
+            },
+            {
+              "name": "First bit selection value",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            },
+            {
+              "name": "First bit set selection entry",
+              "required": false,
+              "data_types": {
+                "REF": [
+                  "AssemN",
+                  "ParamN",
+                  "AssemExaN",
+                  "ArrayN",
+                  "ConstructedParamN"
+                ],
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "First bit reset selection entry",
+              "required": false,
+              "data_types": {
+                "REF": [
+                  "AssemN",
+                  "ParamN",
+                  "AssemExaN",
+                  "ArrayN",
+                  "ConstructedParamN"
+                ],
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Subsequent bit selection value",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            },
+            {
+              "name": "Subsequent bit set selection entry",
+              "required": false,
+              "data_types": {
+                "REF": [
+                  "AssemN",
+                  "ParamN",
+                  "AssemExaN",
+                  "ArrayN",
+                  "ConstructedParamN"
+                ],
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Subsequent bit reset selection entry",
+              "required": false,
+              "data_types": {
+                "REF": [
+                  "AssemN",
+                  "ParamN",
+                  "AssemExaN",
+                  "ArrayN",
+                  "ConstructedParamN"
+                ],
+                "EMPTY": []
+              }
+            }
+          ]
+        },
+        "ArrayN": {
+          "name": "Array",
+          "required": false,
+          "enumerated_fields": {
+            "field_number": 11,
+            "enum_member_count": 1
+          },
+          "fields": [
+            {
+              "name": "Name",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            },
+            {
+              "name": "Path",
+              "required": false,
+              "data_types": {
+                "EPATH": [],
+                "KEYWORD": [
+                  "SYMBOL_ANSI"
+                ]
+              }
+            },
+            {
+              "name": "Descriptor",
+              "required": false,
+              "data_types": {
+                "WORD": []
+              }
+            },
+            {
+              "name": "Help String",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            },
+            {
+              "name": "Reserved",
+              "required": false,
+              "data_types": {
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Reserved",
+              "required": false,
+              "data_types": {
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Reserved",
+              "required": false,
+              "data_types": {
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Array Element Size",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            },
+            {
+              "name": "Array Element Type",
+              "required": false,
+              "data_types": {
+                "REF": [
+                  "AssemN",
+                  "AssemExaN",
+                  "ParamN",
+                  "VariantN",
+                  "BitStringVariantN",
+                  "VariantExaN",
+                  "ConstructedParamN"
+                ],
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Number of Dimensions",
+              "required": false,
+              "data_types": {
+                "USINT": []
+              }
+            },
+            {
+              "name": "Number of Dimension Elements",
+              "required": false,
+              "data_types": {
+                "UDINT": []
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Connection Class": {
+      "name": "Connection Class",
+      "required": false,
+      "class_id": 5,
+      "entries": {}
+    },
+    "Connection Manager": {
+      "name": "Connection Manager",
+      "required": false,
+      "class_id": 6,
+      "entries": {
+        "ConnectionN": {
+          "name": "Connection",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Trigger and transport",
+              "required": false,
+              "data_types": {
+                "DWORD": []
+              }
+            },
+            {
+              "name": "Connection parameters",
+              "required": false,
+              "data_types": {
+                "DWORD": []
+              }
+            },
+            {
+              "name": "O2T RPI",
+              "required": false,
+              "data_types": {
+                "UDINT": [],
+                "REF": [
+                  "ParamN"
+                ]
+              }
+            },
+            {
+              "name": "O2T size",
+              "required": false,
+              "data_types": {
+                "UINT": [],
+                "REF": [
+                  "ParamN"
+                ]
+              }
+            },
+            {
+              "name": "O2T format",
+              "required": false,
+              "data_types": {
+                "REF": [
+                  "ParamN",
+                  "AssemN",
+                  "AssemExaN",
+                  "AssemExaN",
+                  "ArrayN",
+                  "ConstructedParamN"
+                ]
+              }
+            },
+            {
+              "name": "T2O RPI",
+              "required": false,
+              "data_types": {
+                "REF": [
+                  "ParamN"
+                ]
+              }
+            },
+            {
+              "name": "T2O size",
+              "required": false,
+              "data_types": {
+                "UINT": [],
+                "REF": [
+                  "ParamN"
+                ]
+              }
+            },
+            {
+              "name": "T2O format",
+              "required": false,
+              "data_types": {
+                "REF": [
+                  "ParamN",
+                  "AssemN",
+                  "AssemExaN",
+                  "AssemExaN",
+                  "ArrayN",
+                  "ConstructedParamN"
+                ]
+              }
+            },
+            {
+              "name": "Proxy Config size",
+              "required": false,
+              "data_types": {
+                "UINT": [],
+                "REF": [
+                  "ParamN"
+                ]
+              }
+            },
+            {
+              "name": "Proxy Config format",
+              "required": false,
+              "data_types": {
+                "REF": [
+                  "ParamN",
+                  "AssemN",
+                  "AssemExaN",
+                  "AssemExaN",
+                  "ArrayN",
+                  "ConstructedParamN"
+                ]
+              }
+            },
+            {
+              "name": "Target Config size",
+              "required": false,
+              "data_types": {
+                "UINT": [],
+                "REF": [
+                  "ParamN"
+                ]
+              }
+            },
+            {
+              "name": "Target Config format",
+              "required": false,
+              "data_types": {
+                "REF": [
+                  "ParamN",
+                  "AssemN",
+                  "AssemExaN",
+                  "AssemExaN",
+                  "ArrayN",
+                  "ConstructedParamN"
+                ]
+              }
+            },
+            {
+              "name": "Connection name string",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            },
+            {
+              "name": "Help string",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            },
+            {
+              "name": "Path",
+              "required": false,
+              "data_types": {
+                "EPATH": [],
+                "KEYWORD": [
+                  "SYMBOL_ANSI"
+                ]
+              }
+            },
+            {
+              "name": "Safety ASYNC",
+              "required": false,
+              "data_types": {
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Safety Max Consumer Number",
+              "required": false,
+              "data_types": {
+                "EMPTY": []
+              }
+            }
+          ]
+        },
+        "PITNS": {
+          "name": "Production Inhibit Time in Milliseconds Network Segment",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "PITNS",
+              "required": false,
+              "data_types": {
+                "KEYWORD": [
+                  "Yes",
+                  "No"
+                ]
+              }
+            }
+          ]
+        },
+        "PITNS_usec": {
+          "name": "Production Inhibit Time in Microseconds Network Segment",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "PITNS_usec",
+              "required": false,
+              "data_types": {
+                "KEYWORD": [
+                  "Yes",
+                  "No"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Register Class": {
+      "name": "Register Class",
+      "required": false,
+      "class_id": 7,
+      "entries": {}
+    },
+    "Discrete Input Class": {
+      "name": "Discrete Input Class",
+      "required": false,
+      "class_id": 8,
+      "entries": {}
+    },
+    "Discrete Output Class": {
+      "name": "Discrete Output Class",
+      "required": false,
+      "class_id": 9,
+      "entries": {}
+    },
+    "Analog Input Class": {
+      "name": "Analog Input Class",
+      "required": false,
+      "class_id": 10,
+      "entries": {}
+    },
+    "Analog Output Class": {
+      "name": "Analog Output Class",
+      "required": false,
+      "class_id": 11,
+      "entries": {}
+    },
+    "Presence Sensing Class": {
+      "name": "Presence Sensing Class",
+      "required": false,
+      "class_id": 14,
+      "entries": {}
+    },
+    "ParamClass": {
+      "name": "Parameter Class",
+      "required": false,
+      "class_id": 15,
+      "entries": {}
+    },
+    "Groups": {
+      "name": "Parameter Group",
+      "required": false,
+      "class_id": 16,
+      "entries": {
+        "GroupN": {
+          "name": "Group",
+          "required": false,
+          "enumerated_fields": {
+            "field_number": 3,
+            "enum_member_count": 1
+          },
+          "fields": [
+            {
+              "name": "Group Name String",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            },
+            {
+              "name": "Number of Members",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            },
+            {
+              "name": "Parameter, Proxy Parameter or Variant",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            }
+          ]
+        }
+      }
+    },
+    "File Class": {
+      "name": "File Class",
+      "required": false,
+      "class_id": 55,
+      "entries": {}
+    },
+    "Port": {
+      "name": "Port",
+      "required": false,
+      "class_id": 244,
+      "entries": {}
+    },
+    "DLR Class": {
+      "name": "Device Level Ring Class",
+      "required": false,
+      "class_id": 71,
+      "entries": {}
+    },
+    "TCP/IP Interface Class": {
+      "name": "TCP/IP Interface Class",
+      "required": false,
+      "class_id": 245,
+      "entries": {
+        "ENetQCTN": {
+          "name": "EtherNet/IP QuickConnect Target",
+          "required": false,
+          "enumerated_fields": {
+            "field_number": 1,
+            "enum_member_count": 1
+          },
+          "fields": [
+            {
+              "name": "Ready for Connection Time",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            }
+          ]
+        },
+        "ENetQCON": {
+          "name": "EtherNet/IP QuickConnect Originator",
+          "required": false,
+          "enumerated_fields": {
+            "field_number": 1,
+            "enum_member_count": 1
+          },
+          "fields": [
+            {
+              "name": "Connection Origination Time",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Ethernet Link Class": {
+      "name": "Ethernet Link Class",
+      "required": false,
+      "class_id": 246,
+      "entries": {
+        "InterfaceSpeedN": {
+          "name": "Interface Speed",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Interface Speed",
+              "required": false,
+              "data_types": {
+                "UDINT": []
+              }
+            }
+          ]
+        },
+        "InterfaceLabelN": {
+          "name": "Interface Label",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Interface Label",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            }
+          ]
+        }
+      }
+    },
+    "QoS Class": {
+      "name": "Quality of Service Class",
+      "required": false,
+      "class_id": 72,
+      "entries": {}
+    },
+    "Connection Configuration": {
+      "name": "Connection Configuration Class",
+      "required": false,
+      "class_id": 243,
+      "entries": {}
+    },
+    "CIP Security Class": {
+      "name": "CIP Security Class",
+      "required": false,
+      "class_id": 93,
+      "entries": {}
+    },
+    "EtherNet/IP Security Class": {
+      "name": "EtherNet/IP Security Class",
+      "required": false,
+      "class_id": 94,
+      "entries": {}
+    },
+    "Certificate Management Class": {
+      "name": "Certificate Management Class",
+      "required": false,
+      "class_id": 95,
+      "entries": {}
+    },
+    "Authority Class": {
+      "name": "Authority Class",
+      "required": false,
+      "class_id": 96,
+      "entries": {}
+    },
+    "Password Authenticator Class": {
+      "name": "Password Authenticator Class",
+      "required": false,
+      "class_id": 97,
+      "entries": {}
+    },
+    "Certificate Authenticator Class": {
+      "name": "Certificate Authenticator Class",
+      "required": false,
+      "class_id": 98,
+      "entries": {}
+    },
+    "Ingress Egress Class": {
+      "name": "Ingress Egress Class",
+      "required": false,
+      "class_id": 99,
+      "entries": {}
+    },
+    "LLDP Management Class": {
+      "name": "LLDP Management Class",
+      "required": false,
+      "class_id": 265,
+      "entries": {}
+    }
+  }
+}

@@ -1,0 +1,980 @@
+{
+  "schema_verison": 1,
+  "schema_file": "edslib_schema.json",
+  "project": "eds_pie",
+  "lib_name": "Standard",
+  "sections": {
+    "File": {
+      "name": "File Description",
+      "required": false,
+      "class_id": null,
+      "entries": {
+        "DescText": {
+          "name": "File Description Text",
+          "required": true,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "File Description Text",
+              "required": false,
+              "data_types": {
+                "STRING": null
+              }
+            }
+          ]
+        },
+        "CreateDate": {
+          "name": "File Creation Date",
+          "required": true,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "File Creation Date",
+              "required": false,
+              "data_types": {
+                "DATE": []
+              }
+            }
+          ]
+        },
+        "CreateTime": {
+          "name": "File Creation Time",
+          "required": true,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "File Creation Time",
+              "required": false,
+              "data_types": {
+                "TIME": []
+              }
+            }
+          ]
+        },
+        "ModDate": {
+          "name": "Last Modification Date",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Last Modification Date",
+              "required": false,
+              "data_types": {
+                "DATE": []
+              }
+            }
+          ]
+        },
+        "ModTime": {
+          "name": "Last Modification Time",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Last Modification Time",
+              "required": false,
+              "data_types": {
+                "TIME": []
+              }
+            }
+          ]
+        },
+        "Revision": {
+          "name": "EDS Revision",
+          "required": true,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "EDS Revision",
+              "required": false,
+              "data_types": {
+                "REVISION": []
+              }
+            }
+          ]
+        },
+        "HomeURL": {
+          "name": "Home URL",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Home URL",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            }
+          ]
+        },
+        "Exclude": {
+          "name": "Exclude",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Exclude",
+              "required": false,
+              "data_types": {
+                "KEYWORD": [
+                  "NONE",
+                  "WRITE",
+                  "READ_WRITE"
+                ]
+              }
+            }
+          ]
+        },
+        "EDSFileCRC": {
+          "name": "EDS File CRC",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "EDS File CRC",
+              "required": false,
+              "data_types": {
+                "UDINT": []
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Device": {
+      "name": "Device Description",
+      "required": false,
+      "class_id": null,
+      "entries": {
+        "VendCode": {
+          "name": "Vendor ID",
+          "required": true,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Vendor ID",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            }
+          ]
+        },
+        "VendName": {
+          "name": "Vendor Name",
+          "required": true,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Vendor Name",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            }
+          ]
+        },
+        "ProdType": {
+          "name": "Device Type",
+          "required": true,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Device Type",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            }
+          ]
+        },
+        "ProdTypeStr": {
+          "name": "Device Type String",
+          "required": true,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Device Type String",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            }
+          ]
+        },
+        "ProdCode": {
+          "name": "Product Code",
+          "required": true,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Product Code",
+              "required": false,
+              "data_types": {
+                "UDINT": []
+              }
+            }
+          ]
+        },
+        "MajRev": {
+          "name": "Major Revision",
+          "required": true,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Major Revision",
+              "required": false,
+              "data_types": {
+                "USINT": []
+              }
+            }
+          ]
+        },
+        "MinRev": {
+          "name": "Minor Revision",
+          "required": true,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Minor Revision",
+              "required": false,
+              "data_types": {
+                "USINT": []
+              }
+            }
+          ]
+        },
+        "ProdName": {
+          "name": "Product Name",
+          "required": true,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Product Name",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            }
+          ]
+        },
+        "Catalog": {
+          "name": "Catalog Number",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Catalog Number",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            }
+          ]
+        },
+        "Icon": {
+          "name": "Icon File Name",
+          "required": true,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Icon File Name",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            }
+          ]
+        },
+        "IconContents": {
+          "name": "Icon Contents",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Icon Contents",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Device Classification": {
+      "name": "Device Classification",
+      "required": false,
+      "class_id": null,
+      "entries": {
+        "ClassN": {
+          "name": "Class",
+          "required": true,
+          "enumerated_fields": {
+            "field_number": 1,
+            "enum_member_count": 1
+          },
+          "fields": [
+            {
+              "name": "Classification N",
+              "required": false,
+              "data_types": {
+                "VENDOR_SPECIFIC": [],
+                "KEYWORD": [
+                  "CompoNet",
+                  "ControlNet",
+                  "DeviceNet",
+                  "EtherNetIP",
+                  "EtherNetIP_In_Cabinet",
+                  "EtherNetIP_UDP_Only",
+                  "ModbusSL",
+                  "ModbusTCP",
+                  "Safety",
+                  "HART",
+                  "IOLink"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Params": {
+      "name": "Parameters",
+      "required": false,
+      "class_id": null,
+      "entries": {
+        "ParamN": {
+          "name": "Parameter",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Reserved",
+              "required": false,
+              "data_types": {
+                "USINT": []
+              }
+            },
+            {
+              "name": "Link Path Size",
+              "required": false,
+              "data_types": {
+                "USINT": [],
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Link Path",
+              "required": false,
+              "data_types": {
+                "EPATH": [],
+                "KEYWORD": [
+                  "SYMBOL_ANSI"
+                ],
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Descriptor",
+              "required": false,
+              "data_types": {
+                "WORD": []
+              }
+            },
+            {
+              "name": "Data Type",
+              "required": false,
+              "data_types": {
+                "USINT": []
+              }
+            },
+            {
+              "name": "Data Size",
+              "required": false,
+              "data_types": {
+                "USINT": [],
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Parameter Name",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            },
+            {
+              "name": "Units String",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            },
+            {
+              "name": "Help String",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            },
+            {
+              "name": "Minimum Value",
+              "required": false,
+              "data_types": {
+                "DATATYPE_REF": [
+                  "Data Type"
+                ],
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Maximum Value",
+              "required": false,
+              "data_types": {
+                "DATATYPE_REF": [
+                  "Data Type"
+                ],
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Default Value",
+              "required": false,
+              "data_types": {
+                "DATATYPE_REF": [
+                  "Data Type"
+                ],
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Scaling Multiplier",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            },
+            {
+              "name": "Scaling Divider",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            },
+            {
+              "name": "Scaling Base",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            },
+            {
+              "name": "Scaling Offset",
+              "required": false,
+              "data_types": {
+                "DINT": []
+              }
+            },
+            {
+              "name": "Multiplier Link",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            },
+            {
+              "name": "Divisor Link",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            },
+            {
+              "name": "Base Link",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            },
+            {
+              "name": "Offset Link",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            },
+            {
+              "name": "Decimal Precision",
+              "required": false,
+              "data_types": {
+                "USINT": []
+              }
+            },
+            {
+              "name": "International Parameter Name",
+              "required": false,
+              "data_types": {
+                "STRINGI": []
+              }
+            },
+            {
+              "name": "International Engineering Units",
+              "required": false,
+              "data_types": {
+                "STRINGI": []
+              }
+            },
+            {
+              "name": "International Help String",
+              "required": false,
+              "data_types": {
+                "STRINGI": []
+              }
+            }
+          ]
+        },
+        "EnumN": {
+          "name": "Enumeration",
+          "required": false,
+          "enumerated_fields": {
+            "field_number": 3,
+            "enum_member_count": 2
+          },
+          "fields": [
+            {
+              "name": "First Enum",
+              "required": false,
+              "data_types": {
+                "USINT": [],
+                "REF": [
+                  "ParamN"
+                ]
+              }
+            },
+            {
+              "name": "First Enum String",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            },
+            {
+              "name": "Nth Enum",
+              "required": false,
+              "data_types": {
+                "USINT": [],
+                "REF": [
+                  "ParamN"
+                ]
+              }
+            },
+            {
+              "name": "Nth Enum String",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Capacity": {
+      "name": "Capacity",
+      "required": false,
+      "class_id": null,
+      "entries": {
+        "TSpecN": {
+          "name": "Traffic Spec",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "TxRx",
+              "required": false,
+              "data_types": {
+                "KEYWORD": [
+                  "Tx",
+                  "Rx",
+                  "TxRx"
+                ]
+              }
+            },
+            {
+              "name": "ConnSize",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            },
+            {
+              "name": "PacketsPerSecond",
+              "required": false,
+              "data_types": {
+                "UDINT": []
+              }
+            }
+          ]
+        },
+        "ConnOverhead": {
+          "name": "Connection overhead",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Connection overhead",
+              "required": false,
+              "data_types": {
+                "REAL": []
+              }
+            }
+          ]
+        },
+        "MaxCIPConnections": {
+          "name": "Maximum CIP connections",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Maximum CIP connections",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            }
+          ]
+        },
+        "MaxIOConnections": {
+          "name": "Maximum I/O connections",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Maximum I/O connections",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            }
+          ]
+        },
+        "MaxMsgConnections": {
+          "name": "Maximum explicit connections",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Maximum explicit connections",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            }
+          ]
+        },
+        "MaxIOProducers": {
+          "name": "Maximum I/O producers",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Maximum I/O producers",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            }
+          ]
+        },
+        "MaxIOConsumers": {
+          "name": "Maximum I/O consumers",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Maximum I/O consumers",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            }
+          ]
+        },
+        "MaxIOProduceConsume": {
+          "name": "Maximum I/O producers plus consumers",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Maximum I/O producers plus consumers",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            }
+          ]
+        },
+        "MaxIOMcastProducers": {
+          "name": "Maximum I/O multicast producers",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Maximum I/O multicast producers",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            }
+          ]
+        },
+        "MaxIOMcastConsumers": {
+          "name": "Maximum I/O multicast consumers",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Maximum I/O multicast consumers",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            }
+          ]
+        },
+        "MaxConsumersPerMcast": {
+          "name": "Maximum consumers per multicast connection",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Maximum consumers per multicast connection",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            }
+          ]
+        }
+      }
+    },
+    "CommonObjectClass": {
+      "name": "Common Object Class",
+      "required": false,
+      "class_id": null,
+      "entries": {
+        "Revision": {
+          "name": "Revision",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Revision",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            }
+          ]
+        },
+        "MaxInst": {
+          "name": "Maximum Instance Number",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "MaxInst",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            }
+          ]
+        },
+        "Number_Of_Static_Instances": {
+          "name": "Number of Static Instances",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Maximum Instance Number",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            }
+          ]
+        },
+        "Max_Number_Of_Dynamic_Instances": {
+          "name": "Maximum Number of Dynamic Instances",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Maximum Number of Dynamic Instances",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            }
+          ]
+        },
+        "Class_Attributes": {
+          "name": "Class attribute identification",
+          "required": false,
+          "enumerated_fields": {
+            "field_number": 1,
+            "enum_member_count": 1
+          },
+          "fields": [
+            {
+              "name": "Attribute ID",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            }
+          ]
+        },
+        "Instance_Attributes": {
+          "name": "Instance attribute identification",
+          "required": false,
+          "enumerated_fields": {
+            "field_number": 1,
+            "enum_member_count": 1
+          },
+          "fields": [
+            {
+              "name": "Attribute ID",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            }
+          ]
+        },
+        "Class_Services": {
+          "name": "Class service support",
+          "required": false,
+          "enumerated_fields": {
+            "field_number": 1,
+            "enum_member_count": 1
+          },
+          "fields": [
+            {
+              "name": "Service",
+              "required": false,
+              "data_types": {
+                "EDS_SERVICE": []
+              }
+            }
+          ]
+        },
+        "Instance_Services": {
+          "name": "Instance service support",
+          "required": false,
+          "enumerated_fields": {
+            "field_number": 1,
+            "enum_member_count": 1
+          },
+          "fields": [
+            {
+              "name": "Service",
+              "required": false,
+              "data_types": {
+                "EDS_SERVICE": []
+              }
+            }
+          ]
+        },
+        "Object_Name": {
+          "name": "Object Name",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Name",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            }
+          ]
+        },
+        "Object_Class_Code": {
+          "name": "Object Class Code",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Object Class Code",
+              "required": false,
+              "data_types": {
+                "UDINT": []
+              }
+            }
+          ]
+        },
+        "Service_DescriptionN": {
+          "name": "Service Description",
+          "required": false,
+          "enumerated_fields": {
+            "field_number": 1,
+            "enum_member_count": 1
+          },
+          "fields": [
+            {
+              "name": "Service Code",
+              "required": false,
+              "data_types": {
+                "USINT": []
+              }
+            },
+            {
+              "name": "Name",
+              "required": false,
+              "data_types": {
+                "STRING": []
+              }
+            },
+            {
+              "name": "Service Application Path",
+              "required": false,
+              "data_types": {
+                "EPATH": [],
+                "KEYWORD": [
+                  "SYMBOL_ANSI"
+                ]
+              }
+            },
+            {
+              "name": "Service Request Data",
+              "required": false,
+              "data_types": {
+                "REF": [
+                  "AssemExaN",
+                  "ParamN",
+                  "ConstructedParamN"
+                ],
+                "EMPTY": []
+              }
+            },
+            {
+              "name": "Service Response Data",
+              "required": false,
+              "data_types": {
+                "REF": [
+                  "AssemExaN",
+                  "ParamN",
+                  "ConstructedParamN"
+                ],
+                "EMPTY": []
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

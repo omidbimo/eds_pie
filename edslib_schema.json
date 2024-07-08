@@ -1,0 +1,28 @@
+{
+  "schema_verison": 1,
+  "schema_file": "edslib_schema.json",
+  "project": "eds_pie",
+  "lib_name": "CIP family EDS dictionary name",
+  "sections": {
+    "SectionName": {
+      "name": "Section Description",
+      "required": true,
+      "entries": {
+        "Entry keyword": {
+          "name": "Entry Description Text",
+          "required": true,
+          "enumerated_fields": { "field_number": 1, "enum_member_count": 2 },
+          "fields": [
+            { "name": "Field Description Text",
+              "required": true,
+              "datatypes": {
+                 "EDS_DATA_TYPE1": ["val1", "val2"],
+                 "EDS_DATA_TYPE2": [0, 1]
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
