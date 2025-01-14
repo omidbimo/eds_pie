@@ -3,17 +3,19 @@
   "schema_file": "edslib_schema.json",
   "project": "eds_pie",
   "lib_name": "CIP family EDS dictionary name",
+  "protocol": "CIP protocol name",
   "sections": {
-    "SectionName": {
-      "name": "Section Description",
+    "Section Name": {
+      "description": "Section Description",
+      "class_id": 0,
       "required": true,
       "entries": {
         "Entry keyword": {
-          "name": "Entry Description Text",
+          "description": "Entry Description Text",
           "required": true,
-          "enumerated_fields": { "field_number": 1, "enum_member_count": 2 },
+          "enumerated_fields": { "first_enum_field": 1, "enum_member_count": 2 },
           "fields": [
-            { "name": "Field Description Text",
+            { "description": "Field Description Text",
               "required": true,
               "datatypes": {
                  "EDS_DATA_TYPE1": ["val1", "val2"],

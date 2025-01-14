@@ -99,15 +99,15 @@ import os
 import sys
 import inspect
 import struct
-import logging
 import numbers
+import json
 
 from datetime import datetime, date, time
 from string   import digits
 
-from eds_libs import *
-from cip_eds_types import *
+import cip_eds_types as EDS_Types
 
+import logging
 logging.basicConfig(level=logging.WARNING,
     format='%(asctime)s - %(name)s.%(levelname)-8s %(message)s')
 logger = logging.getLogger(__name__)
@@ -130,7 +130,7 @@ HEADING_COMMENT_TEMPLATE = ( ' Electronic Data Sheet Generated with EDS-pie Vers
                          +   '\n' )
 # ------------------------------------------------------------------------------
 
-class TOKEN_TYPES(ENUMS):
+class TOKEN_TYPES(EDS_Types.ENUMS):
     DATE       =  1
     TIME       =  2
     NUMBER     =  3
@@ -142,7 +142,7 @@ class TOKEN_TYPES(ENUMS):
     IDENTIFIER =  9
     DATASET    =  10
 
-class SYMBOLS(ENUMS):
+class SYMBOLS(EDS_Types.ENUMS):
     ASSIGNMENT     = '='
     COMMA          = ','
     SEMICOLON      = ';'
@@ -166,7 +166,37 @@ class SYMBOLS(ENUMS):
     OPERATORS      = [ASSIGNMENT]
     SEPARATORS     = [COMMA, SEMICOLON]
 
-class PSTATE(ENUMS):
+CIP_BOOL    = EDS_Types.BOOL
+CIP_USINT   = EDS_Types.USINT
+CIP_UINT    = EDS_Types.UINT
+CIP_UDINT   = EDS_Types.UDINT
+CIP_ULINT   = EDS_Types.ULINT
+CIP_SINT    = EDS_Types.SINT
+CIP_INT     = EDS_Types.INT
+CIP_DINT    = EDS_Types.DINT
+CIP_LINT    = EDS_Types.LINT
+CIP_WORD    = EDS_Types.WORD
+CIP_DWORD   = EDS_Types.DWORD
+CIP_REAL    = EDS_Types.REAL
+CIP_LREAL   = EDS_Types.LREAL
+CIP_BYTE    = EDS_Types.BYTE
+CIP_STRING  = EDS_Types.STRING
+CIP_STRINGI = EDS_Types.STRINGI
+EDS_DATE    = EDS_Types.DATE
+CIP_TIME    = EDS_Types.TIME
+CIP_EPATH   = EDS_Types.EPATH
+
+EDS_REVISION   = EDS_Types.REVISION
+EDS_KEYWORD    = EDS_Types.KEYWORD
+EDS_DATAREF    = EDS_Types.REF
+EDS_VENDORSPEC = EDS_Types.VENDOR_SPECIFIC
+EDS_TYPEREF    = EDS_Types.DATATYPE_REF # Reference to another field which contains a cip_dtypeid
+EDS_MAC_ADDR   = EDS_Types.ETH_MAC_ADDR
+EDS_EMPTY      = EDS_Types.EMPTY
+EDS_UNDEFINED  = EDS_Types.UNDEFINED
+EDS_SERVICE    = EDS_Types.EDS_SERVICE
+
+class PSTATE(EDS_Types.ENUMS):
     EXPECT_SECTION = 0
     EXPECT_ENTRY   = 1
     EXPECT_SECTION_OR_ENTRY = 2
@@ -204,16 +234,16 @@ class EDS_Section(object):
             return True
         return False
 
-    def getentry(self, entryname):
+    def get_entry(self, entryname):
         return self._entries.get(entryname.replace(' ', '').lower())
 
-    def getfield(self, entryname, field):
+    def get_field(self, entryname, field):
         '''
         To get a section.entry.field using the entry name + (ield name or field index.
         '''
         entry = self._entries.get(entryname.replace(' ', '').lower())
         if entry:
-            return entry.getfield(field)
+            return entry.get_field(field)
         return None
 
     def __str__(self):
@@ -233,7 +263,7 @@ class EDS_Entry(object):
     def addfield(self, fieldvalue, datatype = None):
         return self._section._eds.addfield(self._section.name, self._name, fieldvalue, datatype)
 
-    def hasfield(self, field):
+    def has_field(self, field):
         if isinstance(field, str): # field name
             fieldname = field.replace(' ', '').lower()
             for field in self._fields:
@@ -244,7 +274,7 @@ class EDS_Entry(object):
         else:
             raise TypeError('Inappropriate data type: {}'.format(type(field)))
 
-    def getfield(self, field):
+    def get_field(self, field):
         if isinstance(field, str): # field name
             fieldname = field.replace(' ', '').lower()
             for field in self._fields:
@@ -330,6 +360,197 @@ class EDS_Field(object):
         return 'FIELD(index: {}, name: \"{}\", value: ({}), type: <{}>{})'.format(
             self._index, self._name, str(self._data), type(self._data).__name__, self._data.range)
 
+class EDS_RefLib(object):
+
+    def __init__(self):
+        self.libs = {}
+
+        for file in os.listdir():
+            if file.endswith(".json"):
+                with open(file, "r") as src:
+                    jlib = json.loads(src.read())
+                    if jlib["project"] ==  "eds_pie" and file != "edslib_schema.json":
+                        self.libs[jlib["protocol"].lower()] = jlib
+
+        self.supported_datatypes = {
+            0xC1: CIP_BOOL,
+            0xC2: CIP_SINT,
+            0xC3: CIP_INT,
+            0xC4: CIP_DINT,
+            0xC5: CIP_LINT,
+            0xC6: CIP_USINT,
+            0xC7: CIP_UINT,
+            0xC8: CIP_UDINT,
+            0xC9: CIP_ULINT,
+            0xCA: CIP_REAL,
+            0xCB: CIP_LREAL,
+            0xCC: EDS_Types.STIME,
+            0xCD: EDS_DATE,
+            #, 0xCE: EDS_Types.TIME_OF_DAY
+            #, 0xCF: EDS_Types.DATE_AND_TIME
+            0xD0: CIP_STRING,
+            0xD1: CIP_BYTE,
+            0xD2: CIP_WORD,
+            0xD3: CIP_DWORD,
+            0xD4: EDS_Types.LWORD,
+            #, 0xD5: EDS_Types.STRING2
+            #, 0xD6: EDS_Types.FTIME
+            #, 0xD7: EDS_Types.LTIME
+            #, 0xD8: EDS_Types.ITIME
+            #, 0xD9: EDS_Types.STRINGN
+            #, 0xDA: EDS_Types.SHORT_STRING
+            0xDB: CIP_TIME,
+            0xDC: CIP_EPATH,
+            #, 0xDD: EDS_Types.ENGUNIT
+            0xDE: CIP_STRINGI,
+            }
+
+    def get_lib_name(self, section_keyword):
+        for _, lib in self.libs.items():
+            if section_keyword in lib["sections"]:
+                return lib["protocol"]
+        return None
+
+    def get_section_name(self, class_id, protocol=None):
+        '''
+        To get a protocol specific EDS section_name by its CIP class ID
+        '''
+        if protocol:
+            lib = self.libs[protocol.lower()]
+            if lib is not None:
+                 for section in lib["sections"]:
+                    if section["class_id"] == class_id:
+                        return section
+        else:
+            for _, lib in self.libs.items():
+                for section in lib["sections"]:
+                    if section["class_id"] == class_id:
+                        return section
+        return ''
+
+    def get_section_id(self, section_keyword, protocol=None):
+        if protocol:
+            lib = self.libs[protocol.lower()]
+            if lib is not None:
+                if section_keyword in lib["sections"]: # or ''
+                    return lib["sections"][section_keyword]["class_id"]
+        else:
+            for _, lib in self.libs.items():
+                if section_keyword in lib["sections"]:
+                    return lib["sections"][section_keyword]["class_id"]
+        return None
+
+    def has_section(self, section_keyword, protocol=None):
+        '''
+        Checks the existence of a section by its name
+        If the protocol is specified, only the dictionary of that specific protocol will be checked.
+        If the protocol is unknown, the first matching library will be used.
+        '''
+        if protocol is not None:
+            lib = self.libs[protocol.lower()]
+            if lib["sections"][section_keyword]:
+                return True
+
+        for _, lib in self.libs.items():
+            if section_keyword in lib["sections"]:
+                return True
+        return False
+
+    def get_section(self, section_keyword, protocol=None):
+        section = None
+        for _, lib in self.libs.items():
+            section = lib["sections"].get(section_keyword, None)
+            if section:
+                break
+            else:
+                continue
+        return section
+
+    def has_entry(self, section_keyword, entry_name, protocol=None):
+        '''
+        To get an entry dictionary by its section name and entry name
+        '''
+        if entry_name[-1].isdigit(): # Incremental entry_name
+            entry_name = entry_name.rstrip(digits) + 'N'
+
+        for _, lib in self.libs.items():
+            section = lib["sections"].get(section_keyword, None)
+            if section:
+                if section.get(entry_name, None):
+                    return True
+                break
+            else:
+                continue
+
+        return False
+
+    def get_entry(self, section_keyword, entry_name, protocol=None):
+        '''
+        To get an entry dictionary by its section name and entry name
+        '''
+        entry = None
+
+        if entry_name[-1].isdigit(): # Incremental entry_name
+            entry_name = entry_name.rstrip(digits) + 'N'
+
+        for _, lib in self.libs.items():
+            section = lib["sections"].get(section_keyword, None)
+            if section:
+                entry = section.get(entry_name, None)
+                break
+            else:
+                continue
+
+        return entry
+
+    def get_field(self, section_keyword, entry_name, field_index, protocol=None):
+        '''
+        To get a field dictionary by its section name and entry name and field index
+        '''
+        field = None
+
+        if entry_name[-1].isdigit(): # Incremental entry_name
+            entry_name = entry_name.rstrip(digits) + 'N'
+
+        entry = self.get_entry(section_keyword, entry_name)
+        if entry:
+            '''
+            The requested index is greater than listed fields in the lib,
+            Consider the field as Nth field filed and re-calculate the index.
+            '''
+            if field_index >= len(entry.fields) and entry.get("enumerated_fields", None):
+                 # Calculating reference field index
+                field_index = (field_index % entry["enumerated_fields"]["enum_member_count"]) + entry["enumerated_fields"]["first_enum_field"] - 1
+            field = entry["fields"][field_index]
+        return field
+
+    def get_type(self, cip_typeid):
+        return self.supported_datatypes[cip_typeid]
+
+    def get_required_sections(self):
+
+        required_sections = {}
+
+        for _, lib in self.libs.items():
+            for section_name, section in lib["sections"].items():
+                if section["required"] == True:
+                    required_sections.update({section_name: section})
+
+        return required_sections
+
+    #def is_required_section(self, section_keyword):
+    #    section = self.get_section(section_keyword)
+    #    if section:
+    #        if entry_keyword:
+    #            entry = self
+    #        else:
+    #            return section["required"]
+    #
+    #def is_required_entry(self, section_keyword, entry_keyword=None):
+    #
+    #def is_required_field(self, section_keyword, entry_keyword=None, field_name=None):
+
+
 class EDS(object):
 
     def __init__(self):
@@ -337,19 +558,18 @@ class EDS(object):
         self.end_comment = ''
         self._protocol  = None
         self._sections  = {}
-        self.ref = CIP_EDS_lib()
+        self.ref_libs = EDS_RefLib()
 
     def list(self, section_name='', entry_name=''):
         if section_name:
-            self.list_section(self.getsection(section_name), entry_name)
+            self.list_section(self.get_section(section_name), entry_name)
         else:
             for section in sorted(self.sections, key = lambda section: section._index):
                 self.list_section(section, entry_name)
 
     def list_section(self, section, entry_name=''):
-        print(section)
         if entry_name:
-            self.list_entry(section.getentry(entry_name))
+            self.list_entry(section.get_entry(entry_name))
         else:
             for entry in sorted(section.entries, key = lambda entry: entry._index):
                 self.list_entry(entry)
@@ -367,70 +587,70 @@ class EDS(object):
     def sections(self):
         return tuple(self._sections.values())
 
-    def getsection(self, section):
+    def get_section(self, section):
         '''
         To get a section object by its EDS keyword or by its CIP classID.
         '''
         if isinstance(section, str):
             return self._sections.get(section.replace(' ', '').lower())
         if isinstance(section, numbers.Number):
-            return self._sections.get(self.ref.get_section_name(section, self.protocol).replace(' ', '').lower())
+            return self._sections.get(self.ref_libs.get_section_name(section, self.protocol))
         raise TypeError('Inappropriate data type: {}'.format(type(section)))
 
-    def getentry(self, section, entryname):
+    def get_entry(self, section, entryname):
         '''
         To get an entry by its section name/section id and its entry name.
         '''
-        sec = self.getsection(section)
+        sec = self.get_section(section)
         if sec:
-            return sec.getentry(entryname)
+            return sec.get_entry(entryname)
         return None
 
-    def getfield(self, section, entryname, field):
+    def get_field(self, section, entryname, field):
         '''
         To get an field by its section name/section id, its entry name and its field anme/field index
         '''
-        entry = self.getentry(section, entryname)
+        entry = self.get_entry(section, entryname)
         if entry:
-            return entry.getfield(field)
+            return entry.get_field(field)
         return None
 
-    def getvalue(self, section, entryname, field):
-        field = self.getfield(section, entryname, field)
+    def get_value(self, section, entryname, field):
+        field = self.get_field(section, entryname, field)
         if field:
             return field.value
         return None
 
-    def setvalue(self, section, entryname, field, value):
-        field = self.getfield(section, entryname, field)
+    def set_value(self, section, entryname, field, value):
+        field = self.get_field(section, entryname, field)
         if field is None:
             raise Exception('Not a valid field! Unable to set the field value.')
         field.value = value
 
 
-    def hassection(self, section):
+    def has_section(self, section):
         '''
         To check if the EDS contains a section by its EDS keyword or by its CIP classID.
         '''
         if isinstance(section, str):
             return section.replace(' ', '').lower() in self._sections.keys()
         if isinstance(section, numbers.Number):
-            return self.ref.get_section_name(section, self.protocol).replace(' ', '').lower() in self._sections.keys()
+            return self.ref_libs.get_section_name(section, self.protocol) in self._sections.keys()
         raise TypeError('Inappropriate data type: {}'.format(type(section)))
 
-    def hasentry(self, section, entryname):
-        section = self.getsection(section)
+    def has_entry(self, section, entryname):
+        section = self.get_section(section)
         if section:
             return entryname.replace(' ', '').lower() in section._entries.keys()
         return False
 
-    def hasfield(self, section, entryname, field):
-        entry = self.getentry(section, entryname)
+    def has_field(self, section, entryname, field):
+        entry = self.get_entry(section, entryname)
         if entry:
             return fieldindex < entry.fieldcount
         return False
 
-    def addsection(self, sectionname):
+    def add_section(self, sectionname):
         sectionkey = sectionname.replace(' ', '').lower()
         ref_id = 0
 
@@ -438,26 +658,15 @@ class EDS(object):
             logger.error('Invalid section name! {} contains invalid characters'.format(sectionname))
 
         if sectionkey in self._sections.keys():
-            logger.error('DUplicated section! [{}}'.format(sectionname))
+            logger.error('Duplicate section! [{}}'.format(sectionname))
 
-        if not self.ref.has_section(sectionname):
-            logger.warning('Unknown Section [{}]'.format(sectionname))
+        lib_name = None
+        if self.ref_libs.has_section(sectionname):
+            lib_name = self.ref_libs.get_lib_name(sectionname) # A bit of optimization
         else:
-            ref_section = self.ref.get_section(sectionname)
-            if ref_section:
-                ref_section_key = ref_section.key
-                ref_id = ref_section.id
-            if ref_section_key != sectionname:
-                logger.warning('section name: [{}] should be: [{}]'.format(sectionname, ref_keyword))
+            logger.warning('Unknown Section [{}]'.format(sectionname))
 
-            if sectionkey == 'file' and len(self._sections) != 0:
-                logger.warning('Unexpected order of sections. Section [File] must be the first section of the EDS.')
-            elif sectionkey == 'device' and len(self._sections) != 1:
-                logger.warning('Unexpected order of sections. Section [Device] must be the second section of the EDS.')
-
-            sectionname = ref_section.key
-
-        section = EDS_Section(self, sectionname, ref_id)
+        section = EDS_Section(self, sectionname, self.ref_libs.get_section_id(sectionname, lib_name))
 
         self._sections[sectionkey] = section
 
@@ -477,7 +686,7 @@ class EDS(object):
 
         # Finding a name for the new entry
         ref_keyword = ''
-        ref_entry = self.ref.get_entry(sectionname, entryname)
+        ref_entry = self.ref_libs.get_entry(sectionname, entryname)
         if ref_entry:
             ref_keyword = ref_entry.key.rstrip('N').rstrip(digits)
             if ref_keyword != entryname.rstrip(digits):
@@ -496,11 +705,11 @@ class EDS(object):
         return entry
 
     def addfield(self, sectionname, entryname, fieldvalue, field_datatype = None):
-        section = self.getsection(sectionname)
+        section = self.get_section(sectionname)
         if section is None:
             raise Exception('Section not found! [{}]'.format(section._name))
 
-        entry = section.getentry(entryname)
+        entry = section.get_entry(entryname)
         if entry is None:
             raise Exception('Entry not found! [{}]'.format(Entry._name))
 
@@ -508,11 +717,11 @@ class EDS(object):
 
         # getting field's info from eds reference library
         ref_datatypes = []
-        ref_field = self.ref.get_field(section._name, entry.name, entry.fieldcount)
+        ref_field = self.ref_libs.get_field(section._name, entry.name, entry.fieldcount)
         if ref_field:
             field_name = ref_field.name or entry.name
-            # Serialize the field name if there can be multiple fields with the same name
-            if self.ref.get_entry(section._name, entry.name).Nthfields:
+            # Serialize the field name if there can be enumerated fields
+            if self.ref_libs.has_entry(section._name, entry.name) and self.ref_libs.get_entry(section._name, entry.name).get("enumerated_fields", None):
                 field_name = field_name.rstrip('N') + str(entry.fieldcount + 1)
             ref_datatypes = ref_field.datatypes
         else:
@@ -531,7 +740,7 @@ class EDS(object):
                 logger.warning('Unknown Field [{}].{}.{} = {}. Switched to EDS_EMPTY field.'.format(section._name, entry.name, field_name, fieldvalue))
                 field_data = EDS_EMPTY(fieldvalue)
         # Validating field value
-        elif fieldvalue != '' or self.ref.ismandatory(section._name, entry.name, field_name):
+        elif fieldvalue != '' or self.ref_libs.get_field(section._name, entry.name, field_name)["required"]:
             for dtype, typeinfo in ref_datatypes: # Getting the listed data types and their acceptable ranges
                 if dtype.validate(fieldvalue, typeinfo):
                     if dtype == EDS_TYPEREF:
@@ -542,9 +751,9 @@ class EDS(object):
                         Example: The datatype of Params.Param1.MinimumValue is determined by Params.Param1.DataType
                         '''
                         # TODO: here we read only the first item of the reference field list. Iterating the list might be a better way
-                        typeid = self.getfield(sectionname, entryname, typeinfo[0]).value
+                        typeid = self.get_field(sectionname, entryname, typeinfo[0]).value
                         try:
-                            dtype = self.ref.gettype(typeid)
+                            dtype = self.ref_libs.get_type(typeid)
                             if dtype.validate(fieldvalue, []):
                                 field_data = dtype(fieldvalue, [])
                                 break
@@ -561,7 +770,7 @@ class EDS(object):
                     typelist += [(type_, typeinfo) for type_, typeinfo in ref_datatypes if typeinfo]
                     types_str = ', '.join('<{}({})>'.format(type_[0].__name__, type_[1]) for type_ in typelist)
 
-                    if self.ref.ismandatory(section._name, entry.name, field_name):
+                    if self.ref_libs.get_field(section._name, entry.name, field_name)["required"]:
                         raise Exception('Data_type mismatch! [{}].{}.{} = ({}), should be a type of: {}'
                              .format(section._name, entry.name, field_name, fieldvalue, types_str))
                     else:
@@ -585,7 +794,7 @@ class EDS(object):
         return field
 
     def removesection(self, sectionname, removetree = False):
-        section = self.getsection(sectionname)
+        section = self.get_section(sectionname)
 
         if section is None: return
         if not section.entries:
@@ -599,10 +808,10 @@ class EDS(object):
                 'Remove the entries first or use removetree = True'.format(section._name))
 
     def removeentry(self, sectionname, entryname, removetree = False):
-        entry = self.getentry(sectionname, entryname)
+        entry = self.get_entry(sectionname, entryname)
         if entry is None: return
         if not entry.fields:
-            section = self.getsection(sectionname)
+            section = self.get_section(sectionname)
             del section._entries[entryname.replace(' ', '').lower()]
         elif removetree:
             entry._fields = []
@@ -614,13 +823,16 @@ class EDS(object):
         # TODO
         pass
 
-
     def final_rollcall(self):
-        requiredsections = self.ref.get_required_sections()
-        for section in requiredsections:
-            if self.has_section(section.keyword) == False:
-                logger.error('Missing required section! [{}] \"{}\"'.format(section.keyword, section.name))
+        required_sections = self.ref_libs.get_required_sections()
 
+        for section_name, section in required_sections.items():
+            print(section_name)
+            if self.has_section(section_name):
+                continue
+            raise Exception('Missing required section! [{}]'.format(section_name))
+        '''
+        #TODO: re-enable this part
         for section in self.sections:
             requiredentries = self.ref.get_required_entries(section.name)
             for entry in requiredentries:
@@ -631,10 +843,10 @@ class EDS(object):
             for entry in section.entries:
                 requiredfields = self.ref.get_required_fields(section.name, entry.name)
                 for field in requiredfields:
-                    if self.hasfield(section.name, entry.name, field.placement) == False:
+                    if self.has_field(section.name, entry.name, field.placement) == False:
                         logger.error('Missing required field! [{}].{}.{} #{}'
                             .format(section.name, entry.name, field.name, field.placement))
-
+        '''
     def save(self, filename, overwrite = False):
         if os.path.isfile(filename) and overwrite == False:
             raise Exception('Failed to write to file! \"{}\" already exists and overrwite is not enabled.'.format(filename))
@@ -646,9 +858,9 @@ class EDS(object):
         tabsize = 4
         # sections
         # Creating a list of standard sections.
-        std_sections = [self.getsection('File')]
-        std_sections.append(self.getsection('Device'))
-        std_sections.append(self.getsection('Device Classification'))
+        std_sections = [self.get_section('File')]
+        std_sections.append(self.get_section('Device'))
+        std_sections.append(self.get_section('Device Classification'))
         for section in self.sections:
             if section._id is None and section not in std_sections:
                 std_sections.append(section)
@@ -716,10 +928,10 @@ class EDS(object):
         hfile.write(eds_content)
         hfile.close()
 
-    def get_cip_section_name(self, classid, protocol=None):
+    def get_cip_section_name(self, class_id, protocol=None):
         if protocol is None:
             protocol = self.protocol
-        return self.ref.get_section_name(classid, protocol)
+        return self.ref_libs.get_section_name(class_id, protocol)
 
     def resolve_epath(self, epath):
         '''
@@ -738,7 +950,7 @@ class EDS(object):
                 item = item.strip('[]')
                 if 'Param' == item.rstrip(digits) or 'ProxyParam' == item.rstrip(digits):
                     entry_name = item
-                    field = self.getfield('Params', entry_name, 'Default Value')
+                    field = self.get_field('Params', entry_name, 'Default Value')
                     if field:
                         items[i] = '{:02X}'.format(field.value)
                         continue
@@ -1048,7 +1260,7 @@ class parser(object):
             raise Exception(__name__ + ':> Invalid Parser state! {}'.format(self.state))
 
     def add_section(self, token):
-        self.active_section = self.eds.addsection(token.value)
+        self.active_section = self.eds.add_section(token.value)
 
         if self.active_section is None:
             raise Exception(__name__ + ':> ERROR! unable to create section: {}'.format(token.value))
@@ -1173,11 +1385,11 @@ class eds_pie(object):
         # setting the protocol
         eds._protocol = 'Generic'
 
-        sect = eds.getsection('Device Classification')
+        sect = eds.get_section('Device Classification')
         if sect:
             entries = sorted(sect.entries, key = lambda entry: entry.name) # sorting is only in python2 required
             for entry in entries:
-                field = entry.getfield(0)
+                field = entry.get_field(0)
                 if not field: break
 
                 dt, valid_range = field.datatype
@@ -1186,7 +1398,7 @@ class eds_pie(object):
                     break
         else:
             logger.error('Missing required section [Device Classification]!')
-        #self.final_rollcall()
+        eds.final_rollcall()
         if showprogress: print('')
         return eds
 

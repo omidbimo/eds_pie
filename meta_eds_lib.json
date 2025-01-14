@@ -2,11 +2,12 @@
   "schema_verison": 1,
   "schema_file": "edslib_schema.json",
   "project": "eds_pie",
-  "lib_name": "Standard",
+  "lib_name": "MetaEDS",
+  "protocol": "",
   "sections": {
     "File": {
       "name": "File Description",
-      "required": false,
+      "required": true,
       "class_id": null,
       "entries": {
         "DescText": {
@@ -143,7 +144,7 @@
     },
     "Device": {
       "name": "Device Description",
-      "required": false,
+      "required": true,
       "class_id": null,
       "entries": {
         "VendCode": {
@@ -304,7 +305,7 @@
     },
     "Device Classification": {
       "name": "Device Classification",
-      "required": false,
+      "required": true,
       "class_id": null,
       "entries": {
         "ClassN": {
