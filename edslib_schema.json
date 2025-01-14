@@ -17,9 +17,10 @@
           "fields": [
             { "description": "Field Description Text",
               "required": true,
-              "datatypes": {
-                 "EDS_DATA_TYPE1": ["val1", "val2"],
-                 "EDS_DATA_TYPE2": [0, 1]
+              "data_types": {
+                 "EDS_DATA_TYPE1": "type_info",
+                 "EDS_DATA_TYPE2": ["val1", "val2"],
+                 "EDS_DATA_TYPE3": [0, 1]
               }
             }
           ]

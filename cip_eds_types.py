@@ -251,7 +251,7 @@ class CIP_EDS_BASE_TYPE(object):
         return self._value
 
     @classmethod
-    def validate(value, *args):
+    def validate(cls, value, *args):
         raise(NotImplementedError)
 
     def __repr__(self):

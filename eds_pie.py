@@ -226,22 +226,22 @@ class EDS_Section(object):
     def entries(self):
         return tuple(self._entries.values())
 
-    def addentry(self, entryname, serialize = False):
-        return self._eds.addentry(self._name, entryname)
+    def addentry(self, entry_name, serialize = False):
+        return self._eds.addentry(self._name, entry_name)
 
-    def has_entry(self, entryname = None, entryindex = None):
-        if entryname.replace(' ', '').lower() in self._entries.keys():
+    def has_entry(self, entry_name = None, entryindex = None):
+        if entry_name.replace(' ', '').lower() in self._entries.keys():
             return True
         return False
 
-    def get_entry(self, entryname):
-        return self._entries.get(entryname.replace(' ', '').lower())
+    def get_entry(self, entry_name):
+        return self._entries.get(entry_name.replace(' ', '').lower())
 
-    def get_field(self, entryname, field):
+    def get_field(self, entry_name, field):
         '''
         To get a section.entry.field using the entry name + (ield name or field index.
         '''
-        entry = self._entries.get(entryname.replace(' ', '').lower())
+        entry = self._entries.get(entry_name.replace(' ', '').lower())
         if entry:
             return entry.get_field(field)
         return None
@@ -260,8 +260,8 @@ class EDS_Entry(object):
         self.hcomment = ''
         # Entries don't have fcomment attribute. The fcomments belongs to fields
 
-    def addfield(self, fieldvalue, datatype = None):
-        return self._section._eds.addfield(self._section.name, self._name, fieldvalue, datatype)
+    def addfield(self, field_value, datatype = None):
+        return self._section._eds.addfield(self._section.name, self._name, field_value, datatype)
 
     def has_field(self, field):
         if isinstance(field, str): # field name
@@ -361,7 +361,37 @@ class EDS_Field(object):
             self._index, self._name, str(self._data), type(self._data).__name__, self._data.range)
 
 class EDS_RefLib(object):
+    type_mapping = {
+        "BOOL"    : EDS_Types.BOOL,
+        "USINT"   : EDS_Types.USINT,
+        "UINT"    : EDS_Types.UINT,
+        "UDINT"   : EDS_Types.UDINT,
+        "ULINT"   : EDS_Types.ULINT,
+        "SINT"    : EDS_Types.SINT,
+        "INT"     : EDS_Types.INT,
+        "DINT"    : EDS_Types.DINT,
+        "LINT"    : EDS_Types.LINT,
+        "WORD"    : EDS_Types.WORD,
+        "DWORD"   : EDS_Types.DWORD,
+        "REAL"    : EDS_Types.REAL,
+        "LREAL"   : EDS_Types.LREAL,
+        "BYTE"    : EDS_Types.BYTE,
+        "STRING"  : EDS_Types.STRING,
+        "STRINGI" : EDS_Types.STRINGI,
+        "DATE"    : EDS_Types.DATE,
+        "TIME"    : EDS_Types.TIME,
+        "EPATH"   : EDS_Types.EPATH,
 
+        "REVISION"   : EDS_Types.REVISION,
+        "KEYWORD"    : EDS_Types.KEYWORD,
+        "DATAREF"    : EDS_Types.REF,
+        "VENDORSPEC" : EDS_Types.VENDOR_SPECIFIC,
+        "TYPEREF"    : EDS_Types.DATATYPE_REF, # Reference to another field which contains a cip_dtypeid
+        "MAC_ADDR"   : EDS_Types.ETH_MAC_ADDR,
+        "EMPTY"      : EDS_Types.EMPTY,
+        "UNDEFINED"  : EDS_Types.UNDEFINED,
+        "SERVICE"    : EDS_Types.EDS_SERVICE,
+    }
     def __init__(self):
         self.libs = {}
 
@@ -473,15 +503,9 @@ class EDS_RefLib(object):
         if entry_name[-1].isdigit(): # Incremental entry_name
             entry_name = entry_name.rstrip(digits) + 'N'
 
-        for _, lib in self.libs.items():
-            section = lib["sections"].get(section_keyword, None)
-            if section:
-                if section.get(entry_name, None):
-                    return True
-                break
-            else:
-                continue
-
+        section = self.get_section(section_keyword, protocol)
+        if section and section.get(entry_name, None):
+            return True
         return False
 
     def get_entry(self, section_keyword, entry_name, protocol=None):
@@ -492,15 +516,12 @@ class EDS_RefLib(object):
 
         if entry_name[-1].isdigit(): # Incremental entry_name
             entry_name = entry_name.rstrip(digits) + 'N'
-
-        for _, lib in self.libs.items():
-            section = lib["sections"].get(section_keyword, None)
-            if section:
-                entry = section.get(entry_name, None)
-                break
-            else:
-                continue
-
+        print(section_keyword, entry_name)
+        section = self.get_section(section_keyword, protocol)
+        if section:
+            entry = section["entries"].get(entry_name, None)
+            if entry:
+                print(type(entry))
         return entry
 
     def get_field(self, section_keyword, entry_name, field_index, protocol=None):
@@ -518,7 +539,7 @@ class EDS_RefLib(object):
             The requested index is greater than listed fields in the lib,
             Consider the field as Nth field filed and re-calculate the index.
             '''
-            if field_index >= len(entry.fields) and entry.get("enumerated_fields", None):
+            if field_index >= len(entry["fields"]) and entry.get("enumerated_fields", None):
                  # Calculating reference field index
                 field_index = (field_index % entry["enumerated_fields"]["enum_member_count"]) + entry["enumerated_fields"]["first_enum_field"] - 1
             field = entry["fields"][field_index]
@@ -538,18 +559,14 @@ class EDS_RefLib(object):
 
         return required_sections
 
-    #def is_required_section(self, section_keyword):
-    #    section = self.get_section(section_keyword)
-    #    if section:
-    #        if entry_keyword:
-    #            entry = self
-    #        else:
-    #            return section["required"]
-    #
-    #def is_required_entry(self, section_keyword, entry_keyword=None):
-    #
-    #def is_required_field(self, section_keyword, entry_keyword=None, field_name=None):
+    def get_type(self, type_name):
+        return self.type_mapping.get(type_name, None)
 
+    def validate(self, type_name, type_info, value):
+        dt = self.get_type(type_name)
+        if dt:
+            return dt.validate(value, type_info)
+        return False
 
 class EDS(object):
 
@@ -597,32 +614,32 @@ class EDS(object):
             return self._sections.get(self.ref_libs.get_section_name(section, self.protocol))
         raise TypeError('Inappropriate data type: {}'.format(type(section)))
 
-    def get_entry(self, section, entryname):
+    def get_entry(self, section, entry_name):
         '''
         To get an entry by its section name/section id and its entry name.
         '''
         sec = self.get_section(section)
         if sec:
-            return sec.get_entry(entryname)
+            return sec.get_entry(entry_name)
         return None
 
-    def get_field(self, section, entryname, field):
+    def get_field(self, section, entry_name, field):
         '''
         To get an field by its section name/section id, its entry name and its field anme/field index
         '''
-        entry = self.get_entry(section, entryname)
+        entry = self.get_entry(section, entry_name)
         if entry:
             return entry.get_field(field)
         return None
 
-    def get_value(self, section, entryname, field):
-        field = self.get_field(section, entryname, field)
+    def get_value(self, section, entry_name, field):
+        field = self.get_field(section, entry_name, field)
         if field:
             return field.value
         return None
 
-    def set_value(self, section, entryname, field, value):
-        field = self.get_field(section, entryname, field)
+    def set_value(self, section, entry_name, field, value):
+        field = self.get_field(section, entry_name, field)
         if field is None:
             raise Exception('Not a valid field! Unable to set the field value.')
         field.value = value
@@ -638,78 +655,79 @@ class EDS(object):
             return self.ref_libs.get_section_name(section, self.protocol) in self._sections.keys()
         raise TypeError('Inappropriate data type: {}'.format(type(section)))
 
-    def has_entry(self, section, entryname):
+    def has_entry(self, section, entry_name):
         section = self.get_section(section)
         if section:
-            return entryname.replace(' ', '').lower() in section._entries.keys()
+            return entry_name.replace(' ', '').lower() in section._entries.keys()
         return False
 
-    def has_field(self, section, entryname, field):
-        entry = self.get_entry(section, entryname)
+    def has_field(self, section, entry_name, field):
+        entry = self.get_entry(section, entry_name)
         if entry:
             return fieldindex < entry.fieldcount
         return False
 
-    def add_section(self, sectionname):
-        sectionkey = sectionname.replace(' ', '').lower()
+    def add_section(self, section_name):
+        sectionkey = section_name.replace(' ', '').lower()
         ref_id = 0
 
         if sectionkey == '':
-            logger.error('Invalid section name! {} contains invalid characters'.format(sectionname))
+            logger.error('Invalid section name! {} contains invalid characters'.format(section_name))
 
         if sectionkey in self._sections.keys():
-            logger.error('Duplicate section! [{}}'.format(sectionname))
+            logger.error('Duplicate section! [{}}'.format(section_name))
 
         lib_name = None
-        if self.ref_libs.has_section(sectionname):
-            lib_name = self.ref_libs.get_lib_name(sectionname) # A bit of optimization
+        if self.ref_libs.has_section(section_name):
+            lib_name = self.ref_libs.get_lib_name(section_name) # A bit of optimization
         else:
-            logger.warning('Unknown Section [{}]'.format(sectionname))
+            logger.warning('Unknown Section [{}]'.format(section_name))
 
-        section = EDS_Section(self, sectionname, self.ref_libs.get_section_id(sectionname, lib_name))
+        section = EDS_Section(self, section_name, self.ref_libs.get_section_id(section_name, lib_name))
 
         self._sections[sectionkey] = section
 
         return section
 
-    def addentry(self, sectionname, entryname):
+    def addentry(self, section_name, entry_name):
 
-        section = self._sections[sectionname.replace(' ', '').lower()]
+        section = self._sections[section_name.replace(' ', '').lower()]
 
-        if entryname == '':
-            logger.error('Invalid Entry name! [{}]\"{}\" contains invalid characters.'
-                .format(sectionname, entryname))
-            return None
+        if entry_name == '':
+            raise Exception("Invalid Entry name! [{}]\"{}\"".format(section_name, entry_name))
 
-        if entryname.replace(' ', '').lower() in section._entries.keys():
-            logger.error('Duplicated Entry! to serialize \"{}\", set the serialize switch to True'.format(entry))
+        if entry_name.replace(' ', '').lower() in section._entries.keys():
+            raise Exception("Duplicated Entry! [{}]\"{}\"".format(section_name, entry_name))
 
         # Finding a name for the new entry
-        ref_keyword = ''
-        ref_entry = self.ref_libs.get_entry(sectionname, entryname)
+        ref_keyword = ""
+        # Search for the same section:entry inside the reference lib
+        ref_entry = self.ref_libs.get_entry(section_name, entry_name)
         if ref_entry:
-            ref_keyword = ref_entry.key.rstrip('N').rstrip(digits)
-            if ref_keyword != entryname.rstrip(digits):
+            print(entry_name, ref_entry)
+            ref_keyword = entry_name.rstrip(digits)
+            #TODO:!!!
+            if ref_keyword != entry_name.rstrip(digits):
                 logger.warning('Not exact match! in section [{}], entry name: \"{}\" should be:'
-                    ' \"{}[N]\"'.format(sectionname, entryname, ref_keyword))
+                    ' \"{}[N]\"'.format(section_name, entry_name, ref_keyword))
         else:
-            logger.warning('Unknown Entry [{}].{}'.format(sectionname, entryname))
+            logger.warning('Unknown Entry [{}].{}'.format(section_name, entry_name))
 
 
-        entry_nid = entryname[len(ref_keyword):]
-        entryname = ref_keyword + entry_nid
+        entry_nid = entry_name[len(ref_keyword):]
+        entry_name = ref_keyword + entry_nid
 
-        entry = EDS_Entry(section, entryname, section.entrycount)
-        section._entries[entryname.replace(' ', '').lower()] = entry
+        entry = EDS_Entry(section, entry_name, section.entrycount)
+        section._entries[entry_name.replace(' ', '').lower()] = entry
 
         return entry
 
-    def addfield(self, sectionname, entryname, fieldvalue, field_datatype = None):
-        section = self.get_section(sectionname)
+    def addfield(self, section_name, entry_name, field_value, field_datatype = None):
+        section = self.get_section(section_name)
         if section is None:
             raise Exception('Section not found! [{}]'.format(section._name))
 
-        entry = section.get_entry(entryname)
+        entry = section.get_entry(entry_name)
         if entry is None:
             raise Exception('Entry not found! [{}]'.format(Entry._name))
 
@@ -719,31 +737,32 @@ class EDS(object):
         ref_datatypes = []
         ref_field = self.ref_libs.get_field(section._name, entry.name, entry.fieldcount)
         if ref_field:
-            field_name = ref_field.name or entry.name
+            field_name = ref_field["name"] or entry.name
             # Serialize the field name if there can be enumerated fields
             if self.ref_libs.has_entry(section._name, entry.name) and self.ref_libs.get_entry(section._name, entry.name).get("enumerated_fields", None):
                 field_name = field_name.rstrip('N') + str(entry.fieldcount + 1)
-            ref_datatypes = ref_field.datatypes
+            ref_datatypes = ref_field.get("data_types", None)
+            print("---->",ref_datatypes)
         else:
             field_name = 'field{}'.format(entry.fieldcount)
         if not ref_datatypes:
             '''
             The filed is unknown and no ref_types are in hand. Keep the urrent field type.
             '''
-            if fieldvalue != '' and EDS_VENDORSPEC.validate(fieldvalue):
-                logger.warning('Unknown Field [{}].{}.{} = {}. Switched to VENDOR_SPECIFIC field.'.format(section._name, entry.name, field_name, fieldvalue))
-                field_data = EDS_VENDORSPEC(fieldvalue)
-            elif fieldvalue != '' and EDS_UNDEFINED.validate(fieldvalue):
-                logger.warning('Unknown Field [{}].{}.{} = {}. Switched to EDS_UNDEFINED field.'.format(section._name, entry.name, field_name, fieldvalue))
-                field_data = EDS_UNDEFINED(fieldvalue)
+            if field_value != '' and EDS_VENDORSPEC.validate(field_value):
+                logger.warning('Unknown Field [{}].{}.{} = {}. Switched to VENDOR_SPECIFIC field.'.format(section._name, entry.name, field_name, field_value))
+                field_data = EDS_VENDORSPEC(field_value)
+            elif field_value != '' and EDS_UNDEFINED.validate(field_value):
+                logger.warning('Unknown Field [{}].{}.{} = {}. Switched to EDS_UNDEFINED field.'.format(section._name, entry.name, field_name, field_value))
+                field_data = EDS_UNDEFINED(field_value)
             else:
-                logger.warning('Unknown Field [{}].{}.{} = {}. Switched to EDS_EMPTY field.'.format(section._name, entry.name, field_name, fieldvalue))
-                field_data = EDS_EMPTY(fieldvalue)
+                logger.warning('Unknown Field [{}].{}.{} = {}. Switched to EDS_EMPTY field.'.format(section._name, entry.name, field_name, field_value))
+                field_data = EDS_EMPTY(field_value)
         # Validating field value
-        elif fieldvalue != '' or self.ref_libs.get_field(section._name, entry.name, field_name)["required"]:
-            for dtype, typeinfo in ref_datatypes: # Getting the listed data types and their acceptable ranges
-                if dtype.validate(fieldvalue, typeinfo):
-                    if dtype == EDS_TYPEREF:
+        elif field_value != '' or self.ref_libs.get_field(section._name, entry.name, field_name)["required"]:
+            for type_name, type_info in ref_datatypes.items(): # Getting the listed data types and their acceptable ranges
+                if self.ref_libs.validate(type_name, type_info, field_value):
+                    if type_name == "EDS_TYPEREF":
                         '''
                         Type of a field is determined by value of another field. A referenced-type has to be validated.
                         The name of the ref field that contains the a data_type, is listed in the primary field's
@@ -751,40 +770,41 @@ class EDS(object):
                         Example: The datatype of Params.Param1.MinimumValue is determined by Params.Param1.DataType
                         '''
                         # TODO: here we read only the first item of the reference field list. Iterating the list might be a better way
-                        typeid = self.get_field(sectionname, entryname, typeinfo[0]).value
+                        typeid = self.get_field(section_name, entry_name, typeinfo[0]).value
                         try:
                             dtype = self.ref_libs.get_type(typeid)
-                            if dtype.validate(fieldvalue, []):
-                                field_data = dtype(fieldvalue, [])
+                            if dtype.validate(field_value, []):
+                                field_data = dtype(field_value, [])
                                 break
                         except:
-                            field_data = EDS_UNDEFINED(fieldvalue)
+                            field_data = EDS_UNDEFINED(field_value)
 
                     else: # No TYPEREF
                         # creating type instance with field value
-                        field_data = dtype(fieldvalue, typeinfo)
+                        field_data = self.ref_libs.get_type(type_name)(field_value, type_info)
 
             if field_data is None: # No proper type was found
-                if fieldvalue != '':
-                    typelist = [(type_, type_._range) for type_, typeinfo in ref_datatypes if not typeinfo]
-                    typelist += [(type_, typeinfo) for type_, typeinfo in ref_datatypes if typeinfo]
-                    types_str = ', '.join('<{}({})>'.format(type_[0].__name__, type_[1]) for type_ in typelist)
+                if field_value != '':
+                    print(".....>>",ref_datatypes.items())
+                    type_list = [(type_name, self.ref_libs.get_type(type_name)._range) for type_name, type_info in ref_datatypes.items() if not type_info]
+                    type_list += [(type_name, type_info) for type_name, typeinfo in ref_datatypes.items() if type_info]
+                    types_str = ', '.join('<{}({})>'.format(type_[0].__name__, type_[1]) for type_ in type_list)
 
                     if self.ref_libs.get_field(section._name, entry.name, field_name)["required"]:
                         raise Exception('Data_type mismatch! [{}].{}.{} = ({}), should be a type of: {}'
-                             .format(section._name, entry.name, field_name, fieldvalue, types_str))
+                             .format(section._name, entry.name, field_name, field_value, types_str))
                     else:
                         logger.error('Data_type mismatch! [{}].{}.{} = ({}), should be a type of: {}'
-                             .format(section._name, entry.name, field_name, fieldvalue, types_str))
-                        if EDS_VENDORSPEC.validate(fieldvalue):
-                            field_data = EDS_VENDORSPEC(fieldvalue)
+                             .format(section._name, entry.name, field_name, field_value, types_str))
+                        if EDS_VENDORSPEC.validate(field_value):
+                            field_data = EDS_VENDORSPEC(field_value)
                         else:
-                            field_data = EDS_UNDEFINED(fieldvalue)
+                            field_data = EDS_UNDEFINED(field_value)
                 else:
-                    field_data = EDS_EMPTY(fieldvalue)
+                    field_data = EDS_EMPTY(field_value)
 
-        else: # fieldvalue == ''
-            field_data = EDS_EMPTY(fieldvalue)
+        else: # field_value == ''
+            field_data = EDS_EMPTY(field_value)
 
         field = EDS_Field(entry, field_name, field_data, entry.fieldcount)
 
@@ -793,33 +813,33 @@ class EDS(object):
 
         return field
 
-    def removesection(self, sectionname, removetree = False):
-        section = self.get_section(sectionname)
+    def removesection(self, section_name, removetree = False):
+        section = self.get_section(section_name)
 
         if section is None: return
         if not section.entries:
-            del self._sections[sectionname.replace(' ', '').lower()]
+            del self._sections[section_name.replace(' ', '').lower()]
         elif removetree:
             for entry in section.entries:
-                self.removeentry(sectionname, entry.name, removetree)
-            del self._sections[sectionname.replace(' ', '').lower()]
+                self.removeentry(section_name, entry.name, removetree)
+            del self._sections[section_name.replace(' ', '').lower()]
         else:
             logger.error('Unable to remove section! [{}] contains one or more entries.'
                 'Remove the entries first or use removetree = True'.format(section._name))
 
-    def removeentry(self, sectionname, entryname, removetree = False):
-        entry = self.get_entry(sectionname, entryname)
+    def removeentry(self, section_name, entry_name, removetree = False):
+        entry = self.get_entry(section_name, entry_name)
         if entry is None: return
         if not entry.fields:
-            section = self.get_section(sectionname)
-            del section._entries[entryname.replace(' ', '').lower()]
+            section = self.get_section(section_name)
+            del section._entries[entry_name.replace(' ', '').lower()]
         elif removetree:
             entry._fields = []
         else:
             logger.error('Unable to remove entry! [{}].{} contains one or more fields.'
                 'Remove the fields first or use removetree = True'.format(section._name, entry.name))
 
-    def removefield(self, sectionname, sentryname, fieldindex):
+    def removefield(self, section_name, sentryname, fieldindex):
         # TODO
         pass
 
