@@ -4,6 +4,7 @@
   "project": "eds_pie",
   "lib_name": "EtherNet/IP",
   "protocol": "EtherNetIP",
+  "comment": "All CIP and EtherNet/IP related classes.",
   "sections": {
     "Identity Class": {
       "name": "Identity Class",
@@ -1354,12 +1355,6 @@
       "class_id": 72,
       "entries": {}
     },
-    "Connection Configuration": {
-      "name": "Connection Configuration Class",
-      "required": false,
-      "class_id": 243,
-      "entries": {}
-    },
     "CIP Security Class": {
       "name": "CIP Security Class",
       "required": false,
@@ -1400,6 +1395,12 @@
       "name": "Ingress Egress Class",
       "required": false,
       "class_id": 99,
+      "entries": {}
+    },
+    "Connection Configuration": {
+      "name": "Connection Configuration Class",
+      "required": false,
+      "class_id": 243,
       "entries": {}
     },
     "LLDP Management Class": {

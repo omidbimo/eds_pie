@@ -4,6 +4,7 @@
   "project": "eds_pie",
   "lib_name": "CIP family EDS dictionary name",
   "protocol": "CIP protocol name",
+  "comment": "This is the template json file for eds_pie libraries.",
   "sections": {
     "Section Name": {
       "description": "Section Description",

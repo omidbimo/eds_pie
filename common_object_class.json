@@ -4,6 +4,7 @@
   "project": "eds_pie",
   "lib_name": "Common Object Class",
   "protocol": "CIP",
+  "comment": "Common Entries for all CIP and EtherNet/IP classes.",
   "sections": {
     "Common Object Class": {
       "description": "Common Object Class",

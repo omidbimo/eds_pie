@@ -4,6 +4,7 @@
   "project": "eds_pie",
   "lib_name": "MetaEDS",
   "protocol": "",
+  "comment": "EDS about EDS. Essential administrative Meta data to understand the EDS structure.",
   "sections": {
     "File": {
       "name": "File Description",
