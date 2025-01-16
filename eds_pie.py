@@ -314,7 +314,7 @@ class EDS_Field(object):
         self._entry     = entry
         self._name      = name
         self._data      = data # datatype object. Actually is the Field value containing also its type information
-        self._datatypes = [] # Valid datatypes a field supports
+        self._data_types = [] # Valid datatypes a field supports
         # Fields don't have hcomment attribute. The hcomments belongs to entries
         self.fcomment  = ''
 
@@ -337,14 +337,14 @@ class EDS_Field(object):
                 self._data._value = value
                 return
         # Setting with the actual datatype is failed. Try other supported types.
-        if self._datatypes:
-            for datatype, valid_data in self._datatypes:
+        if self._data_types:
+            for datatype, valid_data in self._data_types:
                 if datatype.validate(value, valid_data):
                     del self._data
                     self._data = datatype(value, valid_data)
                     return
         types_str = ', '.join('<{}>{}'.format(datatype.__name__, valid_data)
-                                for datatype, valid_data in self._datatypes)
+                                for datatype, valid_data in self._data_types)
         raise Exception('Unable to set Field value! Data_type mismatch!'
             ' [{}].{}.{} = ({}), should be a type of: {}'
             .format(self._entry._section.name, self._entry.name, self.name, value, types_str))
@@ -393,7 +393,7 @@ class EDS_RefLib(object):
         "SERVICE"       : EDS_Types.EDS_SERVICE,
         }
 
-    supported_datatypes = {
+    supported_data_types = {
         0xC1: CIP_BOOL,
         0xC2: CIP_SINT,
         0xC3: CIP_INT,
@@ -483,13 +483,7 @@ class EDS_RefLib(object):
         '''
         To get an entry dictionary by its section name and entry name
         '''
-        if entry_name[-1].isdigit(): # Incremental entry_name
-            entry_name = entry_name.rstrip(digits) + 'N'
-
-        section = self.get_section(section_keyword)
-        if section and section["entries"].get(entry_name, None):
-            return True
-        return False
+        return self.get_entry(section_keyword, entry_name) is not None
 
     def get_entry(self, section_keyword, entry_name):
         '''
@@ -502,7 +496,13 @@ class EDS_RefLib(object):
 
         section = self.get_section(section_keyword)
         if section:
-            entry = section["entries"].get(entry_name, None)
+            # First check if the entry is in common class object
+            if section["class_id"] and section["class_id"] != 0:
+                common_section = self.get_section("Common Object Class")
+                entry = common_section["entries"].get(entry_name, None)
+                #print(entry_name, entry)
+            if entry is None:
+                entry = section["entries"].get(entry_name, None)
         return entry
 
     def get_field_byindex(self, section_keyword, entry_name, field_index):
@@ -546,7 +546,7 @@ class EDS_RefLib(object):
         return field
 
     def get_type(self, cip_typeid):
-        return self.supported_datatypes[cip_typeid]
+        return self.supported_data_types[cip_typeid]
 
     def get_required_sections(self):
 
@@ -707,6 +707,9 @@ class EDS(object):
         return entry
 
     def add_field(self, section_name, entry_name, field_value, field_datatype = None):
+        '''
+        Fields must be added in order and no random access is allowed.
+        '''
         section = self.get_section(section_name)
 
         if section is None:
@@ -716,85 +719,65 @@ class EDS(object):
         if entry is None:
             raise Exception('Entry not found! [{}]'.format(entry_name))
 
+        # Getting field's info from eds reference libraries
         field_data = None
-
-        # getting field's info from eds reference library
-        ref_datatypes = []
+        ref_data_types = []
         ref_field = self.ref_libs.get_field_byindex(section._name, entry.name, entry.fieldcount)
+
         if ref_field:
+            # Reference field is now known. Use the ref information to create the field
+            ref_data_types = ref_field.get("data_types", None)
+
             field_name = ref_field["name"] or entry.name
-            # Serialize the field name if there can be enumerated fields
-            if self.ref_libs.has_entry(section._name, entry.name) and self.ref_libs.get_entry(section._name, entry.name).get("enumerated_fields", None):
+            # Serialize the field name if the entry can have enumerated fields like AssemN and ParamN.
+            if self.ref_libs.get_entry(section_name, entry_name).get("enumerated_fields", None):
                 field_name = field_name.rstrip('N') + str(entry.fieldcount + 1)
-            ref_datatypes = ref_field.get("data_types", None)
+
         else:
+            # No reference field was found. Use a general naming schema
             field_name = 'field{}'.format(entry.fieldcount)
-        if not ref_datatypes:
-            '''
-            The filed is unknown and no ref_types are in hand. Keep the urrent field type.
-            '''
-            if field_value != '' and EDS_VENDORSPEC.validate(field_value):
+
+        # Validate field's value and assign a data type to the field
+        if field_value == '':
+            logger.warning("Field [{}].{}.{} has no value. Switched to EDS_EMPTY field.".format(section._name, entry.name, field_name))
+            field_data = EDS_EMPTY(field_value)
+
+        elif not ref_data_types:
+            # The filed is unknown and no ref_types are in hand. Try some default data types.
+            if EDS_VENDORSPEC.validate(field_value):
                 logger.warning('Unknown Field [{}].{}.{} = {}. Switched to VENDOR_SPECIFIC field.'.format(section._name, entry.name, field_name, field_value))
                 field_data = EDS_VENDORSPEC(field_value)
-            elif field_value != '' and EDS_UNDEFINED.validate(field_value):
+            elif EDS_UNDEFINED.validate(field_value):
                 logger.warning('Unknown Field [{}].{}.{} = {}. Switched to EDS_UNDEFINED field.'.format(section._name, entry.name, field_name, field_value))
                 field_data = EDS_UNDEFINED(field_value)
             else:
-                logger.warning('Unknown Field [{}].{}.{} = {}. Switched to EDS_EMPTY field.'.format(section._name, entry.name, field_name, field_value))
-                field_data = EDS_EMPTY(field_value)
-        # Validating field value
-        elif field_value != '' or self.ref_libs.is_required_field(section._name, entry.name, field_name):
-            for type_name, type_info in ref_datatypes.items(): # Getting the listed data types and their acceptable ranges
-                if self.ref_libs.validate(type_name, type_info, field_value):
-                    if type_name == "EDS_TYPEREF":
-                        '''
-                        Type of a field is determined by value of another field. A referenced-type has to be validated.
-                        The name of the ref field that contains the a data_type, is listed in the primary field's
-                        datatype.valid_ranges(typeinfo) which itself is a list of names
-                        Example: The datatype of Params.Param1.MinimumValue is determined by Params.Param1.DataType
-                        '''
-                        # TODO: here we read only the first item of the reference field list. Iterating the list might be a better way
-                        typeid = self.get_field(section_name, entry_name, typeinfo[0]).value
-                        try:
-                            dtype = self.ref_libs.get_type(typeid)
-                            if dtype.validate(field_value, []):
-                                field_data = dtype(field_value, [])
-                                break
-                        except:
-                            field_data = EDS_UNDEFINED(field_value)
+                raise Exception('Unknown Field [{}].{}.{} = {} with no matching data types.'.format(section._name, entry.name, field_name, field_value))
 
-                    else: # No TYPEREF
-                        # creating type instance with field value
-                        field_data = self.ref_libs.get_type(type_name)(field_value, type_info)
+        else:
+            for type_name, type_info in ref_data_types.items(): # Getting the listed data types and their acceptable ranges
+                if self.ref_libs.validate(type_name, type_info, field_value):
+                    # creating type instance with field value
+                    field_data = self.ref_libs.get_type(type_name)(field_value, type_info)
 
             if field_data is None: # No proper type was found
-                if field_value != '':
-                    type_list = [(type_name, self.ref_libs.get_type(type_name)._range) for type_name, type_info in ref_datatypes.items() if not type_info]
-                    type_list += [(type_name, type_info) for type_name, type_info in ref_datatypes.items() if type_info]
-                    for type_name, type_info in type_list:
-                        print(type_name)
-                        print(self.ref_libs.get_type(type_name).__name__)
-                    types_str = ', '.join('<{}({})>'.format(self.ref_libs.get_type(type_name).__name__, type_info) for type_name, type_info in type_list)
+                type_list = [(type_name, self.ref_libs.get_type(type_name)._range) for type_name, type_info in ref_data_types.items() if not type_info]
+                type_list += [(type_name, type_info) for type_name, type_info in ref_data_types.items() if type_info]
+                types_str = ', '.join('<{}({})>'.format(self.ref_libs.get_type(type_name).__name__, type_info) for type_name, type_info in type_list)
 
-                    if self.ref_libs.get_field_byname(section._name, entry.name, field_name)["required"]:
-                        raise Exception('Data_type mismatch! [{}].{}.{} = ({}), should be a type of: {}'
-                             .format(section._name, entry.name, field_name, field_value, types_str))
-                    else:
-                        logger.error('Data_type mismatch! [{}].{}.{} = ({}), should be a type of: {}'
-                             .format(section._name, entry.name, field_name, field_value, types_str))
-                        if EDS_VENDORSPEC.validate(field_value):
-                            field_data = EDS_VENDORSPEC(field_value)
-                        else:
-                            field_data = EDS_UNDEFINED(field_value)
+                if self.ref_libs.get_field_byname(section._name, entry.name, field_name)["required"]:
+                    raise Exception('Data_type mismatch! [{}].{}.{} = ({}), should be a type of: {}'
+                         .format(section._name, entry.name, field_name, field_value, types_str))
                 else:
-                    field_data = EDS_EMPTY(field_value)
-
-        else: # field_value == ''
-            field_data = EDS_EMPTY(field_value)
+                    logger.error('Data_type mismatch! [{}].{}.{} = ({}), should be a type of: {}'
+                         .format(section._name, entry.name, field_name, field_value, types_str))
+                    if EDS_VENDORSPEC.validate(field_value):
+                        field_data = EDS_VENDORSPEC(field_value)
+                    else:
+                        field_data = EDS_UNDEFINED(field_value)
 
         field = EDS_Field(entry, field_name, field_data, entry.fieldcount)
 
-        field._datatypes = ref_datatypes
+        field._data_types = ref_data_types
         entry._fields.append(field)
 
         return field
@@ -833,7 +816,6 @@ class EDS(object):
         required_sections = self.ref_libs.get_required_sections()
 
         for section_name, section in required_sections.items():
-
             if self.has_section(section_name):
                 continue
             raise Exception('Missing required section! [{}]'.format(section_name))
@@ -853,6 +835,24 @@ class EDS(object):
                         logger.error('Missing required field! [{}].{}.{} #{}'
                             .format(section.name, entry.name, field.name, field.placement))
         '''
+        """
+        if type_name == "EDS_TYPEREF":
+            '''
+            Type of a field is determined by value of another field. A referenced-type has to be validated.
+            The name of the ref field that contains the a data_type, is listed in the primary field's
+            datatype.valid_ranges(typeinfo) which itself is a list of names
+            Example: The datatype of Params.Param1.MinimumValue is determined by Params.Param1.DataType
+            '''
+            # TODO: here we read only the first item of the reference field list. Iterating the list might be a better way
+            typeid = self.get_field(section_name, entry_name, typeinfo[0]).value
+            try:
+                dtype = self.ref_libs.get_type(typeid)
+                if dtype.validate(field_value, []):
+                    field_data = dtype(field_value, [])
+                    break
+            except:
+                field_data = EDS_UNDEFINED(field_value)
+        """
     def save(self, filename, overwrite = False):
         if os.path.isfile(filename) and overwrite == False:
             raise Exception('Failed to write to file! \"{}\" already exists and overrwite is not enabled.'.format(filename))
