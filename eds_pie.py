@@ -382,16 +382,50 @@ class EDS_RefLib(object):
         "TIME"    : EDS_Types.TIME,
         "EPATH"   : EDS_Types.EPATH,
 
-        "REVISION"   : EDS_Types.REVISION,
-        "KEYWORD"    : EDS_Types.KEYWORD,
-        "DATAREF"    : EDS_Types.REF,
-        "VENDORSPEC" : EDS_Types.VENDOR_SPECIFIC,
-        "TYPEREF"    : EDS_Types.DATATYPE_REF, # Reference to another field which contains a cip_dtypeid
-        "MAC_ADDR"   : EDS_Types.ETH_MAC_ADDR,
-        "EMPTY"      : EDS_Types.EMPTY,
-        "UNDEFINED"  : EDS_Types.UNDEFINED,
-        "SERVICE"    : EDS_Types.EDS_SERVICE,
-    }
+        "REVISION"      : EDS_Types.REVISION,
+        "KEYWORD"       : EDS_Types.KEYWORD,
+        "REF"           : EDS_Types.REF,
+        "VENDORSPEC"    : EDS_Types.VENDOR_SPECIFIC,
+        "DATATYPE_REF"  : EDS_Types.DATATYPE_REF, # Reference to another field which contains a cip_dtypeid
+        "MAC_ADDR"      : EDS_Types.ETH_MAC_ADDR,
+        "EMPTY"         : EDS_Types.EMPTY,
+        "UNDEFINED"     : EDS_Types.UNDEFINED,
+        "SERVICE"       : EDS_Types.EDS_SERVICE,
+        }
+
+    supported_datatypes = {
+        0xC1: CIP_BOOL,
+        0xC2: CIP_SINT,
+        0xC3: CIP_INT,
+        0xC4: CIP_DINT,
+        0xC5: CIP_LINT,
+        0xC6: CIP_USINT,
+        0xC7: CIP_UINT,
+        0xC8: CIP_UDINT,
+        0xC9: CIP_ULINT,
+        0xCA: CIP_REAL,
+        0xCB: CIP_LREAL,
+        0xCC: EDS_Types.STIME,
+        0xCD: EDS_DATE,
+        #, 0xCE: EDS_Types.TIME_OF_DAY
+        #, 0xCF: EDS_Types.DATE_AND_TIME
+        0xD0: CIP_STRING,
+        0xD1: CIP_BYTE,
+        0xD2: CIP_WORD,
+        0xD3: CIP_DWORD,
+        0xD4: EDS_Types.LWORD,
+        #, 0xD5: EDS_Types.STRING2
+        #, 0xD6: EDS_Types.FTIME
+        #, 0xD7: EDS_Types.LTIME
+        #, 0xD8: EDS_Types.ITIME
+        #, 0xD9: EDS_Types.STRINGN
+        #, 0xDA: EDS_Types.SHORT_STRING
+        0xDB: CIP_TIME,
+        0xDC: CIP_EPATH,
+        #, 0xDD: EDS_Types.ENGUNIT
+        0xDE: CIP_STRINGI,
+        }
+
     def __init__(self):
         self.libs = {}
 
@@ -402,38 +436,7 @@ class EDS_RefLib(object):
                     if jlib["project"] ==  "eds_pie" and file != "edslib_schema.json":
                         self.libs[jlib["protocol"].lower()] = jlib
 
-        self.supported_datatypes = {
-            0xC1: CIP_BOOL,
-            0xC2: CIP_SINT,
-            0xC3: CIP_INT,
-            0xC4: CIP_DINT,
-            0xC5: CIP_LINT,
-            0xC6: CIP_USINT,
-            0xC7: CIP_UINT,
-            0xC8: CIP_UDINT,
-            0xC9: CIP_ULINT,
-            0xCA: CIP_REAL,
-            0xCB: CIP_LREAL,
-            0xCC: EDS_Types.STIME,
-            0xCD: EDS_DATE,
-            #, 0xCE: EDS_Types.TIME_OF_DAY
-            #, 0xCF: EDS_Types.DATE_AND_TIME
-            0xD0: CIP_STRING,
-            0xD1: CIP_BYTE,
-            0xD2: CIP_WORD,
-            0xD3: CIP_DWORD,
-            0xD4: EDS_Types.LWORD,
-            #, 0xD5: EDS_Types.STRING2
-            #, 0xD6: EDS_Types.FTIME
-            #, 0xD7: EDS_Types.LTIME
-            #, 0xD8: EDS_Types.ITIME
-            #, 0xD9: EDS_Types.STRINGN
-            #, 0xDA: EDS_Types.SHORT_STRING
-            0xDB: CIP_TIME,
-            0xDC: CIP_EPATH,
-            #, 0xDD: EDS_Types.ENGUNIT
-            0xDE: CIP_STRINGI,
-            }
+
 
     def get_lib_name(self, section_keyword):
         for _, lib in self.libs.items():
@@ -502,7 +505,7 @@ class EDS_RefLib(object):
             entry = section["entries"].get(entry_name, None)
         return entry
 
-    def get_field(self, section_keyword, entry_name, field_index):
+    def get_field_byindex(self, section_keyword, entry_name, field_index):
         '''
         To get a field dictionary by its section name and entry name and field index
         '''
@@ -521,6 +524,25 @@ class EDS_RefLib(object):
                  # Calculating reference field index
                 field_index = (field_index % entry["enumerated_fields"]["enum_member_count"]) + entry["enumerated_fields"]["first_enum_field"] - 1
             field = entry["fields"][field_index]
+        return field
+
+    def get_field_byname(self, section_keyword, entry_name, field_name):
+        '''
+        To get a field dictionary by its section name and entry name and field name
+        '''
+        field = None
+
+        if entry_name[-1].isdigit(): # Incremental entry_name
+            entry_name = entry_name.rstrip(digits) + 'N'
+
+        entry = self.get_entry(section_keyword, entry_name)
+        if entry:
+            if field_name[-1].isdigit(): # Incremental field_name
+                field_name = field_name.rstrip(digits) + 'N'
+
+            for fld in entry["fields"]:
+                if fld["name"] == field_name:
+                    field = fld
         return field
 
     def get_type(self, cip_typeid):
@@ -544,6 +566,12 @@ class EDS_RefLib(object):
         dt = self.get_type(type_name)
         if dt:
             return dt.validate(value, type_info)
+        return False
+
+    def is_required_field(self, section_keyword, entry_name, field_name):
+        field = self.get_field_byname(section_keyword, entry_name, field_name)
+        if field:
+            return field["required"]
         return False
 
 class EDS(object):
@@ -692,7 +720,7 @@ class EDS(object):
 
         # getting field's info from eds reference library
         ref_datatypes = []
-        ref_field = self.ref_libs.get_field(section._name, entry.name, entry.fieldcount)
+        ref_field = self.ref_libs.get_field_byindex(section._name, entry.name, entry.fieldcount)
         if ref_field:
             field_name = ref_field["name"] or entry.name
             # Serialize the field name if there can be enumerated fields
@@ -715,7 +743,7 @@ class EDS(object):
                 logger.warning('Unknown Field [{}].{}.{} = {}. Switched to EDS_EMPTY field.'.format(section._name, entry.name, field_name, field_value))
                 field_data = EDS_EMPTY(field_value)
         # Validating field value
-        elif field_value != '' or self.ref_libs.get_field(section._name, entry.name, field_name)["required"]:
+        elif field_value != '' or self.ref_libs.is_required_field(section._name, entry.name, field_name):
             for type_name, type_info in ref_datatypes.items(): # Getting the listed data types and their acceptable ranges
                 if self.ref_libs.validate(type_name, type_info, field_value):
                     if type_name == "EDS_TYPEREF":
@@ -742,10 +770,13 @@ class EDS(object):
             if field_data is None: # No proper type was found
                 if field_value != '':
                     type_list = [(type_name, self.ref_libs.get_type(type_name)._range) for type_name, type_info in ref_datatypes.items() if not type_info]
-                    type_list += [(type_name, type_info) for type_name, typeinfo in ref_datatypes.items() if type_info]
-                    types_str = ', '.join('<{}({})>'.format(type_[0].__name__, type_[1]) for type_ in type_list)
+                    type_list += [(type_name, type_info) for type_name, type_info in ref_datatypes.items() if type_info]
+                    for type_name, type_info in type_list:
+                        print(type_name)
+                        print(self.ref_libs.get_type(type_name).__name__)
+                    types_str = ', '.join('<{}({})>'.format(self.ref_libs.get_type(type_name).__name__, type_info) for type_name, type_info in type_list)
 
-                    if self.ref_libs.get_field(section._name, entry.name, field_name)["required"]:
+                    if self.ref_libs.get_field_byname(section._name, entry.name, field_name)["required"]:
                         raise Exception('Data_type mismatch! [{}].{}.{} = ({}), should be a type of: {}'
                              .format(section._name, entry.name, field_name, field_value, types_str))
                     else:
