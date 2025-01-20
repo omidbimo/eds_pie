@@ -812,7 +812,7 @@ class EDS(object):
         # TODO
         pass
 
-    def final_rollcall(self):
+    def semantic_check(self):
         required_sections = self.ref_libs.get_required_sections()
 
         for section_name, section in required_sections.items():
@@ -1387,24 +1387,16 @@ class eds_pie(object):
     def parse(eds_content = '', showprogress = True):
 
         eds = parser(eds_content, showprogress).parse()
-
+        eds.semantic_check()
         # setting the protocol
         eds._protocol = 'Generic'
 
-        sect = eds.get_section('Device Classification')
-        if sect:
-            entries = sorted(sect.entries, key = lambda entry: entry.name) # sorting is only in python2 required
-            for entry in entries:
-                field = entry.get_field(0)
-                if not field: break
+        if eds.get_section('Device Classification').entries:
+            field = eds.get_section('Device Classification').entries[0].get_field(0)
+            if field:
+                eds._protocol = field.value
 
-                dt, valid_range = field.datatype
-                if field.value in valid_range:
-                    eds._protocol = field.value
-                    break
-        else:
-            logger.error('Missing required section [Device Classification]!')
-        eds.final_rollcall()
+        eds.semantic_check()
         if showprogress: print('')
         return eds
 
