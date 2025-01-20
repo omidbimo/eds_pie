@@ -1241,14 +1241,14 @@ class parser(object):
                     self.add_section(token)
                     continue
                 else:
-                    raise Exception(__name__ + ':> Invalid token! Expected a Section token but got: {}'.format(token))
+                    raise Exception("Invalid token! Expected a Section token but got: {}".format(token))
 
             if self.state is PSTATE.EXPECT_ENTRY:
                 if self.match(token, TOKEN_TYPES.IDENTIFIER):
                     self.add_entry(token)
                     continue
                 else:
-                    raise Exception(__name__ + ':> Invalid token! Expected an Entry token but got: {}'.format(token))
+                    raise Exception("Invalid token! Expected an Entry token but got: {}".format(token))
 
             if self.state is PSTATE.EXPECT_FIELD:
                 self.add_field(token)
@@ -1260,7 +1260,7 @@ class parser(object):
                 elif self.match(token, TOKEN_TYPES.IDENTIFIER):
                     self.add_entry(token)
                 else:
-                    raise Exception(__name__ + ':> Invalid token! Expected a Section or an Entry token but got: {}'.format(token))
+                    raise Exception("Invalid token! Expected a Section or an Entry token but got: {}".format(token))
                 continue
 
             raise Exception(__name__ + ':> Invalid Parser state! {}'.format(self.state))
@@ -1269,7 +1269,7 @@ class parser(object):
         self.active_section = self.eds.add_section(token.value)
 
         if self.active_section is None:
-            raise Exception(__name__ + ':> ERROR! unable to create section: {}'.format(token.value))
+            raise Exception("Unable to create section: {}".format(token.value))
 
         # If there are cached comments then they are header comments of the new element
         self.active_section.hcomment = self.comment
@@ -1283,7 +1283,7 @@ class parser(object):
         self.active_entry = self.eds.add_entry(self.active_section.name, token.value)
 
         if self.active_entry is None:
-            raise Exception(__name__ + ':> ERROR! unable to create entry: {}'.format(token.value))
+            raise Exception("Unable to create entry: {}".format(token.value))
 
         # If there are cached comments then they are header comments of the new element
         self.active_entry.hcomment = self.comment
@@ -1304,14 +1304,14 @@ class parser(object):
         while True:
 
             if token is SYMBOLS.EOF:
-                raise Exception(__name__ + ':> Unexpected token. Expected a field token but got EOF.')
+                raise Exception("Unexpected token. Expected a field token but got EOF.")
 
             if (self.match(token, TOKEN_TYPES.SEPARATOR, SYMBOLS.COMMA) or
                 self.match(token, TOKEN_TYPES.SEPARATOR, SYMBOLS.SEMICOLON)):
                 field = self.eds.add_field(self.active_section.name, self.active_entry.name, field_value, field_type)
 
                 if field is None:
-                    raise Exception(__name__ + ':> ERROR! unable to create field: {} of type: {}'.format(token.value, token.type))
+                    raise Exception("Unable to create field: {} of type: {}".format(token.value, token.type))
 
                 # If there are cached comments then they are header comments of the new element
                 field.hcomment = self.comment
@@ -1340,10 +1340,10 @@ class parser(object):
                     field_value += token.value
                 else:
                     # There are different types of tokens to be concatenated.
-                    raise Exception(__name__ + ':> ERROR! Concatenating these literals is not allowed.'
+                    raise Exception("Concatenating these literals is not allowed."
                         + '({})<{}> + ({})<{}> @({})'.format(field_value, TOKEN_TYPES.stringify(field_type), token.value, TOKEN_TYPES.stringify(token.type), token))
             else:
-                raise Exception(__name__ + '.lexer:> Unexpected token type. Expected a field value token but got: {}'.format(token))
+                raise Exception("Unexpected token type. Expected a field value token but got: {}".format(token))
 
             token = self.next_token()
 
@@ -1370,8 +1370,8 @@ class parser(object):
             if expected_value is None or token.value == expected_value:
                 return
 
-        raise Exception(__name__ + '.lexer:> ERROR! Unexpected token!'
-            'Expected: (\"{}\": {}) but received: {}'.format(TOKEN_TYPES.stringify(exptokentype), exptokenval, self.token))
+        raise Exception("Unexpected token! Expected: (\"{}\": {}) but received: {}".format(
+                    TOKEN_TYPES.stringify(exptokentype), exptokenval, self.token))
 
     def match(self, token, expected_type, expected_value=None):
         if token.type == expected_type and expected_value is not None:
