@@ -382,15 +382,15 @@ class EDS_RefLib(object):
         "TIME"    : EDS_Types.TIME,
         "EPATH"   : EDS_Types.EPATH,
 
-        "REVISION"      : EDS_Types.REVISION,
-        "KEYWORD"       : EDS_Types.KEYWORD,
-        "REF"           : EDS_Types.REF,
-        "VENDORSPEC"    : EDS_Types.VENDOR_SPECIFIC,
-        "DATATYPE_REF"  : EDS_Types.DATATYPE_REF, # Reference to another field which contains a cip_dtypeid
-        "MAC_ADDR"      : EDS_Types.ETH_MAC_ADDR,
-        "EMPTY"         : EDS_Types.EMPTY,
-        "UNDEFINED"     : EDS_Types.UNDEFINED,
-        "SERVICE"       : EDS_Types.EDS_SERVICE,
+        "REVISION"          : EDS_Types.REVISION,
+        "KEYWORD"           : EDS_Types.KEYWORD,
+        "REF"               : EDS_Types.REF,
+        "VENDOR_SPECIFIC"   : EDS_Types.VENDOR_SPECIFIC,
+        "DATATYPE_REF"      : EDS_Types.DATATYPE_REF, # Reference to another field which contains a cip_dtypeid
+        "MAC_ADDR"          : EDS_Types.ETH_MAC_ADDR,
+        "EMPTY"             : EDS_Types.EMPTY,
+        "UNDEFINED"         : EDS_Types.UNDEFINED,
+        "SERVICE"           : EDS_Types.EDS_SERVICE,
         }
 
     supported_data_types = {
@@ -727,28 +727,26 @@ class EDS(object):
         if ref_field:
             # Reference field is now known. Use the ref information to create the field
             ref_data_types = ref_field.get("data_types", None)
-
             field_name = ref_field["name"] or entry.name
             # Serialize the field name if the entry can have enumerated fields like AssemN and ParamN.
             if self.ref_libs.get_entry(section_name, entry_name).get("enumerated_fields", None):
                 field_name = field_name.rstrip('N') + str(entry.fieldcount + 1)
-
         else:
-            # No reference field was found. Use a general naming schema
+            # No reference field was found. Use a general naming scheme
             field_name = 'field{}'.format(entry.fieldcount)
 
         # Validate field's value and assign a data type to the field
         if field_value == '':
-            logger.warning("Field [{}].{}.{} has no value. Switched to EDS_EMPTY field.".format(section._name, entry.name, field_name))
+            logger.info("Field [{}].{}.{} has no value. Switched to EDS_EMPTY field.".format(section._name, entry.name, field_name))
             field_data = EDS_EMPTY(field_value)
 
         elif not ref_data_types:
             # The filed is unknown and no ref_types are in hand. Try some default data types.
             if EDS_VENDORSPEC.validate(field_value):
-                logger.warning('Unknown Field [{}].{}.{} = {}. Switched to VENDOR_SPECIFIC field.'.format(section._name, entry.name, field_name, field_value))
+                logger.info('Unknown Field [{}].{}.{} = {}. Switched to VENDOR_SPECIFIC field.'.format(section._name, entry.name, field_name, field_value))
                 field_data = EDS_VENDORSPEC(field_value)
             elif EDS_UNDEFINED.validate(field_value):
-                logger.warning('Unknown Field [{}].{}.{} = {}. Switched to EDS_UNDEFINED field.'.format(section._name, entry.name, field_name, field_value))
+                logger.info('Unknown Field [{}].{}.{} = {}. Switched to EDS_UNDEFINED field.'.format(section._name, entry.name, field_name, field_value))
                 field_data = EDS_UNDEFINED(field_value)
             else:
                 raise Exception('Unknown Field [{}].{}.{} = {} with no matching data types.'.format(section._name, entry.name, field_name, field_value))
@@ -760,8 +758,16 @@ class EDS(object):
                     field_data = self.ref_libs.get_type(type_name)(field_value, type_info)
 
             if field_data is None: # No proper type was found
-                type_list = [(type_name, self.ref_libs.get_type(type_name)._range) for type_name, type_info in ref_data_types.items() if not type_info]
-                type_list += [(type_name, type_info) for type_name, type_info in ref_data_types.items() if type_info]
+                # Providing info on potential acceptable data types
+                type_list = []
+                for type_name, type_info in ref_data_types.items():
+                    if type_info:
+                        type_list.append((type_name, type_info))
+                    else:
+                        try:
+                            type_list.append((type_name, self.ref_libs.get_type(type_name)._range))
+                        except:
+                            continue
                 types_str = ', '.join('<{}({})>'.format(self.ref_libs.get_type(type_name).__name__, type_info) for type_name, type_info in type_list)
 
                 if self.ref_libs.get_field_byname(section._name, entry.name, field_name)["required"]:
