@@ -540,12 +540,12 @@
           "name": "Enumeration",
           "required": false,
           "enumerated_fields": {
-            "field_number": 3,
+            "first_enum_field": 2,
             "enum_member_count": 2
           },
           "fields": [
             {
-              "name": "First Enum",
+              "name": "Enum",
               "required": false,
               "data_types": {
                 "USINT": [],
@@ -555,24 +555,7 @@
               }
             },
             {
-              "name": "First Enum String",
-              "required": false,
-              "data_types": {
-                "STRING": []
-              }
-            },
-            {
-              "name": "Nth Enum",
-              "required": false,
-              "data_types": {
-                "USINT": [],
-                "REF": [
-                  "ParamN"
-                ]
-              }
-            },
-            {
-              "name": "Nth Enum String",
+              "name": "Enum String",
               "required": false,
               "data_types": {
                 "STRING": []
@@ -826,7 +809,7 @@
           "name": "Class attribute identification",
           "required": false,
           "enumerated_fields": {
-            "field_number": 1,
+            "first_enum_field": 1,
             "enum_member_count": 1
           },
           "fields": [
@@ -843,7 +826,7 @@
           "name": "Instance attribute identification",
           "required": false,
           "enumerated_fields": {
-            "field_number": 1,
+            "first_enum_field": 1,
             "enum_member_count": 1
           },
           "fields": [
@@ -860,7 +843,7 @@
           "name": "Class service support",
           "required": false,
           "enumerated_fields": {
-            "field_number": 1,
+            "first_enum_field": 1,
             "enum_member_count": 1
           },
           "fields": [
@@ -877,7 +860,7 @@
           "name": "Instance service support",
           "required": false,
           "enumerated_fields": {
-            "field_number": 1,
+            "first_enum_field": 1,
             "enum_member_count": 1
           },
           "fields": [
@@ -922,7 +905,7 @@
           "name": "Service Description",
           "required": false,
           "enumerated_fields": {
-            "field_number": 1,
+            "first_enum_field": 1,
             "enum_member_count": 1
           },
           "fields": [

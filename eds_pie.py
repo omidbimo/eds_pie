@@ -510,7 +510,6 @@ class EDS_RefLib(object):
         To get a field dictionary by its section name and entry name and field index
         '''
         field = None
-
         if entry_name[-1].isdigit(): # Incremental entry_name
             entry_name = entry_name.rstrip(digits) + 'N'
 
@@ -521,9 +520,12 @@ class EDS_RefLib(object):
             Consider the field as Nth field filed and re-calculate the index.
             '''
             if field_index >= len(entry["fields"]) and entry.get("enumerated_fields", None):
-                 # Calculating reference field index
+                # Calculating reference field index
                 field_index = (field_index % entry["enumerated_fields"]["enum_member_count"]) + entry["enumerated_fields"]["first_enum_field"] - 1
-            field = entry["fields"][field_index]
+            try:
+                field = entry["fields"][field_index]
+            except:
+                field = None
         return field
 
     def get_field_byname(self, section_keyword, entry_name, field_name):
