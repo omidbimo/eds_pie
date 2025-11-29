@@ -91,6 +91,19 @@ class CIP_STD_TYPES(ENUMS):
     CIP_EDS_STRINGI       = 0xDE
     CIP_EDS_NTIME         = 0xDF
 
+class TOKEN_TYPE(EDS_Types.ENUMS):
+    EOF        = 0
+    DATE       = 1
+    TIME       = 2
+    NUMBER     = 3
+    STRING     = 4
+    COMMENT    = 5
+    SECTION    = 6
+    OPERATOR   = 7
+    SEPARATOR  = 8
+    IDENTIFIER = 9
+    DATASET    = 10
+
 def getnumber(data):
     '''
     Converts an input of string type into its numeric representaion.
