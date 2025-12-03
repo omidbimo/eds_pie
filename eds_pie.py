@@ -35,7 +35,7 @@ import json
 
 from datetime import datetime, date, time
 from string   import digits
-
+from eds_parser import Parser
 import cip_eds_types as EDS_Types
 
 import logging
@@ -905,5 +905,6 @@ class eds_pie(object):
 
 class CIP_EDS():
     def __init__(self, eds_data, protocol=None):
-        parser = parser(eds_data)
+        self.parser = Parser(eds_data)
+        self.parser.parse()
 

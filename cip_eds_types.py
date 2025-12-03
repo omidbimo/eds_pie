@@ -91,7 +91,7 @@ class CIP_STD_TYPES(ENUMS):
     CIP_EDS_STRINGI       = 0xDE
     CIP_EDS_NTIME         = 0xDF
 
-class TOKEN_TYPE(EDS_Types.ENUMS):
+class TOKEN_TYPE(ENUMS):
     EOF        = 0
     DATE       = 1
     TIME       = 2
@@ -103,6 +103,31 @@ class TOKEN_TYPE(EDS_Types.ENUMS):
     SEPARATOR  = 8
     IDENTIFIER = 9
     DATASET    = 10
+
+class SYMBOLS(ENUMS):
+    ASSIGNMENT      = '='
+    COMMA           = ','
+    SEMICOLON       = ';'
+    COLON           = ':'
+    MINUS           = '-'
+    UNDERLINE       = '_'
+    PLUS            = '+'
+    POINT           = '.'
+    BACKSLASH       = '\\'
+    QUOTATION       = '\"'
+    TAB             = '\t'
+    DOLLAR          = '$'
+    OPENING_BRACKET = '['
+    CLOSING_BRACKET = ']'
+    OPENING_BRACE   = '{'
+    CLOSING_BRACE   = '}'
+    AMPERSAND       = '&'
+    SPACE           = ' '
+    LF              = '\n'
+    CR              = '\r'
+    EOF             = None
+    OPERATORS       = [ASSIGNMENT]
+    SEPARATORS      = [COMMA, SEMICOLON]
 
 def getnumber(data):
     '''

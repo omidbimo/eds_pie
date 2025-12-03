@@ -1,9 +1,11 @@
 
 from cip_eds_types import *
+import cip_eds_types as EDS_Types
+
 import logging
-logging.basicConfig(level=logging.WARNING,
+logging.basicConfig(level=logging.DEBUG,
     format='%(asctime)s - %(name)s.%(levelname)-8s %(message)s')
-    
+
 '''
     EDS grammatics:
     ---------------
@@ -14,7 +16,7 @@ logging.basicConfig(level=logging.WARNING,
     SEPARATOR
         {,;-:}
 
-    EOL
+    LF
         \n
 
     STRING
@@ -35,7 +37,7 @@ logging.basicConfig(level=logging.WARNING,
         [h,m,s] = NUMBER/HEXNUMBER
 
     COMMENT
-        $ {ASCII symbols} EOL
+        $ {ASCII symbols} LF
 
     HEADER_COMMENT
         COMMENT
@@ -75,59 +77,41 @@ logging.basicConfig(level=logging.WARNING,
                         KEYWORDVALUE }  FOOTERCOMENT }
 '''
 
-class SYMBOLS(EDS_Types.ENUMS):
-    ASSIGNMENT      = '='
-    COMMA           = ','
-    SEMICOLON       = ';'
-    COLON           = ':'
-    MINUS           = '-'
-    UNDERLINE       = '_'
-    PLUS            = '+'
-    POINT           = '.'
-    BACKSLASH       = '\\'
-    QUOTATION       = '\"'
-    TAB             = '\t'
-    DOLLAR          = '$'
-    OPENING_BRACKET = '['
-    CLOSING_BRACKET = ']'
-    OPENING_BRACE   = '{'
-    CLOSING_BRACE   = '}'
-    AMPERSAND       = '&'
-    SPACE           = ' '
-    EOL             = '\n'
-    EOF             = None
-    OPERATORS       = [ASSIGNMENT]
-    SEPARATORS      = [COMMA, SEMICOLON]
+
 
 SECTION_NAME_VALID_SYMBOLES = "-.\\_/"
 
-class token():
-    def __init__(self, type=None, valueNone, cursor=None):
+class Token():
+    def __init__(self, type, value, cursor):
         self.type   = type
         self.value  = value
-        self.cursor = cursor
+
+        self.offset = cursor.offset
+        self.col    = cursor.col
+        self.line   = cursor.line
 
     def __str__(self):
         return '[Ln: {}, Col: {}, Pos: {}] {} \"{}\"'.format(
-            str(self.cursor.line).rjust(4),
-            str(self.cursor.col).rjust(3),
-            str(self.cursor.offset).rjust(5),
+            str(self.line).rjust(4),
+            str(self.col).rjust(3),
+            str(self.offset).rjust(5),
             TOKEN_TYPE.stringify(self.type).ljust(11),
             self.value)
 
-class cursor():
-    self.offset = 0
-    self.column = 0
-    self.line = 0
+class Cursor():
+    def __init__(self):
+        self.offset = 0
+        self.col = 0
+        self.line = 1
 
-class lexer():
+class Lexer():
     def __init__(self, eds_data):
         self.eds_data = eds_data.encode("ascii")
-        slef.eds_length
-        self.cursor = cursor()
+        self.eds_length = len(self.eds_data)
+        self.cursor = Cursor()
 
-    def next_token(self):
-        token = self.get_token()
+    def next_Token(self):
+        token = self.get_Token()
         self.prevtoken = self.token
         self.token = token
         logger.debug('token: {}'.format(token or 'EOF'))
@@ -136,27 +120,28 @@ class lexer():
     def get_char(self):
         assert self.cursor.offset <= self.eds_length
 
-        # EOF
-        if self.cursor.offset == self.eds_length:
-            return TOKEN_TYPE.EOF
+        if self.cursor.offset < self.eds_length:
+            ch = self.eds_data[self.cursor.offset]
 
-        ch = self.eds_data[self.cursor.offset]
-        self.cursor.offset += 1
-        self.col += 1
-        if char == SYMBOLS.EOL:
-            self.cursor.line += 1
-            self.cursor.col = 0
+            self.cursor.offset += 1
+            self.cursor.col += 1
+            if ch == SYMBOLS.LF:
+                self.cursor.line += 1
+                self.cursor.col = 0
+        else: # EOF
+            ch = SYMBOLS.EOF
+
         return ch
 
     def look_ahead(self, offset = 1):
         if self.cursor.offset + offset < self.eds_length:
             return self.eds_data[self.cursor.offset + offset]
-        return SYMBOLS.EOL
+        return SYMBOLS.LF
 
 
     def lookbehind(self, offset = 1):
         if self.cursor.offset - offset >= 0:
-            return self.eds_data[self.offset - offset]
+            return self.eds_data[self.cursor.offset - offset]
         return None
 
     def get_token(self):
@@ -167,67 +152,63 @@ class lexer():
             ch = self.get_char()
 
             if token is None:
-
                 if ch is SYMBOLS.EOF:
-                    return token(TOKEN_TYPE.EOF, cursor=self.cursor)
+                    return Token(TOKEN_TYPE.EOF, '', cursor=self.cursor)
 
                 if ch.isspace():
                     # Ignoring space characters including: space, tab, carriage return
                     continue
 
                 if ch == SYMBOLS.DOLLAR:
-                    token = token(TOKEN_TYPE.COMMENT, '', cursor)
+                    token = Token(TOKEN_TYPE.COMMENT, '', self.cursor)
                     next = self.look_ahead()
-                    if next != SYMBOLS.EOL and next != SYMBOLS.EOF:
-                        token.cursor.offset += 1
-                        token.cursor.column += 1
+                    if next == SYMBOLS.LF or next == SYMBOLS.EOF:
+                        return token
+
+                    token.offset += 1
+                    token.col += 1
                     continue
 
                 if ch == SYMBOLS.OPENING_BRACKET:
-                    token = token(TOKEN_TYPE.SECTION, '', self.cursor)
-                    next = self.look_ahead()
-                    if next != SYMBOLS.EOL and next != SYMBOLS.EOF and next != SYMBOLS.CLOSING_BRACKET:
-                        token.cursor.offset += 1
-                        token.cursor.column += 1
+                    token = Token(TOKEN_TYPE.SECTION, '', self.cursor)
                     continue
 
                 if ch == SYMBOLS.OPENING_BRACE:
-                    token = token(TOKEN_TYPE.DATASET, ch, self.cursor)
-                    if next != SYMBOLS.EOL and next != SYMBOLS.EOF and next != SYMBOLS.CLOSING_BRACE:
-                        token.cursor.offset += 1
-                        token.cursor.column += 1
+                    token = Token(TOKEN_TYPE.DATASET, ch, self.cursor)
                     continue
 
                 if ch == SYMBOLS.POINT or ch == SYMBOLS.MINUS or ch == SYMBOLS.PLUS  or ch.isdigit():
-                    token = token(TOKEN_TYPE.NUMBER, ch, self.cursor)
-                    if self.look_ahead() in SYMBOLS.OPERATORS or self.look_ahead() in SYMBOLS.SEPARATORS:
+                    token = Token(TOKEN_TYPE.NUMBER, ch, self.cursor)
+                    next = self.look_ahead()
+                    if next in SYMBOLS.OPERATORS or next in SYMBOLS.SEPARATORS:
                         return token
                     continue
 
                 if ch.isalpha():
-                    token = token(TOKEN_TYPE.IDENTIFIER, ch, self.cursor)
-                    if self.look_ahead() in SYMBOLS.OPERATORS or self.look_ahead() in SYMBOLS.SEPARATORS:
+                    token = Token(TOKEN_TYPE.IDENTIFIER, ch, self.cursor)
+                    next = self.look_ahead()
+                    if next in SYMBOLS.OPERATORS or next in SYMBOLS.SEPARATORS:
                         return token
                     continue
 
                 if ch == SYMBOLS.QUOTATION:
-                    token = token(TOKEN_TYPE.STRING, '', self.cursor)
+                    token = Token(TOKEN_TYPE.STRING, '', self.cursor)
                     continue
 
                 if ch in SYMBOLS.OPERATORS:
-                    return token(TOKEN_TYPE.OPERATOR, ch, self.cursor)
+                    return Token(TOKEN_TYPE.OPERATOR, ch, self.cursor)
 
                 if ch in SYMBOLS.SEPARATORS:
-                    return token(TOKEN_TYPE.SEPARATOR, ch, self.cursor)
+                    return Token(TOKEN_TYPE.SEPARATOR, ch, self.cursor)
 
             if token.type == TOKEN_TYPE.COMMENT:
-                if ch == SYMBOLS.EOL or ch == SYMBOLS.EOF:
+                if ch == SYMBOLS.LF or ch == SYMBOLS.CR or ch == SYMBOLS.EOF:
                     return token
                 token.value += ch
                 continue
 
             if token.type is TOKEN_TYPE.SECTION:
-                if ch == SYMBOLS.EOL:
+                if ch == SYMBOLS.LF:
                     raise Exception(".lexer:> Unexpected end of line during processing of section data at offset:{}".format(cursor.offset))
                 if ch == SYMBOLS.EOF:
                     raise Exception(".lexer:> Unexpected end of file during processing of section data at offset:{}".format(cursor.offset))
@@ -254,7 +235,7 @@ class lexer():
                     raise Exception( __name__ + ".lexer:> Invalid section identifier! Sequential spaces are not allowed."
                         + " Unexpected char sequence @[idx: {}] [ln: {}] [col: {}]".format(self.cursor.offset, self.cursor.line, self.cursor.col))
 
-                if ch == SYMBOLS.EOF or ch == SYMBOLS.EOL:
+                if ch == SYMBOLS.EOF or ch == SYMBOLS.LF:
                     raise Exception( __name__ + '.lexer:> Invalid section identifier!'
                         + ' Unexpected char sequence @[idx: {}] [ln: {}] [col: {}]'.format(self.cursor.offset, self.cursor.line, self.cursor.col))
 
@@ -275,6 +256,9 @@ class lexer():
                 continue
 
             if token.type is TOKEN_TYPE.IDENTIFIER:
+                if ch == SYMBOLS.EOF or ch == SYMBOLS.LF:
+                    return token
+
                 if ch.isspace():
                     return token
 
@@ -287,7 +271,7 @@ class lexer():
                 if ch == SYMBOLS.QUOTATION and self.lookbehind() != SYMBOLS.BACKSLASH:
                     return token
 
-                if ch == SYMBOLS.EOF or ch == SYMBOLS.EOL:
+                if ch == SYMBOLS.EOF or ch == SYMBOLS.LF:
                     raise Exception( __name__ + '.lexer:> Invalid string value!'
                         + ' Unexpected char sequence @[idx: {}] [ln: {}] [col: {}]'.format(self.cursor.offset, self.cursor.line, self.cursor.col))
 
