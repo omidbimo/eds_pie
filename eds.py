@@ -354,7 +354,7 @@ class EDS:
         if self.ref_libs.has_entry(section_name, entry_name) == False:
             logger.warning("Unknown Entry [{}].{}".format(section_name, entry_name))
 
-        entry = Entry(section, entry_name, len(section.entries))
+        entry = Entry(section, entry_name)
         section.entries[entry_name] = entry
 
         return entry
@@ -565,10 +565,7 @@ class EDS:
         sorted_sections = [self.get_section("File")]
         sorted_sections.append(self.get_section("Device"))
         sorted_sections.append(self.get_section("Device Classification"))
-        # listing sections without a class Id
-        sorted_sections += [section for key, section in self.sections.items() if section not in sorted_sections and section.class_id is None]
-        # listing sections with a class Ids
-        sorted_sections += sorted([section for key, section in self.sections.items() if section not in sorted_sections], key = lambda section: section.class_id)
+        sorted_sections += [section for key, section in self.sections.items() if section not in sorted_sections]
 
         for section in sorted_sections:
             if section.hcomment != "":
@@ -667,8 +664,7 @@ class Section:
 
 class Entry:
 
-    def __init__(self, section, name, index):
-        self.index = index
+    def __init__(self, section, name):
         self.parent = section
         self.name = name
         self.fields = [] # Unlike the sections and entries, fields are implemented as a list.
