@@ -1,30 +1,3 @@
-'''
-
-MIT License
-
-Copyright (c) 2021 Omid Kompani
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the 'Software'), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-'''
-
-
 
 import os
 import sys
@@ -37,10 +10,10 @@ from datetime import datetime, date, time
 from string   import digits
 from eds_parser import Parser
 import cip_eds_types as EDS_Types
-from eds import EDS
+
 
 import logging
-logging.basicConfig(level=logging.WARNING,
+logging.basicConfig(level=logging.DEBUG,
     format='%(asctime)s - %(name)s.%(levelname)-8s %(message)s')
 logger = logging.getLogger(__name__)
 #-------------------------------------------------------------------------------
@@ -89,9 +62,5 @@ class eds_pie(object):
 class CIP_EDS():
     def __new__(cls, eds_data):
         return Parser(eds_data).parse()
-    """
-    def __init__(self, eds_data, protocol=None):
-        self.parser = Parser(eds_data)
-        self.parser.parse()
-    """
+
 

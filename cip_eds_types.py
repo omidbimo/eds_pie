@@ -34,7 +34,7 @@ from collections import namedtuple
 RANGE = namedtuple('RANGE', 'min max')
 
 import logging
-logging.basicConfig(level=logging.WARNING,
+logging.basicConfig(level=logging.DEBUG,
     format='%(asctime)s - %(name)s.%(levelname)-8s %(message)s')
 logger = logging.getLogger(__name__)
 
