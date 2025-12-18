@@ -1,63 +1,160 @@
 
-import os
-import sys
-import inspect
-import struct
-import numbers
-import json
-
-from datetime import datetime, date, time
-from string   import digits
-from eds_parser import Parser
-import cip_eds_types as EDS_Types
-
+from cip_eds_types import *
+from eds_lexer import Lexer
+from eds import EDS
 
 import logging
+
 logging.basicConfig(level=logging.DEBUG,
     format='%(asctime)s - %(name)s.%(levelname)-8s %(message)s')
 logger = logging.getLogger(__name__)
-#-------------------------------------------------------------------------------
-EDS_PIE_VERSION     = '0.1'
-EDS_PIE_RELASE_DATE = '3 Nov. 2020'
 
-#-------------------------------------------------------------------------------
-END_COMMENT_TEMPLATE = ( ' '.ljust(79, '-') + '\n' + ' EOF \n'
-                      + ' '.ljust(79, '-') + '\n' )
+class State(ENUMS):
+    EXPECT_SECTION = 0
+    EXPECT_ENTRY   = 1
+    EXPECT_SECTION_OR_ENTRY = 2
+    EXPECT_FIELD   = 3
 
-HEADING_COMMENT_TEMPLATE = ( ' Electronic Data Sheet Generated with EDS-pie Version '
-                         +   '{} - {}\n'.format(EDS_PIE_VERSION, EDS_PIE_RELASE_DATE)
-                         +   ' '.ljust(79, '-') + '\n'
-                         +   ' Created on: {} - {}:{}\n'.format(str(date.today()),
-                                 str(datetime.now().hour), str(datetime.now().minute))
-                         +   ' '.ljust(79, '-') + '\n\n ATTENTION: \n'
-                         +   ' Changes in this file may cause configuration or '
-                         +   'communication problems.\n\n' + ' '.ljust(79, '-')
-                         +   '\n' )
-# ------------------------------------------------------------------------------
+class Parser:
+    def __init__(self, eds_data, showprogress = False):
+        self.lexer = Lexer(eds_data)
+        self.state = State.EXPECT_SECTION
+        self.eds = EDS()
+        self.section_in_process = None
+        self.entry_in_process = None
+        self.field_in_process = None
+        self.hcomment = ""
+        self.fcomment = ""
+
+    def parse(self):
+
+        while True:
+            token = self.lexer.get_token()
+
+            if token.type is TOKEN_TYPE.EOF:
+                break
+
+            if self.match(token, TOKEN_TYPE.COMMENT):
+                self.add_comment(token.value)
+                continue
+
+            if self.state is State.EXPECT_SECTION:
+                self.expect(token, TOKEN_TYPE.SECTION)
+                self.entry_in_process = None
+                self.field_in_process = None
+                self.section_in_process = self.eds.add_section(token.value)
+
+                if self.section_in_process is None:
+                    raise Exception("Unable to create Section: {}".format(token.value))
+
+                self.state = State.EXPECT_ENTRY
+                continue
 
 
+            if self.state is State.EXPECT_ENTRY:
 
+                self.expect(token, TOKEN_TYPE.IDENTIFIER)
+                self.entry_in_process = None
+                self.entry_in_process = self.eds.add_entry(self.section_in_process.name, token.value)
 
+                if self.entry_in_process is None:
+                    raise Exception("Unable to create Entry: {}".format(token.value))
 
-class eds_pie(object):
+                # Expecting at least one field.
+                self.expect(self.lexer.get_token(), TOKEN_TYPE.OPERATOR, SYMBOLS.ASSIGNMENT)
+                self.state = State.EXPECT_FIELD
+                continue
 
-    @staticmethod
-    def parse(eds_content = '', showprogress = True):
+            if self.state is State.EXPECT_FIELD:
 
-        eds = parser(eds_content, showprogress).parse()
-        eds.semantic_check()
-        # setting the protocol
-        eds._protocol = 'Generic'
+                if self.match(token, TOKEN_TYPE.SEPARATOR, SYMBOLS.SEMICOLON) or self.match(token, TOKEN_TYPE.SEPARATOR, SYMBOLS.COMMA):
+                    # Empty Field
+                    self.field_in_process = self.eds.add_field(self.section_in_process.name, self.entry_in_process.name, "")
+                else:
+                    # Store token data to concatenate field values if required
+                    field_value = token.value
+                    field_type = token.type
 
-        if eds.get_section('Device Classification').entries:
-            field = eds.get_section('Device Classification').entries[0].get_field(0)
-            if field:
-                eds._protocol = field.value
+                    # Strings can be teared down into multiple lines
+                    if token.type == TOKEN_TYPE.STRING:
+                        while True:
+                            token = self.lexer.get_token()
+                            if not self.match(token, TOKEN_TYPE.STRING): break
+                            field_value += token.value
+                    else:
+                        token = self.lexer.get_token()
 
-        eds.semantic_check()
-        if showprogress: print('')
-        return eds
+                    self.field_in_process = self.eds.add_field(self.section_in_process.name, self.entry_in_process.name, field_value, field_type)
 
+                if self.field_in_process is None:
+                    raise Exception("Unable to create Field: {}".format(token.value))
+
+                if self.match(token, TOKEN_TYPE.SEPARATOR, SYMBOLS.COMMA):
+                    continue
+
+                self.expect(token, TOKEN_TYPE.SEPARATOR, SYMBOLS.SEMICOLON)
+                # End of Entry. The next token might be an entry or a new section
+                self.state = State.EXPECT_SECTION_OR_ENTRY
+                continue
+
+            if self.state is State.EXPECT_SECTION_OR_ENTRY:
+
+                if self.match(token, TOKEN_TYPE.SECTION):
+                    self.entry_in_process = None
+                    self.field_in_process = None
+                    self.section_in_process = self.eds.add_section(token.value)
+                    if self.section_in_process is None:
+                        raise Exception("Unable to create section: {}".format(token.value))
+                    self.state = State.EXPECT_ENTRY
+                    continue
+
+                self.expect(token, TOKEN_TYPE.IDENTIFIER)
+                self.entry_in_process = None
+                self.entry_in_process = self.eds.add_entry(self.section_in_process.name, token.value)
+                if self.entry_in_process is None:
+                    raise Exception("Unable to create entry: {}".format(token.value))
+                # Expecting at least one field.
+                self.expect(self.lexer.get_token(), TOKEN_TYPE.OPERATOR, SYMBOLS.ASSIGNMENT)
+                self.state = State.EXPECT_FIELD
+                continue
+
+            raise Exception(__name__ + ':> Invalid Parser state! {}'.format(self.state))
+
+        return self.eds
+
+    def add_comment(self, comment):
+        if self.field_in_process:
+            self.field_in_process.fcomment += comment.strip() + '\n'
+        elif self.entry_in_process:
+            self.entry_in_process.fcomment += comment.strip() + '\n'
+        elif self.section_in_process:
+            self.section_in_process.fcomment += comment.strip() + '\n'
+        else:
+            self.eds.hcomment += comment.strip() + '\n'
+
+    def on_EOF(self):
+        # The rest of cached comments belong to no elements
+        self.eds.end_comment = self.fcomment
+        self.fcomment = ""
+
+    def expect(self, token, expected_type, expected_value=None):
+        if token.type == expected_type:
+            if expected_value is None or token.value == expected_value:
+                return
+
+        if expected_value:
+            raise Exception("Unexpected token! Expected: (\"{}\": {}) but found: {}".format(
+                            TOKEN_TYPE.stringify(expected_type), expected_value, token))
+        raise Exception("Unexpected token! Expected: (\"{}\") but found: {}".format(
+                        TOKEN_TYPE.stringify(expected_type), token))
+
+    def match(self, token, expected_type, expected_value=None):
+        if token.type == expected_type:
+            if expected_value is not None:
+                if token.value != expected_value:
+                    return False
+            return True
+        return False
 
 class CIP_EDS():
     def __new__(cls, eds_data):

@@ -110,8 +110,6 @@ class EDS_RefLib():
                     if jlib["project"] ==  "eds_pie" and file != "edslib_schema.json":
                         self.libs[jlib["protocol"].lower()] = jlib
 
-
-
     def get_lib_name(self, section_keyword):
         for _, lib in self.libs.items():
             if section_keyword in lib["sections"]:
