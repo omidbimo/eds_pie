@@ -301,6 +301,20 @@
               }
             }
           ]
+        },
+        "ApplicationProfilesAssembly": {
+          "name": "Application Profiles Assembly",
+          "required": false,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Application Profiles Assembly",
+              "required": false,
+              "data_types": {
+                "UINT": []
+              }
+            }
+          ]
         }
       }
     },
