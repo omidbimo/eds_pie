@@ -174,7 +174,7 @@ class EDS_RefLib():
             if section["class_id"] and section["class_id"] != 0:
                 common_section = self.get_section("Common Object Class")
                 entry = common_section["entries"].get(entry_name, None)
-                #print(entry_name, entry)
+
             if entry is None:
                 entry = section["entries"].get(entry_name, None)
         return entry
@@ -259,9 +259,9 @@ class EDS:
         self.hcomment = '' # Heading comment
         self.fcomment = '' # End comment
 
-    def list(self):
+    def list(self, indent=0):
         for key, section in self.sections.items():
-            section.list()
+            section.list(indent)
 
     def get_section(self, section_name=None, class_id=0):
         '''
@@ -427,7 +427,6 @@ class EDS:
                     raise Exception('Data type mismatch! [{}].{}.{} = ({}), should be a type of: {}'
                          .format(section.name, entry.name, field_name, field_value, types_str))
                 elif field_value != "":
-                    print(field_value)
                     logger.error('Data_type mismatch! [{}].{}.{} = ({}), should be a type of: {}'
                          .format(section.name, entry.name, field_name, field_value, types_str))
                     if EDS_VENDORSPEC.validate(field_value):
@@ -634,9 +633,7 @@ class EDS:
 
             for key, entry in section.entries.items():
                 prn += "     {} = ".format(entry.name)
-                print(entry.hcomment, entry.fcomment)
-                for field in entry.fields:
-                    print(field.hcomment, field.fcomment)
+
                 prn += ",\n".join("{}{}".format(field.data, "    $ {}".format(field.fcomment) if field.fcomment else "") for field in entry.fields)
                 prn += ";\n"
         return prn
@@ -670,9 +667,10 @@ class Section:
             return entry.get_field(field_index)
         return None
 
-    def list(self):
+    def list(self, indent=0):
+        print ("".ljust(indent, " ") + "{}".format(self))
         for key, entry in self.entries.items():
-            entry.list()
+            entry.list(indent+4)
 
     def __str__(self):
         return 'SECTION({})'.format(self.name)
@@ -716,10 +714,10 @@ class Entry:
             return self.fields[field_index]
         return None
 
-    def list(self):
-        print ('    {}'.format(self))
+    def list(self, indent=0):
+        print ("".ljust(indent, " ") + "{}".format(self))
         for field in self.fields:
-            print ('        {}'.format(field))
+            print ("".ljust(indent + 4, " ") + "{}".format(field))
 
     @property
     def value(self):

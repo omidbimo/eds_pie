@@ -33,7 +33,7 @@ class Parser:
                 break
 
             if self.match(token, TOKEN_TYPE.COMMENT):
-                self.cashe_comment(token)
+                self.add_comment(token.value)
                 continue
 
             if self.state is State.EXPECT_SECTION:
@@ -44,8 +44,6 @@ class Parser:
 
                 if self.section_in_process is None:
                     raise Exception("Unable to create Section: {}".format(token.value))
-
-                self.add_comment(self.section_in_process)
 
                 self.state = State.EXPECT_ENTRY
                 continue
@@ -59,8 +57,6 @@ class Parser:
 
                 if self.entry_in_process is None:
                     raise Exception("Unable to create Entry: {}".format(token.value))
-
-                self.add_comment(self.entry_in_process)
 
                 # Expecting at least one field.
                 self.expect(self.lexer.get_token(), TOKEN_TYPE.OPERATOR, SYMBOLS.ASSIGNMENT)
@@ -79,8 +75,6 @@ class Parser:
                 if self.field_in_process is None:
                     raise Exception("Unable to create Field: {}".format(token.value))
 
-                self.add_comment(self.field_in_process)
-
                 if self.match(token, TOKEN_TYPE.SEPARATOR, SYMBOLS.COMMA):
                     continue
 
@@ -97,7 +91,6 @@ class Parser:
                     self.section_in_process = self.eds.add_section(token.value)
                     if self.section_in_process is None:
                         raise Exception("Unable to create section: {}".format(token.value))
-                    self.add_comment(self.section_in_process)
                     self.state = State.EXPECT_ENTRY
                     continue
 
@@ -106,7 +99,6 @@ class Parser:
                 self.entry_in_process = self.eds.add_entry(self.section_in_process.name, token.value)
                 if self.entry_in_process is None:
                     raise Exception("Unable to create entry: {}".format(token.value))
-                self.add_comment(self.entry_in_process)
                 # Expecting at least one field.
                 self.expect(self.lexer.get_token(), TOKEN_TYPE.OPERATOR, SYMBOLS.ASSIGNMENT)
                 self.state = State.EXPECT_FIELD
@@ -126,12 +118,16 @@ class Parser:
         else:
             self.hcomment += token.value.strip() + '\n'
 
-    def add_comment(self, obj):
-        print(obj.name, self.fcomment)
-        obj.hcomment = self.hcomment
-        obj.fcomment = self.fcomment
-        self.hcomment = ""
-        self.fcomment = ""
+    def add_comment(self, comment):
+        if self.field_in_process:
+            self.field_in_process.fcomment += comment.strip() + '\n'
+        elif self.entry_in_process:
+            self.entry_in_process.fcomment += comment.strip() + '\n'
+        elif self.section_in_process:
+            self.section_in_process.fcomment += comment.strip() + '\n'
+        else:
+            self.eds.hcomment += comment.strip() + '\n'
+
 
     def on_EOF(self):
         # The rest of cached comments belong to no elements
