@@ -65,12 +65,24 @@ class Parser:
 
             if self.state is State.EXPECT_FIELD:
 
-                # A field can be also empty
                 if self.match(token, TOKEN_TYPE.SEPARATOR, SYMBOLS.SEMICOLON) or self.match(token, TOKEN_TYPE.SEPARATOR, SYMBOLS.COMMA):
+                    # Empty Field
                     self.field_in_process = self.eds.add_field(self.section_in_process.name, self.entry_in_process.name, "")
                 else:
-                    self.field_in_process = self.eds.add_field(self.section_in_process.name, self.entry_in_process.name, token.value, token.type)
-                    token = self.lexer.get_token()
+                    # Store token data to concatenate field values if required
+                    field_value = token.value
+                    field_type = token.type
+
+                    # Strings can be teared down into multiple lines
+                    if token.type == TOKEN_TYPE.STRING:
+                        while True:
+                            token = self.lexer.get_token()
+                            if not self.match(token, TOKEN_TYPE.STRING): break
+                            field_value += token.value
+                    else:
+                        token = self.lexer.get_token()
+
+                    self.field_in_process = self.eds.add_field(self.section_in_process.name, self.entry_in_process.name, field_value, field_type)
 
                 if self.field_in_process is None:
                     raise Exception("Unable to create Field: {}".format(token.value))
@@ -108,16 +120,6 @@ class Parser:
 
         return self.eds
 
-    def cashe_comment(self, token):
-        if self.field_in_process:
-            self.fcomment += token.value.strip() + '\n'
-        elif self.entry_in_process:
-            self.fcomment += token.value.strip() + '\n'
-        elif self.section_in_process:
-            self.fcomment += token.value.strip() + '\n'
-        else:
-            self.hcomment += token.value.strip() + '\n'
-
     def add_comment(self, comment):
         if self.field_in_process:
             self.field_in_process.fcomment += comment.strip() + '\n'
@@ -127,7 +129,6 @@ class Parser:
             self.section_in_process.fcomment += comment.strip() + '\n'
         else:
             self.eds.hcomment += comment.strip() + '\n'
-
 
     def on_EOF(self):
         # The rest of cached comments belong to no elements

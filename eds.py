@@ -119,14 +119,14 @@ class EDS_RefLib():
         return None
 
     def get_section_name(self, class_id):
-        '''
+        """
         To get a protocol specific EDS section_name by its CIP class ID
-        '''
+        """
         for _, lib in self.libs.items():
             for section in lib["sections"]:
                 if section["class_id"] == class_id:
                     return section
-        return ''
+        return ""
 
     def get_section_id(self, section_keyword):
         section = self.get_section(section_keyword)
@@ -135,9 +135,9 @@ class EDS_RefLib():
         return None
 
     def has_section(self, section_keyword):
-        '''
+        """
         Checks the existence of a section by its name
-        '''
+        """
         for _, lib in self.libs.items():
             if section_keyword in lib["sections"]:
                 return True
@@ -154,19 +154,19 @@ class EDS_RefLib():
         return section
 
     def has_entry(self, section_keyword, entry_name):
-        '''
+        """
         To get an entry dictionary by its section name and entry name
-        '''
+        """
         return self.get_entry(section_keyword, entry_name) is not None
 
     def get_entry(self, section_keyword, entry_name):
-        '''
+        """
         To get an entry dictionary by its section name and entry name
-        '''
+        """
         entry = None
 
         if entry_name[-1].isdigit(): # Incremental entry_name
-            entry_name = entry_name.rstrip(digits) + 'N'
+            entry_name = entry_name.rstrip(digits) + "N"
 
         section = self.get_section(section_keyword)
         if section:
@@ -180,19 +180,19 @@ class EDS_RefLib():
         return entry
 
     def get_field_byindex(self, section_keyword, entry_name, field_index):
-        '''
+        """
         To get a field dictionary by its section name and entry name and field index
-        '''
+        """
         field = None
         if entry_name[-1].isdigit(): # Incremental entry_name
-            entry_name = entry_name.rstrip(digits) + 'N'
+            entry_name = entry_name.rstrip(digits) + "N"
 
         entry = self.get_entry(section_keyword, entry_name)
         if entry:
-            '''
+            """
             The requested index is greater than listed fields in the lib,
             Consider the field as Nth field filed and re-calculate the index.
-            '''
+            """
             if field_index >= len(entry["fields"]) and entry.get("enumerated_fields", None):
                 # Calculating reference field index
                 field_index = (field_index % entry["enumerated_fields"]["enum_member_count"]) + entry["enumerated_fields"]["first_enum_field"] - 1
@@ -203,18 +203,18 @@ class EDS_RefLib():
         return field
 
     def get_field_byname(self, section_keyword, entry_name, field_name):
-        '''
+        """
         To get a field dictionary by its section name and entry name and field name
-        '''
+        """
         field = None
 
         if entry_name[-1].isdigit(): # Incremental entry_name
-            entry_name = entry_name.rstrip(digits) + 'N'
+            entry_name = entry_name.rstrip(digits) + "N"
 
         entry = self.get_entry(section_keyword, entry_name)
         if entry:
             if field_name[-1].isdigit(): # Incremental field_name
-                field_name = field_name.rstrip(digits) + 'N'
+                field_name = field_name.rstrip(digits) + "N"
 
             for fld in entry["fields"]:
                 if fld["name"] == field_name:
@@ -256,17 +256,17 @@ class EDS:
         self.protocol  = None
         self.sections  = {}
         self.ref_libs = EDS_RefLib()
-        self.hcomment = '' # Heading comment
-        self.fcomment = '' # End comment
+        self.hcomment = "" # Heading comment
+        self.fcomment = "" # End comment
 
     def list(self, indent=0):
         for key, section in self.sections.items():
             section.list(indent)
 
     def get_section(self, section_name=None, class_id=0):
-        '''
+        """
         To get a section object by its EDS keyword or by its CIP classID.
-        '''
+        """
         if section_name:
             return self.sections.get(section_name)
 
@@ -274,18 +274,18 @@ class EDS:
 
 
     def get_entry(self, section_name, entry_name):
-        '''
+        """
         To get an entry by its section name and its entry name.
-        '''
+        """
         section = self.get_section(section_name)
         if section:
             return section.get_entry(entry_name)
         return None
 
     def get_field(self, section_name, entry_name, field_index):
-        '''
+        """
         To get an field by its section name/section id, its entry name and its field anme/field index
-        '''
+        """
         entry = self.get_entry(section, entry_name)
         if entry:
             return entry.get_field(field_index)
@@ -300,19 +300,19 @@ class EDS:
     def set_value(self, section, entry_name, field, value):
         field = self.get_field(section, entry_name, field)
         if field is None:
-            raise Exception('Not a valid field! Unable to set the field value.')
+            raise Exception("Not a valid field! Unable to set the field value.")
         field.value = value
 
 
     def has_section(self, section):
-        '''
+        """
         To check if the EDS contains a section by its EDS keyword or by its CIP classID.
-        '''
+        """
         if isinstance(section, str):
             return section in self.sections.keys()
         if isinstance(section, numbers.Number):
             return self.ref_libs.get_section_name(section, self.protocol) in self.sections.keys()
-        raise TypeError('Inappropriate data type: {}'.format(type(section)))
+        raise TypeError("Inappropriate data type: {}".format(type(section)))
 
     def has_entry(self, section, entry_name):
         section = self.get_section(section)
@@ -327,14 +327,14 @@ class EDS:
         return False
 
     def add_section(self, section_name):
-        if section_name == '':
+        if section_name == "":
             raise Exception("Invalid section name! [{}]".format(section_name))
 
         if section_name in self.sections.keys():
-            raise Exception('Duplicate section! [{}}'.format(section_name))
+            raise Exception("Duplicate section! [{}}".format(section_name))
 
         if self.ref_libs.has_section(section_name) == False:
-            logger.warning('Unknown Section [{}]'.format(section_name))
+            logger.warning("Unknown Section [{}]".format(section_name))
 
         section = Section(self, section_name, self.ref_libs.get_section_id(section_name))
         self.sections.update({section_name: section})
@@ -344,7 +344,7 @@ class EDS:
     def add_entry(self, section_name, entry_name):
         section = self.sections[section_name]
 
-        if entry_name == '':
+        if entry_name == "":
             raise Exception("Invalid Entry name! [{}]\"{}\"".format(section_name, entry_name))
 
         if entry_name in section.entries.keys():
@@ -352,7 +352,7 @@ class EDS:
 
         # Search for the same section:entry inside the reference lib
         if self.ref_libs.has_entry(section_name, entry_name) == False:
-            logger.warning('Unknown Entry [{}].{}'.format(section_name, entry_name))
+            logger.warning("Unknown Entry [{}].{}".format(section_name, entry_name))
 
         entry = Entry(section, entry_name, len(section.entries))
         section.entries[entry_name] = entry
@@ -360,19 +360,19 @@ class EDS:
         return entry
 
     def add_field(self, section_name, entry_name, field_value, field_datatype=None):
-        '''
+        """
         Fields must be added in order and no random access is allowed.
-        '''
+        """
         section = self.get_section(section_name)
 
         if section is None:
-            raise Exception('Section not found! [{}]'.format(section_name))
+            raise Exception("Section not found! [{}]".format(section_name))
 
         entry = section.get_entry(entry_name)
         if entry is None:
-            raise Exception('Entry not found! [{}]'.format(entry_name))
+            raise Exception("Entry not found! [{}]".format(entry_name))
 
-        # Getting field's info from eds reference libraries
+        # Getting field"s info from eds reference libraries
         field_data = None
         ref_data_types = []
         ref_field = self.ref_libs.get_field_byindex(section.name, entry.name, len(entry.fields))
@@ -383,12 +383,12 @@ class EDS:
             field_name = ref_field["name"] or entry.name
             # Serialize the field name if the entry can have enumerated fields like AssemN and ParamN.
             if self.ref_libs.get_entry(section_name, entry_name).get("enumerated_fields", None):
-                field_name = field_name.rstrip('N') + str(len(entry.fields) + 1)
+                field_name = field_name.rstrip("N") + str(len(entry.fields) + 1)
         else:
             # No reference field was found. Use a general naming scheme
-            field_name = 'field{}'.format(len(entry.fields))
+            field_name = "field{}".format(len(entry.fields))
 
-        # Validate field's value and assign a data type to the field
+        # Validate field"s value and assign a data type to the field
         if field_value == "":
             logger.info("Field [{}].{}.{} has no value. Switched to EDS_EMPTY field.".format(section.name, entry.name, field_name))
             field_data = EDS_EMPTY(field_value)
@@ -396,13 +396,13 @@ class EDS:
         elif not ref_data_types:
             # The filed is unknown and no ref_types are in hand. Try some default data types.
             if EDS_VENDORSPEC.validate(field_value):
-                logger.info('Unknown Field [{}].{}.{} = {}. Switched to VENDOR_SPECIFIC field.'.format(section.name, entry.name, field_name, field_value))
+                logger.warning("Unknown Field [{}].{}.{} = {}. Switched to VENDOR_SPECIFIC field.".format(section.name, entry.name, field_name, field_value))
                 field_data = EDS_VENDORSPEC(field_value)
             elif EDS_UNDEFINED.validate(field_value):
-                logger.info('Unknown Field [{}].{}.{} = {}. Switched to EDS_UNDEFINED field.'.format(section.name, entry.name, field_name, field_value))
+                logger.warning("Unknown Field [{}].{}.{} = {}. Switched to EDS_UNDEFINED field.".format(section.name, entry.name, field_name, field_value))
                 field_data = EDS_UNDEFINED(field_value)
             else:
-                raise Exception('Unknown Field [{}].{}.{} = {} with no matching data types.'.format(section.name, entry.name, field_name, field_value))
+                raise Exception("Unknown Field [{}].{}.{} = {} with no matching data types.".format(section.name, entry.name, field_name, field_value))
 
         else:
             for type_name, type_info in ref_data_types.items(): # Getting the listed data types and their acceptable ranges
@@ -421,13 +421,13 @@ class EDS:
                             type_list.append((type_name, self.ref_libs.get_type(type_name)._range))
                         except:
                             continue
-                types_str = ', '.join('<{}({})>'.format(self.ref_libs.get_type(type_name).__name__, type_info) for type_name, type_info in type_list)
+                types_str = ", ".join("<{}({})>".format(self.ref_libs.get_type(type_name).__name__, type_info) for type_name, type_info in type_list)
 
                 if self.ref_libs.get_field_byname(section.name, entry.name, field_name)["required"]:
-                    raise Exception('Data type mismatch! [{}].{}.{} = ({}), should be a type of: {}'
+                    raise Exception("Data type mismatch! [{}].{}.{} = ({}), should be a type of: {}"
                          .format(section.name, entry.name, field_name, field_value, types_str))
                 elif field_value != "":
-                    logger.error('Data_type mismatch! [{}].{}.{} = ({}), should be a type of: {}'
+                    logger.error("Data_type mismatch! [{}].{}.{} = ({}), should be a type of: {}"
                          .format(section.name, entry.name, field_name, field_value, types_str))
                     if EDS_VENDORSPEC.validate(field_value):
                         field_data = EDS_VENDORSPEC(field_value)
@@ -452,8 +452,8 @@ class EDS:
                 self.remove_entry(section_name, entry.name, removetree)
             del self.sections[section_name]
         else:
-            logger.error('Unable to remove section! [{}] contains one or more entries.'
-                'Remove the entries first or use removetree = True'.format(section.name))
+            logger.error("Unable to remove section! [{}] contains one or more entries."
+                "Remove the entries first or use removetree = True".format(section.name))
 
     def remove_entry(self, section_name, entry_name, removetree = False):
         entry = self.get_entry(section_name, entry_name)
@@ -464,8 +464,8 @@ class EDS:
         elif removetree:
             entry.fields = []
         else:
-            logger.error('Unable to remove entry! [{}].{} contains one or more fields.'
-                'Remove the fields first or use removetree = True'.format(section.name, entry.name))
+            logger.error("Unable to remove entry! [{}].{} contains one or more fields."
+                "Remove the fields first or use removetree = True".format(section.name, entry.name))
 
     def remove_field(self, section_name, sentryname, fieldindex):
         # TODO
@@ -477,31 +477,31 @@ class EDS:
         for section_name, section in required_sections.items():
             if self.has_section(section_name):
                 continue
-            raise Exception('Missing required section! [{}]'.format(section_name))
-        '''
+            raise Exception("Missing required section! [{}]".format(section_name))
+        """
         #TODO: re-enable this part
         for section in self.sections:
             requiredentries = self.ref.get_required_entries(section.name)
             for entry in requiredentries:
                 if self.has_entry(section.name, entry.keyword) == False:
-                    logger.error('Missing required entry! [{}].\"{}\"{}'
+                    logger.error("Missing required entry! [{}].\"{}\"{}"
                         .format(section.name, entry.keyword, entry.name))
 
             for entry in section.entries:
                 requiredfields = self.ref.get_required_fields(section.name, entry.name)
                 for field in requiredfields:
                     if self.has_field(section.name, entry.name, field.placement) == False:
-                        logger.error('Missing required field! [{}].{}.{} #{}'
+                        logger.error("Missing required field! [{}].{}.{} #{}"
                             .format(section.name, entry.name, field.name, field.placement))
-        '''
+        """
         """
         if type_name == "EDS_TYPEREF":
-            '''
+
             Type of a field is determined by value of another field. A referenced-type has to be validated.
-            The name of the ref field that contains the a data_type, is listed in the primary field's
+            The name of the ref field that contains the a data_type, is listed in the primary field"s
             datatype.valid_ranges(typeinfo) which itself is a list of names
             Example: The datatype of Params.Param1.MinimumValue is determined by Params.Param1.DataType
-            '''
+
             # TODO: here we read only the first item of the reference field list. Iterating the list might be a better way
             typeid = self.get_field(section_name, entry_name, typeinfo[0]).value
             try:
@@ -514,18 +514,18 @@ class EDS:
         """
     def save(self, filename, overwrite = False):
         if os.path.isfile(filename) and overwrite == False:
-            raise Exception('Failed to write to file! \"{}\" already exists and overrwite is not enabled.'.format(filename))
+            raise Exception("Failed to write to file! \"{}\" already exists and overrwite is not enabled.".format(filename))
 
-        if self.heading_comment == '':
+        if self.heading_comment == "":
             self.heading_comment = HEADING_COMMENT_TEMPLATE
-        eds_content = ''.join('$ {}\n'.format(line.strip()) for line in self.heading_comment.splitlines())
+        eds_content = "".join("$ {}\n".format(line.strip()) for line in self.heading_comment.splitlines())
 
         tabsize = 4
         # sections
         # Creating a list of standard sections.
-        std_sections = [self.get_section('File')]
-        std_sections.append(self.get_section('Device'))
-        std_sections.append(self.get_section('Device Classification'))
+        std_sections = [self.get_section("File")]
+        std_sections.append(self.get_section("Device"))
+        std_sections.append(self.get_section("Device Classification"))
         for section in self.sections:
             if section._id is None and section not in std_sections:
                 std_sections.append(section)
@@ -535,61 +535,61 @@ class EDS:
         sections = std_sections + protocol_sections
 
         for section in sections:
-            if section.hcomment != '':
-                eds_content += ''.join('$ {}\n'.format(line.strip()) for line in section.hcomment.splitlines())
-            eds_content += '\n[{}]'.format(section.name)
+            if section.hcomment != "":
+                eds_content += "".join("$ {}\n".format(line.strip()) for line in section.hcomment.splitlines())
+            eds_content += "\n[{}]".format(section.name)
 
-            if section.fcomment != '':
-                eds_content += ''.join('$ {}\n'.format(line.strip()) for line in section.fcomment.splitlines())
+            if section.fcomment != "":
+                eds_content += "".join("$ {}\n".format(line.strip()) for line in section.fcomment.splitlines())
 
-            eds_content += '\n'
+            eds_content += "\n"
 
             # Entries
             entries = sorted(section.entries, key = lambda entry: entry.index)
             for entry in entries:
 
-                if entry.hcomment != '':
-                    eds_content += ''.join(''.ljust(tabsize, ' ') + '$ {}\n'.format(line.strip()) for line in entry.hcomment.splitlines())
-                eds_content += ''.ljust(tabsize, ' ') + '{} ='.format(entry.name)
+                if entry.hcomment != "":
+                    eds_content += "".join("".ljust(tabsize, " ") + "$ {}\n".format(line.strip()) for line in entry.hcomment.splitlines())
+                eds_content += "".ljust(tabsize, " ") + "{} =".format(entry.name)
 
                 # fields
                 if len(entry.fields) == 1:
-                    if '\n' in str(entry.fields[0].data):
-                        eds_content += '\n'
-                        eds_content += '\n'.join(''.ljust(2 * tabsize, ' ') + line
+                    if "\n" in str(entry.fields[0].data):
+                        eds_content += "\n"
+                        eds_content += "\n".join("".ljust(2 * tabsize, " ") + line
                             for line in str(entry.fields[0]._data).splitlines())
-                        eds_content += ';'
+                        eds_content += ";"
                     else:
-                        eds_content += '{};'.format(entry.fields[0]._data)
-                    if entry.fields[0].fcomment != '':
-                        eds_content += ''.join(''.ljust(tabsize, ' ') +
-                            '$ {}\n'.format(line.strip()) for line in entry.fields[0].fcomment.splitlines())
-                    eds_content += '\n'
+                        eds_content += "{};".format(entry.fields[0]._data)
+                    if entry.fields[0].fcomment != "":
+                        eds_content += "".join("".ljust(tabsize, " ") +
+                            "$ {}\n".format(line.strip()) for line in entry.fields[0].fcomment.splitlines())
+                    eds_content += "\n"
                 else: # entry has multiple fields
-                    eds_content += '\n'
+                    eds_content += "\n"
 
                     for fieldindex, field in enumerate(entry.fields):
-                        singleline_field_str = ''.ljust(2 * tabsize, ' ') + '{}'.format(field._data)
+                        singleline_field_str = "".ljust(2 * tabsize, " ") + "{}".format(field._data)
 
                         # separator
                         if (fieldindex + 1) == len(entry.fields):
-                            singleline_field_str += ';'
+                            singleline_field_str += ";"
                         else:
-                            singleline_field_str += ','
+                            singleline_field_str += ","
 
                         # footer comment
-                        if field.fcomment != '':
-                            singleline_field_str = singleline_field_str.ljust(30, ' ')
-                            singleline_field_str += ''.join('$ {}'.format(line.strip()) for line in field.fcomment.splitlines())
-                        eds_content += singleline_field_str + '\n'
+                        if field.fcomment != "":
+                            singleline_field_str = singleline_field_str.ljust(30, " ")
+                            singleline_field_str += "".join("$ {}".format(line.strip()) for line in field.fcomment.splitlines())
+                        eds_content += singleline_field_str + "\n"
 
         # end comment
-        eds_content += '\n'
-        if self.end_comment == '':
+        eds_content += "\n"
+        if self.end_comment == "":
             self.end_comment = END_COMMENT_TEMPLATE
-        eds_content += ''.join('$ {}\n'.format(line.strip()) for line in self.end_comment.splitlines())
+        eds_content += "".join("$ {}\n".format(line.strip()) for line in self.end_comment.splitlines())
 
-        hfile = open(filename, 'w')
+        hfile = open(filename, "w")
         hfile.write(eds_content)
         hfile.close()
 
@@ -599,35 +599,114 @@ class EDS:
         return self.ref_libs.get_section_name(class_id, protocol)
 
     def resolve_epath(self, epath):
-        '''
+        """
         EPATH data types can contain references to param entries in params section.
         This method validates the path and resolves the referenced items inside the epath.
-        input EPATH in string format. example \'20 04 24 [Param1] 30 03\'
+        input EPATH in string format. example \"20 04 24 [Param1] 30 03\"
         return: EPATH in string format
-        '''
+        """
         items = epath.split()
         for i in range(len(items)):
             item = items[i]
             if len(item) < 2:
-                raise Exception('Invalid EPATH format! item[{}]:\"{}\" in [{}]'.format(index, item, path))
+                raise Exception("Invalid EPATH format! item[{}]:\"{}\" in [{}]".format(index, item, path))
 
             if not isnumber(item):
-                item = item.strip('[]')
-                if 'Param' == item.rstrip(digits) or 'ProxyParam' == item.rstrip(digits):
+                item = item.strip("[]")
+                if "Param" == item.rstrip(digits) or "ProxyParam" == item.rstrip(digits):
                     entry_name = item
-                    field = self.get_field('Params', entry_name, 'Default Value')
+                    field = self.get_field("Params", entry_name, "Default Value")
                     if field:
-                        items[i] = '{:02X}'.format(field.value)
+                        items[i] = "{:02X}".format(field.value)
                         continue
-                    raise Exception('Entry not found! tem[\'{}\'] in [{}]'.format(item, path))
-                raise Exception('Invalid path format! tem[\'{}\'] in [{}]'.format(item, path))
+                    raise Exception("Entry not found! tem[\"{}\"] in [{}]".format(item, path))
+                raise Exception("Invalid path format! tem[\"{}\"] in [{}]".format(item, path))
             elif not ishex(item):
-                raise Exception('Invalid EPATH format! item[\'{}\'] in [{}]'.format(item, path))
+                raise Exception("Invalid EPATH format! item[\"{}\"] in [{}]".format(item, path))
 
-        return ' '.join(item for item in items)
+        return " ".join(item for item in items)
+
 
     def __str__(self):
-        prn = ''
+        indent = 4
+        eds_str = "".join("$ {}\n".format(line.strip()) for line in self.hcomment.splitlines())
+
+
+        # sections
+        sorted_sections = [self.get_section("File")]
+        sorted_sections.append(self.get_section("Device"))
+        sorted_sections.append(self.get_section("Device Classification"))
+        sorted_sections += [section for key, section in self.sections.items() if section not in sorted_sections and section.class_id is None]
+        #sections = [section for key, section in self.sections.items() if section not in sorted_sections and section.class_id is None]
+        sorted_sections += sorted([section for key, section in self.sections.items() if section not in sorted_sections], key = lambda section: section.class_id)
+        for section in sorted_sections:
+            eds_str += "[{}]\n".format(section)
+        return eds_str
+        #for section in self.sections:
+        #    if section._id is None and section not in sorted_sections:
+        #        sorted_sections.append(section)
+        # Creating a list of protocol specific sections oredred by their ids.
+        protocol_sections = [section for section in self.sections if section._id is not None]
+        protocol_sections = sorted(protocol_sections, key = lambda section: section._id)
+        sections = std_sections + protocol_sections
+
+        for section in sections:
+            if section.hcomment != "":
+                eds_content += "".join("$ {}\n".format(line.strip()) for line in section.hcomment.splitlines())
+            eds_content += "\n[{}]".format(section.name)
+
+            if section.fcomment != "":
+                eds_content += "".join("$ {}\n".format(line.strip()) for line in section.fcomment.splitlines())
+
+            eds_content += "\n"
+
+            # Entries
+            entries = sorted(section.entries, key = lambda entry: entry.index)
+            for entry in entries:
+
+                if entry.hcomment != "":
+                    eds_content += "".join("".ljust(tabsize, " ") + "$ {}\n".format(line.strip()) for line in entry.hcomment.splitlines())
+                eds_content += "".ljust(tabsize, " ") + "{} =".format(entry.name)
+
+                # fields
+                if len(entry.fields) == 1:
+                    if "\n" in str(entry.fields[0].data):
+                        eds_content += "\n"
+                        eds_content += "\n".join("".ljust(2 * tabsize, " ") + line
+                            for line in str(entry.fields[0]._data).splitlines())
+                        eds_content += ";"
+                    else:
+                        eds_content += "{};".format(entry.fields[0]._data)
+                    if entry.fields[0].fcomment != "":
+                        eds_content += "".join("".ljust(tabsize, " ") +
+                            "$ {}\n".format(line.strip()) for line in entry.fields[0].fcomment.splitlines())
+                    eds_content += "\n"
+                else: # entry has multiple fields
+                    eds_content += "\n"
+
+                    for fieldindex, field in enumerate(entry.fields):
+                        singleline_field_str = "".ljust(2 * tabsize, " ") + "{}".format(field._data)
+
+                        # separator
+                        if (fieldindex + 1) == len(entry.fields):
+                            singleline_field_str += ";"
+                        else:
+                            singleline_field_str += ","
+
+                        # footer comment
+                        if field.fcomment != "":
+                            singleline_field_str = singleline_field_str.ljust(30, " ")
+                            singleline_field_str += "".join("$ {}".format(line.strip()) for line in field.fcomment.splitlines())
+                        eds_content += singleline_field_str + "\n"
+
+        # end comment
+        eds_content += "\n"
+        if self.end_comment == "":
+            self.end_comment = END_COMMENT_TEMPLATE
+        eds_content += "".join("$ {}\n".format(line.strip()) for line in self.end_comment.splitlines())
+    """
+    def __str__(self):
+        prn = ""
         for key, section in self.sections.items():
             prn += "{}\n".format(section.name)
 
@@ -637,21 +716,21 @@ class EDS:
                 prn += ",\n".join("{}{}".format(field.data, "    $ {}".format(field.fcomment) if field.fcomment else "") for field in entry.fields)
                 prn += ";\n"
         return prn
-
+    """
 class Section:
     def __init__(self, eds, name, class_id=0):
         self.parent  = eds
         self.class_id = class_id
         self.name = name
         self.entries = {}
-        self.hcomment = ''
-        self.fcomment = ''
+        self.hcomment = ""
+        self.fcomment = ""
 
     def add_entry(self, entry_name, serialize = False):
         return self._eds.add_entry(self.name, entry_name)
 
     def has_entry(self, entry_name = None, entryindex = None):
-        if entry_name.replace(' ', '').lower() in self.entries.keys():
+        if entry_name.replace(" ", "").lower() in self.entries.keys():
             return True
         return False
 
@@ -659,24 +738,24 @@ class Section:
         return self.entries.get(entry_name)
 
     def get_field(self, entry_name, field_index):
-        '''
+        """
         To get a section.entry.field using the entry name + (ield name or field index.
-        '''
+        """
         entry = self.entries.get(entry_name)
         if entry:
             return entry.get_field(field_index)
         return None
 
     def list(self, indent=0):
-        print ("".ljust(indent, " ") + "{}".format(self))
+        print ("".ljust(indent, " ") + self.__repr__())
         for key, entry in self.entries.items():
             entry.list(indent+4)
 
     def __str__(self):
-        return 'SECTION({})'.format(self.name)
+        return self.name
 
     def __repr__(self):
-        return "TODO!!"
+        return "SECTION({})".format(self.name)
 
 class Entry:
 
@@ -685,27 +764,27 @@ class Entry:
         self.parent = section
         self.name = name
         self.fields = [] # Unlike the sections and entries, fields are implemented as a list.
-        self.hcomment = ''
-        self.fcomment = ''
+        self.hcomment = ""
+        self.fcomment = ""
 
     def add_field(self, field_value, datatype = None):
         return self.parent.parent.add_field(self.parent.name, self.name, field_value, datatype)
 
     def has_field(self, field):
         if isinstance(field, str): # field name
-            fieldname = field.replace(' ', '').lower()
+            fieldname = field.replace(" ", "").lower()
             for field in self.fields:
-                if fieldname == field.name.replace(' ', '').lower():
+                if fieldname == field.name.replace(" ", "").lower():
                     return True
         elif isinstance(field, numbers.Number): # field index
             return field < len(entry.fields)
         else:
-            raise TypeError('Inappropriate data type: {}'.format(type(field)))
+            raise TypeError("Inappropriate data type: {}".format(type(field)))
 
     def get_field(self, field_index):
         """
         if isinstance(field, str): # field name
-            fieldname = field.replace(' ', '').lower()
+            fieldname = field.replace(" ", "").lower()
             for field in self.fields:
                 if fieldname == field:
                     return field
@@ -715,19 +794,21 @@ class Entry:
         return None
 
     def list(self, indent=0):
-        print ("".ljust(indent, " ") + "{}".format(self))
+        print("".ljust(indent, " ") + self.__repr__())
         for field in self.fields:
-            print ("".ljust(indent + 4, " ") + "{}".format(field))
+            print("".ljust(indent + 4, " ") + field.__repr__())
 
     @property
     def value(self):
         if len(self.fields) > 1:
-            logger.warning('Entry has multiple fields. Only the first field is returned.')
+            logger.warning("Entry has multiple fields. Only the first field is returned.")
         return self.fields[0].value
 
     def __str__(self):
-        return 'ENTRY({})'.format(self.name)
+        return self.name
 
+    def __repr__(self):
+        return "ENTRY({})".format(self.name)
 
 class Field:
     def __init__(self, entry, name, data, index):
@@ -737,8 +818,8 @@ class Field:
         self.data = data # datatype object. Actually is the Field value containing also its type information
         self.data_types = [] # Valid datatypes a field supports
 
-        self.hcomment = ''
-        self.fcomment = ''
+        self.hcomment = ""
+        self.fcomment = ""
 
     @property
     def value(self):
@@ -757,10 +838,10 @@ class Field:
                     del self.data
                     self.data = datatype(value, valid_data)
                     return
-        types_str = ', '.join('<{}>{}'.format(datatype.__name__, valid_data)
+        types_str = ", ".join("<{}>{}".format(datatype.__name__, valid_data)
                                 for datatype, valid_data in self._data_types)
-        raise Exception('Unable to set Field value! Data_type mismatch!'
-            ' [{}].{}.{} = ({}), should be a type of: {}'
+        raise Exception("Unable to set Field value! Data_type mismatch!"
+            " [{}].{}.{} = ({}), should be a type of: {}"
             .format(self.parent.parent.name, self.parent.name, self.name, value, types_str))
 
     @property
@@ -769,7 +850,15 @@ class Field:
 
     def __str__(self):
         if self.data is None:
-            return '\"\"'
+            return "\"\""
         # TODO: If a field of STRING contains multi lines of string, print each line as a seperate string.
-        return 'FIELD(index: {}, name: \"{}\", value: ({}), type: <{}>{})'.format(
+        return "FIELD(index: {}, name: \"{}\", value: ({}), type: <{}>{})".format(
+            self.index, self.name, str(self.data), type(self.data).__name__, self.data.range)
+
+    def __repr__(self):
+        if self.data is None:
+            return "FIELD(index: {}, name: \"{}\", value: ({}), type: <{}>{})".format(
+                self.index, self.name, "", "", "")
+        # TODO: If a field of STRING contains multi lines of string, print each line as a seperate string.
+        return "FIELD(index: {}, name: \"{}\", value: ({}), type: <{}>{})".format(
             self.index, self.name, str(self.data), type(self.data).__name__, self.data.range)
