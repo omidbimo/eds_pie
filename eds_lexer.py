@@ -91,39 +91,33 @@ class Token():
         self.line   = cursor.line
 
     def __str__(self):
-        return '[Ln: {}, Col: {}, Pos: {}] {} \"{}\"'.format(
+        return '[Pos: {}, Ln: {}, Col: {}] {} \"{}\"'.format(
+            str(self.offset).rjust(5),
             str(self.line).rjust(4),
             str(self.col).rjust(3),
-            str(self.offset).rjust(5),
             TOKEN_TYPE.stringify(self.type).ljust(11),
             self.value)
 
 class Cursor():
     def __init__(self):
-        self.offset = 0
+        self.offset = -1
         self.col = 0
         self.line = 1
 
 class Lexer():
     def __init__(self, eds_data):
-        self.eds_data = eds_data.encode("ascii")
+        self.eds_data = eds_data
         self.eds_length = len(self.eds_data)
         self.cursor = Cursor()
 
-    def next_Token(self):
-        token = self.get_Token()
-        self.prevtoken = self.token
-        self.token = token
-        logger.debug('token: {}'.format(token or 'EOF'))
-        return token
-
     def get_char(self):
-        assert self.cursor.offset <= self.eds_length
+        assert self.cursor.offset + 1 <= self.eds_length
 
-        if self.cursor.offset < self.eds_length:
-            ch = self.eds_data[self.cursor.offset]
+        self.cursor.offset += 1
 
-            self.cursor.offset += 1
+        if self.cursor.offset  < self.eds_length:
+            ch = chr(self.eds_data[self.cursor.offset])
+
             self.cursor.col += 1
             if ch == SYMBOLS.LF:
                 self.cursor.line += 1
@@ -135,9 +129,8 @@ class Lexer():
 
     def look_ahead(self, offset = 1):
         if self.cursor.offset + offset < self.eds_length:
-            return self.eds_data[self.cursor.offset + offset]
+            return chr(self.eds_data[self.cursor.offset + offset])
         return SYMBOLS.LF
-
 
     def lookbehind(self, offset = 1):
         if self.cursor.offset - offset >= 0:
@@ -153,7 +146,8 @@ class Lexer():
 
             if token is None:
                 if ch is SYMBOLS.EOF:
-                    return Token(TOKEN_TYPE.EOF, '', cursor=self.cursor)
+                    token = Token(TOKEN_TYPE.EOF, '', cursor=self.cursor)
+                    break
 
                 if ch.isspace():
                     # Ignoring space characters including: space, tab, carriage return
@@ -163,7 +157,7 @@ class Lexer():
                     token = Token(TOKEN_TYPE.COMMENT, '', self.cursor)
                     next = self.look_ahead()
                     if next == SYMBOLS.LF or next == SYMBOLS.EOF:
-                        return token
+                        break
 
                     token.offset += 1
                     token.col += 1
@@ -181,14 +175,14 @@ class Lexer():
                     token = Token(TOKEN_TYPE.NUMBER, ch, self.cursor)
                     next = self.look_ahead()
                     if next in SYMBOLS.OPERATORS or next in SYMBOLS.SEPARATORS:
-                        return token
+                        break
                     continue
 
                 if ch.isalpha():
                     token = Token(TOKEN_TYPE.IDENTIFIER, ch, self.cursor)
                     next = self.look_ahead()
                     if next in SYMBOLS.OPERATORS or next in SYMBOLS.SEPARATORS:
-                        return token
+                        break
                     continue
 
                 if ch == SYMBOLS.QUOTATION:
@@ -196,14 +190,16 @@ class Lexer():
                     continue
 
                 if ch in SYMBOLS.OPERATORS:
-                    return Token(TOKEN_TYPE.OPERATOR, ch, self.cursor)
+                    token = Token(TOKEN_TYPE.OPERATOR, ch, self.cursor)
+                    break
 
                 if ch in SYMBOLS.SEPARATORS:
-                    return Token(TOKEN_TYPE.SEPARATOR, ch, self.cursor)
+                    token = Token(TOKEN_TYPE.SEPARATOR, ch, self.cursor)
+                    break
 
             if token.type == TOKEN_TYPE.COMMENT:
                 if ch == SYMBOLS.LF or ch == SYMBOLS.CR or ch == SYMBOLS.EOF:
-                    return token
+                    break
                 token.value += ch
                 continue
 
@@ -213,38 +209,33 @@ class Lexer():
                 if ch == SYMBOLS.EOF:
                     raise Exception(".lexer:> Unexpected end of file during processing of section data at offset:{}".format(cursor.offset))
                 if ch == SYMBOLS.CLOSING_BRACKET:
-                    return token
+                    break
 
                 # filtering invalid symbols in section name
                 if (not ch.isspace() and not ch.isalpha() and not ch.isdigit()
                     and (ch not in SECTION_NAME_VALID_SYMBOLES)):
 
-                    raise Exception( __name__ + ".lexer:> Invalid section identifier!"
-                                   + " Unexpected char sequence "
-                                   + "@[idx: {}] [ln: {}] [col: {}]"
-                                   .format(self.cursor.offset, self.cursor.line, self.cursor.col))
+                    raise Exception( __name__ + ".lexer:> Invalid section identifier! Unexpected char sequence: {}".format(token))
 
                 # unexpected symbols at the beginning or at the end of the section identifier
                 if ((token.value == '' or self.look_ahead() == ']') and
                     (not ch.isalpha() and not ch.isdigit())):
-                    raise Exception( __name__ + ".lexer:> Invalid section identifier!"
-                        + " Unexpected char sequence @[idx: {}] [ln: {}] [col: {}]".format(self.cursor.offset, self.cursor.line, self.cursor.col))
+                    raise Exception( __name__ + ".lexer:> Invalid section identifier! Unexpected char sequence: {}".format(token))
 
                 # Sequential spaces
                 if ch == ' ' and self.look_ahead().isspace():
                     raise Exception( __name__ + ".lexer:> Invalid section identifier! Sequential spaces are not allowed."
-                        + " Unexpected char sequence @[idx: {}] [ln: {}] [col: {}]".format(self.cursor.offset, self.cursor.line, self.cursor.col))
+                        + " Unexpected char sequence: {}".format(token))
 
                 if ch == SYMBOLS.EOF or ch == SYMBOLS.LF:
-                    raise Exception( __name__ + '.lexer:> Invalid section identifier!'
-                        + ' Unexpected char sequence @[idx: {}] [ln: {}] [col: {}]'.format(self.cursor.offset, self.cursor.line, self.cursor.col))
+                    raise Exception( __name__ + ".lexer:> Invalid section identifier! Unexpected char sequence: {}".format(token))
 
                 token.value += ch
                 continue
 
             if token.type is TOKEN_TYPE.NUMBER:
                 if ch.isspace():
-                    return token
+                    break
                 # Switching the token type to other types
                 if   ch is SYMBOLS.COLON:     token.type = TOKEN_TYPE.TIME
                 elif ch is SYMBOLS.MINUS:     token.type = TOKEN_TYPE.DATE
@@ -252,63 +243,64 @@ class Lexer():
 
                 token.value += ch
                 if self.look_ahead() in SYMBOLS.OPERATORS or self.look_ahead() in SYMBOLS.SEPARATORS:
-                    return token
+                    break
                 continue
 
             if token.type is TOKEN_TYPE.IDENTIFIER:
                 if ch == SYMBOLS.EOF or ch == SYMBOLS.LF:
-                    return token
+                    break
 
                 if ch.isspace():
-                    return token
+                    break
 
                 token.value += ch
                 if self.look_ahead() in SYMBOLS.OPERATORS or self.look_ahead() in SYMBOLS.SEPARATORS:
-                    return token
+                    break
                 continue
 
             if token.type is TOKEN_TYPE.STRING:
                 if ch == SYMBOLS.QUOTATION and self.lookbehind() != SYMBOLS.BACKSLASH:
-                    return token
+                    break
 
                 if ch == SYMBOLS.EOF or ch == SYMBOLS.LF:
-                    raise Exception( __name__ + '.lexer:> Invalid string value!'
-                        + ' Unexpected char sequence @[idx: {}] [ln: {}] [col: {}]'.format(self.cursor.offset, self.cursor.line, self.cursor.col))
+                    raise Exception( __name__ + ".lexer:> Invalid string value! Unexpected char sequence: {}".format(token))
 
                 token.value += ch
                 continue
 
             if token.type is TOKEN_TYPE.DATASET:
                 if self.look_ahead() == SYMBOLS.SEMICOLON:
-                    return token
+                    break
 
                 token.value += ch
                 if ch == SYMBOLS.CLOSINGBRACE:
-                    return token
+                    break
                 continue
 
             if token.type is TOKEN_TYPE.TIME:
                 if ch.isspace():
-                    return token
+                    break
 
                 if not ch.isdigit() and ch is not SYMBOLS.COLON:
-                    raise Exception( __name__ + '.lexer:> Invalid TIME value!'
-                        + ' Unexpected char sequence @[idx: {}] [ln: {}] [col: {}]'.format(self.cursor.offset, self.cursor.line, self.cursor.col))
+                    raise Exception( __name__ + '.lexer:> Invalid TIME value! {}'.format(token))
                 token.value += ch
 
                 if self.look_ahead() in SYMBOLS.OPERATORS or self.look_ahead() in SYMBOLS.SEPARATORS:
-                    return token
+                    break
                 continue
 
             if token.type is TOKEN_TYPE.DATE:
                 if ch.isspace():
-                    return token
+                    break
 
                 if not ch.isdigit() and ch is not SYMBOLS.MINUS:
-                    raise Exception( __name__ + '.lexer:> Invalid DATE value!'
-                        + ' Unexpected char sequence @[idx: {}] [ln: {}] [col: {}]'.format(self.cursor.offset, self.cursor.line, self.cursor.col))
+                    raise Exception( __name__ + '.lexer:> Invalid DATE value! {}'.format(token))
+
                 token.value += ch
 
                 if self.look_ahead() in SYMBOLS.OPERATORS or self.look_ahead() in SYMBOLS.SEPARATORS:
-                    return token
+                    break
                 continue
+
+        logger.debug('token: {}'.format(token or 'EOF'))
+        return token
