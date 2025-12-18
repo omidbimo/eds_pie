@@ -516,78 +516,7 @@ class EDS:
         if os.path.isfile(filename) and overwrite == False:
             raise Exception("Failed to write to file! \"{}\" already exists and overrwite is not enabled.".format(filename))
 
-        if self.heading_comment == "":
-            self.heading_comment = HEADING_COMMENT_TEMPLATE
-        eds_content = "".join("$ {}\n".format(line.strip()) for line in self.heading_comment.splitlines())
-
-        tabsize = 4
-        # sections
-        # Creating a list of standard sections.
-        std_sections = [self.get_section("File")]
-        std_sections.append(self.get_section("Device"))
-        std_sections.append(self.get_section("Device Classification"))
-        for section in self.sections:
-            if section._id is None and section not in std_sections:
-                std_sections.append(section)
-        # Creating a list of protocol specific sections oredred by their ids.
-        protocol_sections = [section for section in self.sections if section._id is not None]
-        protocol_sections = sorted(protocol_sections, key = lambda section: section._id)
-        sections = std_sections + protocol_sections
-
-        for section in sections:
-            if section.hcomment != "":
-                eds_content += "".join("$ {}\n".format(line.strip()) for line in section.hcomment.splitlines())
-            eds_content += "\n[{}]".format(section.name)
-
-            if section.fcomment != "":
-                eds_content += "".join("$ {}\n".format(line.strip()) for line in section.fcomment.splitlines())
-
-            eds_content += "\n"
-
-            # Entries
-            entries = sorted(section.entries, key = lambda entry: entry.index)
-            for entry in entries:
-
-                if entry.hcomment != "":
-                    eds_content += "".join("".ljust(tabsize, " ") + "$ {}\n".format(line.strip()) for line in entry.hcomment.splitlines())
-                eds_content += "".ljust(tabsize, " ") + "{} =".format(entry.name)
-
-                # fields
-                if len(entry.fields) == 1:
-                    if "\n" in str(entry.fields[0].data):
-                        eds_content += "\n"
-                        eds_content += "\n".join("".ljust(2 * tabsize, " ") + line
-                            for line in str(entry.fields[0]._data).splitlines())
-                        eds_content += ";"
-                    else:
-                        eds_content += "{};".format(entry.fields[0]._data)
-                    if entry.fields[0].fcomment != "":
-                        eds_content += "".join("".ljust(tabsize, " ") +
-                            "$ {}\n".format(line.strip()) for line in entry.fields[0].fcomment.splitlines())
-                    eds_content += "\n"
-                else: # entry has multiple fields
-                    eds_content += "\n"
-
-                    for fieldindex, field in enumerate(entry.fields):
-                        singleline_field_str = "".ljust(2 * tabsize, " ") + "{}".format(field._data)
-
-                        # separator
-                        if (fieldindex + 1) == len(entry.fields):
-                            singleline_field_str += ";"
-                        else:
-                            singleline_field_str += ","
-
-                        # footer comment
-                        if field.fcomment != "":
-                            singleline_field_str = singleline_field_str.ljust(30, " ")
-                            singleline_field_str += "".join("$ {}".format(line.strip()) for line in field.fcomment.splitlines())
-                        eds_content += singleline_field_str + "\n"
-
-        # end comment
-        eds_content += "\n"
-        if self.end_comment == "":
-            self.end_comment = END_COMMENT_TEMPLATE
-        eds_content += "".join("$ {}\n".format(line.strip()) for line in self.end_comment.splitlines())
+        eds_content = self.__str__()
 
         hfile = open(filename, "w")
         hfile.write(eds_content)
@@ -629,63 +558,54 @@ class EDS:
 
     def __str__(self):
         indent = 4
-        eds_str = "".join("$ {}\n".format(line.strip()) for line in self.hcomment.splitlines())
-
+        if self.hcomment != "":
+            eds_str = "".join("$ {}\n".format(line.strip()) for line in self.hcomment.splitlines())
 
         # sections
         sorted_sections = [self.get_section("File")]
         sorted_sections.append(self.get_section("Device"))
         sorted_sections.append(self.get_section("Device Classification"))
+        # listing sections without a class Id
         sorted_sections += [section for key, section in self.sections.items() if section not in sorted_sections and section.class_id is None]
-        #sections = [section for key, section in self.sections.items() if section not in sorted_sections and section.class_id is None]
+        # listing sections with a class Ids
         sorted_sections += sorted([section for key, section in self.sections.items() if section not in sorted_sections], key = lambda section: section.class_id)
-        for section in sorted_sections:
-            eds_str += "[{}]\n".format(section)
-        return eds_str
-        #for section in self.sections:
-        #    if section._id is None and section not in sorted_sections:
-        #        sorted_sections.append(section)
-        # Creating a list of protocol specific sections oredred by their ids.
-        protocol_sections = [section for section in self.sections if section._id is not None]
-        protocol_sections = sorted(protocol_sections, key = lambda section: section._id)
-        sections = std_sections + protocol_sections
 
-        for section in sections:
+        for section in sorted_sections:
             if section.hcomment != "":
-                eds_content += "".join("$ {}\n".format(line.strip()) for line in section.hcomment.splitlines())
-            eds_content += "\n[{}]".format(section.name)
+                eds_str += "".join("$ {}\n".format(line.strip()) for line in section.hcomment.splitlines())
+            eds_str += "\n[{}]".format(section.name)
 
             if section.fcomment != "":
-                eds_content += "".join("$ {}\n".format(line.strip()) for line in section.fcomment.splitlines())
+                eds_str += "\n"
+                eds_str += "\n".join("".ljust(indent, " ") + "$ {}".format(line.strip()) for line in section.fcomment.splitlines())
 
-            eds_content += "\n"
+            eds_str += "\n"
 
             # Entries
-            entries = sorted(section.entries, key = lambda entry: entry.index)
-            for entry in entries:
+            for key, entry in section.entries.items():
 
                 if entry.hcomment != "":
-                    eds_content += "".join("".ljust(tabsize, " ") + "$ {}\n".format(line.strip()) for line in entry.hcomment.splitlines())
-                eds_content += "".ljust(tabsize, " ") + "{} =".format(entry.name)
+                    eds_str += "".join("".ljust(indent, " ") + "$ {}\n".format(line.strip()) for line in entry.hcomment.splitlines())
+                eds_str += "".ljust(indent, " ") + "{} =".format(entry.name)
 
                 # fields
                 if len(entry.fields) == 1:
                     if "\n" in str(entry.fields[0].data):
-                        eds_content += "\n"
-                        eds_content += "\n".join("".ljust(2 * tabsize, " ") + line
-                            for line in str(entry.fields[0]._data).splitlines())
-                        eds_content += ";"
+                        eds_str += "\n"
+                        eds_str += "\n".join("".ljust(2 * indent, " ") + line
+                            for line in str(entry.fields[0].data).splitlines())
+                        eds_str += ";"
                     else:
-                        eds_content += "{};".format(entry.fields[0]._data)
+                        eds_str += "{};".format(entry.fields[0].data)
                     if entry.fields[0].fcomment != "":
-                        eds_content += "".join("".ljust(tabsize, " ") +
+                        eds_str += "".join("".ljust(indent, " ") +
                             "$ {}\n".format(line.strip()) for line in entry.fields[0].fcomment.splitlines())
-                    eds_content += "\n"
+                    eds_str += "\n"
                 else: # entry has multiple fields
-                    eds_content += "\n"
+                    eds_str += "\n"
 
                     for fieldindex, field in enumerate(entry.fields):
-                        singleline_field_str = "".ljust(2 * tabsize, " ") + "{}".format(field._data)
+                        singleline_field_str = "".ljust(2 * indent, " ") + "{}".format(field.data)
 
                         # separator
                         if (fieldindex + 1) == len(entry.fields):
@@ -697,26 +617,14 @@ class EDS:
                         if field.fcomment != "":
                             singleline_field_str = singleline_field_str.ljust(30, " ")
                             singleline_field_str += "".join("$ {}".format(line.strip()) for line in field.fcomment.splitlines())
-                        eds_content += singleline_field_str + "\n"
+                        eds_str += singleline_field_str + "\n"
 
         # end comment
-        eds_content += "\n"
-        if self.end_comment == "":
-            self.end_comment = END_COMMENT_TEMPLATE
-        eds_content += "".join("$ {}\n".format(line.strip()) for line in self.end_comment.splitlines())
-    """
-    def __str__(self):
-        prn = ""
-        for key, section in self.sections.items():
-            prn += "{}\n".format(section.name)
+        eds_str += "\n"
+        if self.fcomment != "":
+            eds_str += "".join("$ {}\n".format(line.strip()) for line in self.fcomment.splitlines())
+        return eds_str
 
-            for key, entry in section.entries.items():
-                prn += "     {} = ".format(entry.name)
-
-                prn += ",\n".join("{}{}".format(field.data, "    $ {}".format(field.fcomment) if field.fcomment else "") for field in entry.fields)
-                prn += ";\n"
-        return prn
-    """
 class Section:
     def __init__(self, eds, name, class_id=0):
         self.parent  = eds
@@ -846,7 +754,7 @@ class Field:
 
     @property
     def datatype(self):
-        return (type(self._data), self.data.range)
+        return (type(self.data), self.data.range)
 
     def __str__(self):
         if self.data is None:
