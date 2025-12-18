@@ -1,6 +1,6 @@
 
 from cip_eds_types import *
-from eds_lexer import Lexer
+from eds_lexer import Lexer, TOKEN_TYPES, SYMBOLS
 from eds import EDS
 
 import logging
@@ -31,15 +31,15 @@ class Parser:
         while True:
             token = self.lexer.get_token()
 
-            if token.type is TOKEN_TYPE.EOF:
+            if token.type is TOKEN_TYPES.EOF:
                 break
 
-            if self.match(token, TOKEN_TYPE.COMMENT):
+            if self.match(token, TOKEN_TYPES.COMMENT):
                 self.add_comment(token.value)
                 continue
 
             if self.state is State.EXPECT_SECTION:
-                self.expect(token, TOKEN_TYPE.SECTION)
+                self.expect(token, TOKEN_TYPES.SECTION)
                 self.entry_in_process = None
                 self.field_in_process = None
                 self.section_in_process = self.eds.add_section(token.value)
@@ -53,7 +53,7 @@ class Parser:
 
             if self.state is State.EXPECT_ENTRY:
 
-                self.expect(token, TOKEN_TYPE.IDENTIFIER)
+                self.expect(token, TOKEN_TYPES.IDENTIFIER)
                 self.entry_in_process = None
                 self.entry_in_process = self.eds.add_entry(self.section_in_process.name, token.value)
 
@@ -61,13 +61,13 @@ class Parser:
                     raise Exception("Unable to create Entry: {}".format(token.value))
 
                 # Expecting at least one field.
-                self.expect(self.lexer.get_token(), TOKEN_TYPE.OPERATOR, SYMBOLS.ASSIGNMENT)
+                self.expect(self.lexer.get_token(), TOKEN_TYPES.OPERATOR, SYMBOLS.ASSIGNMENT)
                 self.state = State.EXPECT_FIELD
                 continue
 
             if self.state is State.EXPECT_FIELD:
 
-                if self.match(token, TOKEN_TYPE.SEPARATOR, SYMBOLS.SEMICOLON) or self.match(token, TOKEN_TYPE.SEPARATOR, SYMBOLS.COMMA):
+                if self.match(token, TOKEN_TYPES.SEPARATOR, SYMBOLS.SEMICOLON) or self.match(token, TOKEN_TYPES.SEPARATOR, SYMBOLS.COMMA):
                     # Empty Field
                     self.field_in_process = self.eds.add_field(self.section_in_process.name, self.entry_in_process.name, "")
                 else:
@@ -76,10 +76,10 @@ class Parser:
                     field_type = token.type
 
                     # Strings can be teared down into multiple lines
-                    if token.type == TOKEN_TYPE.STRING:
+                    if token.type == TOKEN_TYPES.STRING:
                         while True:
                             token = self.lexer.get_token()
-                            if not self.match(token, TOKEN_TYPE.STRING): break
+                            if not self.match(token, TOKEN_TYPES.STRING): break
                             field_value += token.value
                     else:
                         token = self.lexer.get_token()
@@ -89,17 +89,17 @@ class Parser:
                 if self.field_in_process is None:
                     raise Exception("Unable to create Field: {}".format(token.value))
 
-                if self.match(token, TOKEN_TYPE.SEPARATOR, SYMBOLS.COMMA):
+                if self.match(token, TOKEN_TYPES.SEPARATOR, SYMBOLS.COMMA):
                     continue
 
-                self.expect(token, TOKEN_TYPE.SEPARATOR, SYMBOLS.SEMICOLON)
+                self.expect(token, TOKEN_TYPES.SEPARATOR, SYMBOLS.SEMICOLON)
                 # End of Entry. The next token might be an entry or a new section
                 self.state = State.EXPECT_SECTION_OR_ENTRY
                 continue
 
             if self.state is State.EXPECT_SECTION_OR_ENTRY:
 
-                if self.match(token, TOKEN_TYPE.SECTION):
+                if self.match(token, TOKEN_TYPES.SECTION):
                     self.entry_in_process = None
                     self.field_in_process = None
                     self.section_in_process = self.eds.add_section(token.value)
@@ -108,13 +108,13 @@ class Parser:
                     self.state = State.EXPECT_ENTRY
                     continue
 
-                self.expect(token, TOKEN_TYPE.IDENTIFIER)
+                self.expect(token, TOKEN_TYPES.IDENTIFIER)
                 self.entry_in_process = None
                 self.entry_in_process = self.eds.add_entry(self.section_in_process.name, token.value)
                 if self.entry_in_process is None:
                     raise Exception("Unable to create entry: {}".format(token.value))
                 # Expecting at least one field.
-                self.expect(self.lexer.get_token(), TOKEN_TYPE.OPERATOR, SYMBOLS.ASSIGNMENT)
+                self.expect(self.lexer.get_token(), TOKEN_TYPES.OPERATOR, SYMBOLS.ASSIGNMENT)
                 self.state = State.EXPECT_FIELD
                 continue
 
@@ -144,9 +144,9 @@ class Parser:
 
         if expected_value:
             raise Exception("Unexpected token! Expected: (\"{}\": {}) but found: {}".format(
-                            TOKEN_TYPE.stringify(expected_type), expected_value, token))
+                            TOKEN_TYPES.stringify(expected_type), expected_value, token))
         raise Exception("Unexpected token! Expected: (\"{}\") but found: {}".format(
-                        TOKEN_TYPE.stringify(expected_type), token))
+                        TOKEN_TYPES.stringify(expected_type), token))
 
     def match(self, token, expected_type, expected_value=None):
         if token.type == expected_type:

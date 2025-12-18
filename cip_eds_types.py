@@ -57,77 +57,40 @@ class ENUMS(object):
                 if isinstance(base.__dict__[attr], int) and base.__dict__[attr] == enum: return '{}'.format(attr)
         return ''
 
-class CIP_STD_TYPES(ENUMS):
-    CIP_EDS_UTIME         = 0xC0
-    CIP_EDS_BOOL          = 0xC1
-    CIP_EDS_SINT          = 0xC2
-    CIP_EDS_INT           = 0xC3
-    CIP_EDS_DINT          = 0xC4
-    CIP_EDS_LINT          = 0xC5
-    CIP_EDS_USINT         = 0xC6
-    CIP_EDS_UINT          = 0xC7
-    CIP_EDS_UDINT         = 0xC8
-    CIP_EDS_ULINT         = 0xC9
-    CIP_EDS_REAL          = 0xCA
-    CIP_EDS_LREAL         = 0xCB
-    CIP_EDS_STIME         = 0xCC
-    CIP_EDS_DATE          = 0xCD
-    CIP_EDS_TIME_OF_DAY   = 0xCE
-    CIP_EDS_DATE_AND_TIME = 0xCF
-    CIP_EDS_STRING        = 0xD0
-    CIP_EDS_BYTE          = 0xD1
-    CIP_EDS_WORD          = 0xD2
-    CIP_EDS_DWORD         = 0xD3
-    CIP_EDS_LWORD         = 0xD4
-    CIP_EDS_STRING2       = 0xD5
-    CIP_EDS_FTIME         = 0xD6
-    CIP_EDS_LTIME         = 0xD7
-    CIP_EDS_ITIME         = 0xD8
-    CIP_EDS_STRINGN       = 0xD9
-    CIP_EDS_SHORT_STRING  = 0xDA
-    CIP_EDS_TIME          = 0xDB
-    CIP_EDS_EPATH         = 0xDC
-    CIP_EDS_ENGUNIT       = 0xDD
-    CIP_EDS_STRINGI       = 0xDE
-    CIP_EDS_NTIME         = 0xDF
+class CIP_TYPES(ENUMS):
+    UTIME         = 0xC0
+    BOOL          = 0xC1
+    SINT          = 0xC2
+    INT           = 0xC3
+    DINT          = 0xC4
+    LINT          = 0xC5
+    USINT         = 0xC6
+    UINT          = 0xC7
+    UDINT         = 0xC8
+    ULINT         = 0xC9
+    REAL          = 0xCA
+    LREAL         = 0xCB
+    STIME         = 0xCC
+    DATE          = 0xCD
+    TIME_OF_DAY   = 0xCE
+    DATE_AND_TIME = 0xCF
+    STRING        = 0xD0
+    BYTE          = 0xD1
+    WORD          = 0xD2
+    DWORD         = 0xD3
+    LWORD         = 0xD4
+    STRING2       = 0xD5
+    FTIME         = 0xD6
+    LTIME         = 0xD7
+    ITIME         = 0xD8
+    STRINGN       = 0xD9
+    SHORT_STRING  = 0xDA
+    TIME          = 0xDB
+    EPATH         = 0xDC
+    ENGUNIT       = 0xDD
+    STRINGI       = 0xDE
+    NTIME         = 0xDF
 
-class TOKEN_TYPE(ENUMS):
-    EOF        = 0
-    DATE       = 1
-    TIME       = 2
-    NUMBER     = 3
-    STRING     = 4
-    COMMENT    = 5
-    SECTION    = 6
-    OPERATOR   = 7
-    SEPARATOR  = 8
-    IDENTIFIER = 9
-    DATASET    = 10
-
-class SYMBOLS(ENUMS):
-    ASSIGNMENT      = '='
-    COMMA           = ','
-    SEMICOLON       = ';'
-    COLON           = ':'
-    MINUS           = '-'
-    UNDERLINE       = '_'
-    PLUS            = '+'
-    POINT           = '.'
-    BACKSLASH       = '\\'
-    QUOTATION       = '\"'
-    TAB             = '\t'
-    DOLLAR          = '$'
-    OPENING_BRACKET = '['
-    CLOSING_BRACKET = ']'
-    OPENING_BRACE   = '{'
-    CLOSING_BRACE   = '}'
-    AMPERSAND       = '&'
-    SPACE           = ' '
-    LF              = '\n'
-    CR              = '\r'
-    EOF             = None
-    OPERATORS       = [ASSIGNMENT]
-    SEPARATORS      = [COMMA, SEMICOLON]
 
 def getnumber(data):
     '''
@@ -359,7 +322,7 @@ class CIP_EDS_BASE_INT(CIP_EDS_BASE_TYPE):
 
 
 class BOOL(CIP_EDS_BASE_TYPE):
-    _typeid = CIP_STD_TYPES.CIP_EDS_BOOL
+    _typeid = CIP_TYPES.BOOL
     _range = RANGE(0, 1)
 
     def __new__(cls, value, *args):
@@ -378,7 +341,7 @@ class BOOL(CIP_EDS_BASE_TYPE):
 
 
 class USINT(CIP_EDS_BASE_INT):
-    _typeid = CIP_STD_TYPES.CIP_EDS_USINT
+    _typeid = CIP_TYPES.USINT
     _range = RANGE(0, 255)
 
     def __new__(cls, value, *args):
@@ -394,7 +357,7 @@ class USINT(CIP_EDS_BASE_INT):
 
 
 class SINT(CIP_EDS_BASE_INT):
-    _typeid = CIP_STD_TYPES.CIP_EDS_USINT
+    _typeid = CIP_TYPES.USINT
     _range = RANGE(0, 255)
 
     def __new__(cls, value, *args):
@@ -410,7 +373,7 @@ class SINT(CIP_EDS_BASE_INT):
 
 
 class UINT(CIP_EDS_BASE_INT):
-    _typeid = CIP_STD_TYPES.CIP_EDS_UINT
+    _typeid = CIP_TYPES.UINT
     _range = RANGE(0, 65535)
 
     def __new__(cls, value, *args):
@@ -426,7 +389,7 @@ class UINT(CIP_EDS_BASE_INT):
 
 
 class INT(CIP_EDS_BASE_INT):
-    _typeid = CIP_STD_TYPES.CIP_EDS_INT
+    _typeid = CIP_TYPES.INT
     _range = RANGE(-32768, 32767)
 
     def __new__(cls, value, *args):
@@ -442,7 +405,7 @@ class INT(CIP_EDS_BASE_INT):
 
 
 class UDINT(CIP_EDS_BASE_INT):
-    _typeid = CIP_STD_TYPES.CIP_EDS_UDINT
+    _typeid = CIP_TYPES.UDINT
     _range = RANGE(0, 4294967295)
 
     def __new__(cls, value, *args):
@@ -458,7 +421,7 @@ class UDINT(CIP_EDS_BASE_INT):
 
 
 class DINT(CIP_EDS_BASE_INT):
-    _typeid = CIP_STD_TYPES.CIP_EDS_DINT
+    _typeid = CIP_TYPES.DINT
     _range = RANGE(-2147483648, 2147483647)
 
     def __new__(cls, value, *args):
@@ -475,7 +438,7 @@ class DINT(CIP_EDS_BASE_INT):
 
 
 class ULINT(CIP_EDS_BASE_INT):
-    _typeid = CIP_STD_TYPES.CIP_EDS_ULINT
+    _typeid = CIP_TYPES.ULINT
     _range = RANGE(0, 18446744073709551615)
 
     def __new__(cls, value, *args):
@@ -491,7 +454,7 @@ class ULINT(CIP_EDS_BASE_INT):
 
 
 class LINT(CIP_EDS_BASE_INT):
-    _typeid = CIP_STD_TYPES.CIP_EDS_LINT
+    _typeid = CIP_TYPES.LINT
     _range = RANGE(-9223372036854775808, 9223372036854775807)
     def __new__(cls, value, *args):
         if cls.validate(value):
@@ -506,7 +469,7 @@ class LINT(CIP_EDS_BASE_INT):
 
 
 class BYTE(CIP_EDS_BASE_INT):
-    _typeid = CIP_STD_TYPES.CIP_EDS_BYTE
+    _typeid = CIP_TYPES.BYTE
     _range = RANGE(0, 255)
 
     def __new__(cls, value, *args):
@@ -522,7 +485,7 @@ class BYTE(CIP_EDS_BASE_INT):
 
 
 class WORD(CIP_EDS_BASE_INT):
-    _typeid = CIP_STD_TYPES.CIP_EDS_WORD
+    _typeid = CIP_TYPES.WORD
     _range = RANGE(0, 65535)
 
     def __new__(cls, value, *args):
@@ -538,7 +501,7 @@ class WORD(CIP_EDS_BASE_INT):
 
 
 class DWORD(CIP_EDS_BASE_INT):
-    _typeid = CIP_STD_TYPES.CIP_EDS_DWORD
+    _typeid = CIP_TYPES.DWORD
     _range = RANGE(0, 4294967295)
 
     def __new__(cls, value, *args):
@@ -554,7 +517,7 @@ class DWORD(CIP_EDS_BASE_INT):
 
 
 class LWORD(CIP_EDS_BASE_INT):
-    _typeid = CIP_STD_TYPES.CIP_EDS_LWORD
+    _typeid = CIP_TYPES.LWORD
     _range = RANGE(0, 18446744073709551615)
 
     def __new__(cls, value, *args):
@@ -569,7 +532,7 @@ class LWORD(CIP_EDS_BASE_INT):
         super(LWORD, self).__init__(value)
 
 class REAL(CIP_EDS_BASE_INT): # TODO: improve validate
-    _typeid = CIP_STD_TYPES.CIP_EDS_REAL
+    _typeid = CIP_TYPES.REAL
     _range = RANGE(-16777216.0, 16777216.0)
 
     def __new__(cls, value, *args):
@@ -584,7 +547,7 @@ class REAL(CIP_EDS_BASE_INT): # TODO: improve validate
         super(REAL, self).__init__(value)
 
 class LREAL(CIP_EDS_BASE_INT): # TODO: improve validate
-    _typeid = CIP_STD_TYPES.CIP_EDS_LREAL
+    _typeid = CIP_TYPES.LREAL
     _range = RANGE(-9007199254740992.0, 9007199254740992.0)
 
     def __new__(cls, value, *args):
@@ -600,7 +563,7 @@ class LREAL(CIP_EDS_BASE_INT): # TODO: improve validate
 
 
 class STIME(CIP_EDS_BASE_TYPE): #  dummy type! TODO
-    _typeid = CIP_STD_TYPES.CIP_EDS_STIME
+    _typeid = CIP_TYPES.STIME
 
     def __new__(cls, value, *args):
         if cls.validate(value):
@@ -614,7 +577,7 @@ class STIME(CIP_EDS_BASE_TYPE): #  dummy type! TODO
         super(STIME, self).__init__(value)
 
 class STRING(CIP_EDS_BASE_TYPE):
-    _typeid = CIP_STD_TYPES.CIP_EDS_STRING
+    _typeid = CIP_TYPES.STRING
 
     def __new__(cls, value, *args):
         if cls.validate(value):
@@ -637,7 +600,7 @@ class STRING(CIP_EDS_BASE_TYPE):
 
 
 class STRINGI(CIP_EDS_BASE_TYPE):
-    _typeid = CIP_STD_TYPES.CIP_EDS_STRINGI
+    _typeid = CIP_TYPES.STRINGI
 
     def __new__(cls, value, *args):
         if cls.validate(value):
@@ -681,7 +644,7 @@ class DATE(CIP_EDS_BASE_TYPE):
 
 
 class TIME(CIP_EDS_BASE_TYPE):
-    _typeid = CIP_STD_TYPES.CIP_EDS_TIME
+    _typeid = CIP_TYPES.TIME
 
     def __new__(cls, value, *args):
         if cls.validate(value):
@@ -731,7 +694,7 @@ class TIME(CIP_EDS_BASE_TYPE):
 
 
 class EPATH(CIP_EDS_BASE_TYPE):
-    _typeid = CIP_STD_TYPES.CIP_EDS_EPATH
+    _typeid = CIP_TYPES.EPATH
 
     def __new__(cls, value, *args):
         if cls.validate(value):

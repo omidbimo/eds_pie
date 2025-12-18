@@ -4,111 +4,16 @@ import json
 
 from cip_eds_types import *
 
-CIP_BOOL    = BOOL
-CIP_USINT   = USINT
-CIP_UINT    = UINT
-CIP_UDINT   = UDINT
-CIP_ULINT   = ULINT
-CIP_SINT    = SINT
-CIP_INT     = INT
-CIP_DINT    = DINT
-CIP_LINT    = LINT
-CIP_WORD    = WORD
-CIP_DWORD   = DWORD
-CIP_REAL    = REAL
-CIP_LREAL   = LREAL
-CIP_BYTE    = BYTE
-CIP_STRING  = STRING
-CIP_STRINGI = STRINGI
-EDS_DATE    = DATE
-CIP_TIME    = TIME
-CIP_EPATH   = EPATH
-
-EDS_REVISION   = REVISION
-EDS_KEYWORD    = KEYWORD
-EDS_DATAREF    = REF
-EDS_VENDORSPEC = VENDOR_SPECIFIC
-EDS_TYPEREF    = DATATYPE_REF # Reference to another field which contains a cip_dtypeid
-EDS_MAC_ADDR   = ETH_MAC_ADDR
-EDS_EMPTY      = EMPTY
-EDS_UNDEFINED  = UNDEFINED
-EDS_SERVICE    = EDS_SERVICE
-
-class EDS_RefLib():
-    type_mapping = {
-        "BOOL"    : BOOL,
-        "USINT"   : USINT,
-        "UINT"    : UINT,
-        "UDINT"   : UDINT,
-        "ULINT"   : ULINT,
-        "SINT"    : SINT,
-        "INT"     : INT,
-        "DINT"    : DINT,
-        "LINT"    : LINT,
-        "WORD"    : WORD,
-        "DWORD"   : DWORD,
-        "REAL"    : REAL,
-        "LREAL"   : LREAL,
-        "BYTE"    : BYTE,
-        "STRING"  : STRING,
-        "STRINGI" : STRINGI,
-        "DATE"    : DATE,
-        "TIME"    : TIME,
-        "EPATH"   : EPATH,
-
-        "REVISION"          : REVISION,
-        "KEYWORD"           : KEYWORD,
-        "REF"               : REF,
-        "VENDOR_SPECIFIC"   : VENDOR_SPECIFIC,
-        "DATATYPE_REF"      : DATATYPE_REF, # Reference to another field which contains a cip_dtypeid
-        "MAC_ADDR"          : ETH_MAC_ADDR,
-        "EMPTY"             : EMPTY,
-        "UNDEFINED"         : UNDEFINED,
-        "SERVICE"           : EDS_SERVICE,
-        }
-
-    supported_data_types = {
-        0xC1: CIP_BOOL,
-        0xC2: CIP_SINT,
-        0xC3: CIP_INT,
-        0xC4: CIP_DINT,
-        0xC5: CIP_LINT,
-        0xC6: CIP_USINT,
-        0xC7: CIP_UINT,
-        0xC8: CIP_UDINT,
-        0xC9: CIP_ULINT,
-        0xCA: CIP_REAL,
-        0xCB: CIP_LREAL,
-        0xCC: STIME,
-        0xCD: EDS_DATE,
-        #, 0xCE: TIME_OF_DAY
-        #, 0xCF: DATE_AND_TIME
-        0xD0: CIP_STRING,
-        0xD1: CIP_BYTE,
-        0xD2: CIP_WORD,
-        0xD3: CIP_DWORD,
-        0xD4: LWORD,
-        #, 0xD5: STRING2
-        #, 0xD6: FTIME
-        #, 0xD7: LTIME
-        #, 0xD8: ITIME
-        #, 0xD9: STRINGN
-        #, 0xDA: SHORT_STRING
-        0xDB: CIP_TIME,
-        0xDC: CIP_EPATH,
-        #, 0xDD: ENGUNIT
-        0xDE: CIP_STRINGI,
-        }
-
+class EDS_RefLib:
     def __init__(self):
         self.libs = {}
 
         for file in os.listdir():
             if file.endswith(".json"):
                 with open(file, "r") as src:
-                    jlib = json.loads(src.read())
-                    if jlib["project"] ==  "eds_pie" and file != "edslib_schema.json":
-                        self.libs[jlib["protocol"].lower()] = jlib
+                    data = json.loads(src.read())
+                    if data.get("project", None) ==  "eds_pie" and file != "edslib_schema.json":
+                        self.libs[data["protocol"].lower()] = data
 
     def get_lib_name(self, section_keyword):
         for _, lib in self.libs.items():
@@ -218,12 +123,11 @@ class EDS_RefLib():
                 if fld["name"] == field_name:
                     field = fld
         return field
-
+    """
     def get_type(self, cip_typeid):
         return self.supported_data_types[cip_typeid]
-
+    """
     def get_required_sections(self):
-
         required_sections = {}
 
         for _, lib in self.libs.items():
@@ -234,7 +138,7 @@ class EDS_RefLib():
         return required_sections
 
     def get_type(self, type_name):
-        return self.type_mapping.get(type_name, None)
+        return getattr(__import__("cip_eds_types"), type_name, None)
 
     def validate(self, type_name, type_info, value):
         dt = self.get_type(type_name)
@@ -388,17 +292,17 @@ class EDS:
 
         # Validate field"s value and assign a data type to the field
         if field_value == "":
-            logger.info("Field [{}].{}.{} has no value. Switched to EDS_EMPTY field.".format(section.name, entry.name, field_name))
-            field_data = EDS_EMPTY(field_value)
+            logger.info("Field [{}].{}.{} has no value. Switched to EMPTY field.".format(section.name, entry.name, field_name))
+            field_data = EMPTY(field_value)
 
         elif not ref_data_types:
             # The filed is unknown and no ref_types are in hand. Try some default data types.
-            if EDS_VENDORSPEC.validate(field_value):
+            if VENDOR_SPECIFIC.validate(field_value):
                 logger.warning("Unknown Field [{}].{}.{} = {}. Switched to VENDOR_SPECIFIC field.".format(section.name, entry.name, field_name, field_value))
-                field_data = EDS_VENDORSPEC(field_value)
-            elif EDS_UNDEFINED.validate(field_value):
-                logger.warning("Unknown Field [{}].{}.{} = {}. Switched to EDS_UNDEFINED field.".format(section.name, entry.name, field_name, field_value))
-                field_data = EDS_UNDEFINED(field_value)
+                field_data = VENDOR_SPECIFIC(field_value)
+            elif UNDEFINED.validate(field_value):
+                logger.warning("Unknown Field [{}].{}.{} = {}. Switched to UNDEFINED field.".format(section.name, entry.name, field_name, field_value))
+                field_data = UNDEFINED(field_value)
             else:
                 raise Exception("Unknown Field [{}].{}.{} = {} with no matching data types.".format(section.name, entry.name, field_name, field_value))
 
@@ -427,10 +331,10 @@ class EDS:
                 elif field_value != "":
                     logger.error("Data_type mismatch! [{}].{}.{} = ({}), should be a type of: {}"
                          .format(section.name, entry.name, field_name, field_value, types_str))
-                    if EDS_VENDORSPEC.validate(field_value):
-                        field_data = EDS_VENDORSPEC(field_value)
+                    if VENDOR_SPECIFIC.validate(field_value):
+                        field_data = VENDOR_SPECIFIC(field_value)
                     else:
-                        field_data = EDS_UNDEFINED(field_value)
+                        field_data = UNDEFINED(field_value)
 
         field = Field(entry, field_name, field_data, len(entry.fields))
 
@@ -508,7 +412,7 @@ class EDS:
                     field_data = dtype(field_value, [])
                     break
             except:
-                field_data = EDS_UNDEFINED(field_value)
+                field_data = UNDEFINED(field_value)
         """
     def save(self, filename, overwrite = False):
         if os.path.isfile(filename) and overwrite == False:
@@ -729,7 +633,7 @@ class Field:
 
     @value.setter
     def value(self, value):
-        if type(self.data) != EMPTY or type(self.data) != EDS_UNDEFINED:
+        if type(self.data) != EMPTY or type(self.data) != UNDEFINED:
             if type(self.data).validate(value, self.data.range):
                 self.data.value = value
                 return

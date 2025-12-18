@@ -77,9 +77,45 @@ logging.basicConfig(level=logging.DEBUG,
                         KEYWORDVALUE }  FOOTERCOMENT }
 '''
 
-
-
 SECTION_NAME_VALID_SYMBOLES = "-.\\_/"
+
+class SYMBOLS(ENUMS):
+    ASSIGNMENT      = '='
+    COMMA           = ','
+    SEMICOLON       = ';'
+    COLON           = ':'
+    MINUS           = '-'
+    UNDERLINE       = '_'
+    PLUS            = '+'
+    POINT           = '.'
+    BACKSLASH       = '\\'
+    QUOTATION       = '\"'
+    TAB             = '\t'
+    DOLLAR          = '$'
+    OPENING_BRACKET = '['
+    CLOSING_BRACKET = ']'
+    OPENING_BRACE   = '{'
+    CLOSING_BRACE   = '}'
+    AMPERSAND       = '&'
+    SPACE           = ' '
+    LF              = '\n'
+    CR              = '\r'
+    EOF             = None
+    OPERATORS       = [ASSIGNMENT]
+    SEPARATORS      = [COMMA, SEMICOLON]
+
+class TOKEN_TYPES(ENUMS):
+    EOF        = 0
+    DATE       = 1
+    TIME       = 2
+    NUMBER     = 3
+    STRING     = 4
+    COMMENT    = 5
+    SECTION    = 6
+    OPERATOR   = 7
+    SEPARATOR  = 8
+    IDENTIFIER = 9
+    DATASET    = 10
 
 class Token():
     def __init__(self, type, value, cursor):
@@ -95,7 +131,7 @@ class Token():
             str(self.offset).rjust(5),
             str(self.line).rjust(4),
             str(self.col).rjust(3),
-            TOKEN_TYPE.stringify(self.type).ljust(11),
+            TOKEN_TYPES.stringify(self.type).ljust(11),
             self.value)
 
 class Cursor():
@@ -146,7 +182,7 @@ class Lexer():
 
             if token is None:
                 if ch is SYMBOLS.EOF:
-                    token = Token(TOKEN_TYPE.EOF, '', cursor=self.cursor)
+                    token = Token(TOKEN_TYPES.EOF, '', cursor=self.cursor)
                     break
 
                 if ch.isspace():
@@ -154,7 +190,7 @@ class Lexer():
                     continue
 
                 if ch == SYMBOLS.DOLLAR:
-                    token = Token(TOKEN_TYPE.COMMENT, '', self.cursor)
+                    token = Token(TOKEN_TYPES.COMMENT, '', self.cursor)
                     next = self.look_ahead()
                     if next == SYMBOLS.LF or next == SYMBOLS.EOF:
                         break
@@ -164,46 +200,46 @@ class Lexer():
                     continue
 
                 if ch == SYMBOLS.OPENING_BRACKET:
-                    token = Token(TOKEN_TYPE.SECTION, '', self.cursor)
+                    token = Token(TOKEN_TYPES.SECTION, '', self.cursor)
                     continue
 
                 if ch == SYMBOLS.OPENING_BRACE:
-                    token = Token(TOKEN_TYPE.DATASET, ch, self.cursor)
+                    token = Token(TOKEN_TYPES.DATASET, ch, self.cursor)
                     continue
 
                 if ch == SYMBOLS.POINT or ch == SYMBOLS.MINUS or ch == SYMBOLS.PLUS  or ch.isdigit():
-                    token = Token(TOKEN_TYPE.NUMBER, ch, self.cursor)
+                    token = Token(TOKEN_TYPES.NUMBER, ch, self.cursor)
                     next = self.look_ahead()
                     if next in SYMBOLS.OPERATORS or next in SYMBOLS.SEPARATORS:
                         break
                     continue
 
                 if ch.isalpha():
-                    token = Token(TOKEN_TYPE.IDENTIFIER, ch, self.cursor)
+                    token = Token(TOKEN_TYPES.IDENTIFIER, ch, self.cursor)
                     next = self.look_ahead()
                     if next in SYMBOLS.OPERATORS or next in SYMBOLS.SEPARATORS:
                         break
                     continue
 
                 if ch == SYMBOLS.QUOTATION:
-                    token = Token(TOKEN_TYPE.STRING, '', self.cursor)
+                    token = Token(TOKEN_TYPES.STRING, '', self.cursor)
                     continue
 
                 if ch in SYMBOLS.OPERATORS:
-                    token = Token(TOKEN_TYPE.OPERATOR, ch, self.cursor)
+                    token = Token(TOKEN_TYPES.OPERATOR, ch, self.cursor)
                     break
 
                 if ch in SYMBOLS.SEPARATORS:
-                    token = Token(TOKEN_TYPE.SEPARATOR, ch, self.cursor)
+                    token = Token(TOKEN_TYPES.SEPARATOR, ch, self.cursor)
                     break
 
-            if token.type == TOKEN_TYPE.COMMENT:
+            if token.type == TOKEN_TYPES.COMMENT:
                 if ch == SYMBOLS.LF or ch == SYMBOLS.CR or ch == SYMBOLS.EOF:
                     break
                 token.value += ch
                 continue
 
-            if token.type is TOKEN_TYPE.SECTION:
+            if token.type is TOKEN_TYPES.SECTION:
                 if ch == SYMBOLS.LF:
                     raise Exception(".lexer:> Unexpected end of line during processing of section data at offset:{}".format(cursor.offset))
                 if ch == SYMBOLS.EOF:
@@ -233,20 +269,20 @@ class Lexer():
                 token.value += ch
                 continue
 
-            if token.type is TOKEN_TYPE.NUMBER:
+            if token.type is TOKEN_TYPES.NUMBER:
                 if ch.isspace():
                     break
                 # Switching the token type to other types
-                if   ch is SYMBOLS.COLON:     token.type = TOKEN_TYPE.TIME
-                elif ch is SYMBOLS.MINUS:     token.type = TOKEN_TYPE.DATE
-                elif ch is SYMBOLS.UNDERLINE: token.type = TOKEN_TYPE.IDENTIFIER
+                if   ch is SYMBOLS.COLON:     token.type = TOKEN_TYPES.TIME
+                elif ch is SYMBOLS.MINUS:     token.type = TOKEN_TYPES.DATE
+                elif ch is SYMBOLS.UNDERLINE: token.type = TOKEN_TYPES.IDENTIFIER
 
                 token.value += ch
                 if self.look_ahead() in SYMBOLS.OPERATORS or self.look_ahead() in SYMBOLS.SEPARATORS:
                     break
                 continue
 
-            if token.type is TOKEN_TYPE.IDENTIFIER:
+            if token.type is TOKEN_TYPES.IDENTIFIER:
                 if ch == SYMBOLS.EOF or ch == SYMBOLS.LF:
                     break
 
@@ -258,7 +294,7 @@ class Lexer():
                     break
                 continue
 
-            if token.type is TOKEN_TYPE.STRING:
+            if token.type is TOKEN_TYPES.STRING:
                 if ch == SYMBOLS.QUOTATION and self.lookbehind() != SYMBOLS.BACKSLASH:
                     break
 
@@ -268,7 +304,7 @@ class Lexer():
                 token.value += ch
                 continue
 
-            if token.type is TOKEN_TYPE.DATASET:
+            if token.type is TOKEN_TYPES.DATASET:
                 if self.look_ahead() == SYMBOLS.SEMICOLON:
                     break
 
@@ -277,7 +313,7 @@ class Lexer():
                     break
                 continue
 
-            if token.type is TOKEN_TYPE.TIME:
+            if token.type is TOKEN_TYPES.TIME:
                 if ch.isspace():
                     break
 
@@ -289,7 +325,7 @@ class Lexer():
                     break
                 continue
 
-            if token.type is TOKEN_TYPE.DATE:
+            if token.type is TOKEN_TYPES.DATE:
                 if ch.isspace():
                     break
 
