@@ -73,7 +73,6 @@ class Parser:
                 else:
                     # Store token data to concatenate field values if required
                     field_value = token.value
-                    field_type = token.type
 
                     # Strings can be teared down into multiple lines
                     if token.type == TOKEN_TYPES.STRING:
@@ -84,7 +83,7 @@ class Parser:
                     else:
                         token = self.lexer.get_token()
 
-                    self.field_in_process = self.eds.add_field(self.section_in_process.name, self.entry_in_process.name, field_value, field_type)
+                    self.field_in_process = self.eds.add_field(self.section_in_process.name, self.entry_in_process.name, field_value)
 
                 if self.field_in_process is None:
                     raise Exception("Unable to create Field: {}".format(token.value))

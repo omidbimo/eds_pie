@@ -68,7 +68,7 @@ class EDS_RefLib:
         """
         entry = None
 
-        if entry_name[-1].isdigit(): # Incremental entry_name
+        if entry_name[-1].isdigit(): # Enumerated Entry
             entry_name = entry_name.rstrip(digits) + "N"
 
         section = self.get_section(section_keyword)
@@ -82,27 +82,37 @@ class EDS_RefLib:
                 entry = section["entries"].get(entry_name, None)
         return entry
 
+    def has_field(self, section_keyword, entry_name, field_index):
+        field = None
+        entry = self.get_entry(section_keyword, entry_name)
+        if entry:
+            """
+            If the requested index is greater than listed fields in the lib,
+            the field is possibly an enumerated field. re-calculate the index.
+            """
+            fields = entry.get("fields")
+            if field_index < len(entry["fields"]) or entry.get("enumerated_fields", None):
+                return True
+        return False
+
     def get_field_byindex(self, section_keyword, entry_name, field_index):
         """
         To get a field dictionary by its section name and entry name and field index
         """
         field = None
-        if entry_name[-1].isdigit(): # Incremental entry_name
-            entry_name = entry_name.rstrip(digits) + "N"
-
         entry = self.get_entry(section_keyword, entry_name)
         if entry:
             """
-            The requested index is greater than listed fields in the lib,
-            Consider the field as Nth field filed and re-calculate the index.
+            If the requested index is greater than listed fields in the lib,
+            the field is possibly an enumerated field. re-calculate the index.
             """
-            if field_index >= len(entry["fields"]) and entry.get("enumerated_fields", None):
-                # Calculating reference field index
-                field_index = (field_index % entry["enumerated_fields"]["enum_member_count"]) + entry["enumerated_fields"]["first_enum_field"] - 1
-            try:
+            fields = entry.get("fields")
+
+            if field_index < len(entry["fields"]) or entry.get("enumerated_fields", None):
+                if field_index >= len(entry["fields"]):
+                    # Calculating reference field index
+                    field_index = (field_index % entry["enumerated_fields"]["enum_member_count"]) + entry["enumerated_fields"]["first_enum_field"] - 1
                 field = entry["fields"][field_index]
-            except:
-                field = None
         return field
 
     def get_field_byname(self, section_keyword, entry_name, field_name):
@@ -110,10 +120,6 @@ class EDS_RefLib:
         To get a field dictionary by its section name and entry name and field name
         """
         field = None
-
-        if entry_name[-1].isdigit(): # Incremental entry_name
-            entry_name = entry_name.rstrip(digits) + "N"
-
         entry = self.get_entry(section_keyword, entry_name)
         if entry:
             if field_name[-1].isdigit(): # Incremental field_name
@@ -140,18 +146,48 @@ class EDS_RefLib:
     def get_type(self, type_name):
         return getattr(__import__("cip_eds_types"), type_name, None)
 
+    def get_field_data_types(self, section_keyword, entry_name, field_index):
+        field = self.get_field_byindex(section_keyword, entry_name, field_index)
+        if field is not None:
+            return field.get("data_types", None)
+        return None
+
+    def get_field_name(self, section_keyword, entry_name, field_index):
+        field = self.get_field_byindex(section_keyword, entry_name, field_index)
+        if field is not None:
+            return field.get("name", None)
+        return None
+
+    def find_proper_data_type_for_field_value(self, section_keyword, entry_name, field_index, field_value):
+        ref_field = self.get_field_byindex(section_keyword, entry_name, field_index)
+        if ref_field is not None:
+            cip_data_instance = None
+            ref_data_types = ref_field.get("data_types", {})
+
+            for type_name, type_info in ref_data_types.items():
+                if self.validate(type_name, type_info, field_value):
+                    return type_name, type_info
+
+        return None
+
     def validate(self, type_name, type_info, value):
         dt = self.get_type(type_name)
         if dt:
             return dt.validate(value, type_info)
         return False
 
+    def is_required_field(self, section_keyword, entry_name, field_index):
+        field = self.get_field_byindex(section_keyword, entry_name, field_index)
+        if field:
+            return field.get("required", False)
+        return False
+    """
     def is_required_field(self, section_keyword, entry_name, field_name):
         field = self.get_field_byname(section_keyword, entry_name, field_name)
         if field:
             return field["required"]
         return False
-
+    """
 class EDS:
 
     def __init__(self):
@@ -222,10 +258,10 @@ class EDS:
             return entry_name in section.entries.keys()
         return False
 
-    def has_field(self, section, entry_name, field):
+    def has_field(self, section, entry_name, field_index):
         entry = self.get_entry(section, entry_name)
         if entry:
-            return fieldindex < len(entry.fields)
+            return field_index < len(entry.fields)
         return False
 
     def add_section(self, section_name):
@@ -261,7 +297,7 @@ class EDS:
 
         return entry
 
-    def add_field(self, section_name, entry_name, field_value, field_datatype=None):
+    def add_field(self, section_name, entry_name, field_value, field_data_type=None):
         """
         Fields must be added in order and no random access is allowed.
         """
@@ -273,75 +309,7 @@ class EDS:
         entry = section.get_entry(entry_name)
         if entry is None:
             raise Exception("Entry not found! [{}]".format(entry_name))
-
-        # Getting field"s info from eds reference libraries
-        field_data = None
-        ref_data_types = []
-        ref_field = self.ref_libs.get_field_byindex(section.name, entry.name, len(entry.fields))
-
-        if ref_field:
-            # Reference field is now known. Use the ref information to create the field
-            ref_data_types = ref_field.get("data_types", None)
-            field_name = ref_field["name"] or entry.name
-            # Serialize the field name if the entry can have enumerated fields like AssemN and ParamN.
-            if self.ref_libs.get_entry(section_name, entry_name).get("enumerated_fields", None):
-                field_name = field_name.rstrip("N") + str(len(entry.fields) + 1)
-        else:
-            # No reference field was found. Use a general naming scheme
-            field_name = "field{}".format(len(entry.fields))
-
-        # Validate field"s value and assign a data type to the field
-        if field_value == "":
-            logger.info("Field [{}].{}.{} has no value. Switched to EMPTY field.".format(section.name, entry.name, field_name))
-            field_data = EMPTY(field_value)
-
-        elif not ref_data_types:
-            # The filed is unknown and no ref_types are in hand. Try some default data types.
-            if VENDOR_SPECIFIC.validate(field_value):
-                logger.warning("Unknown Field [{}].{}.{} = {}. Switched to VENDOR_SPECIFIC field.".format(section.name, entry.name, field_name, field_value))
-                field_data = VENDOR_SPECIFIC(field_value)
-            elif UNDEFINED.validate(field_value):
-                logger.warning("Unknown Field [{}].{}.{} = {}. Switched to UNDEFINED field.".format(section.name, entry.name, field_name, field_value))
-                field_data = UNDEFINED(field_value)
-            else:
-                raise Exception("Unknown Field [{}].{}.{} = {} with no matching data types.".format(section.name, entry.name, field_name, field_value))
-
-        else:
-            for type_name, type_info in ref_data_types.items(): # Getting the listed data types and their acceptable ranges
-                if self.ref_libs.validate(type_name, type_info, field_value):
-                    # creating type instance with field value
-                    field_data = self.ref_libs.get_type(type_name)(field_value, type_info)
-
-            if field_data is None: # No proper type was found
-                # Providing info on potential acceptable data types
-                type_list = []
-                for type_name, type_info in ref_data_types.items():
-                    if type_info:
-                        type_list.append((type_name, type_info))
-                    else:
-                        try:
-                            type_list.append((type_name, self.ref_libs.get_type(type_name)._range))
-                        except:
-                            continue
-                types_str = ", ".join("<{}({})>".format(self.ref_libs.get_type(type_name).__name__, type_info) for type_name, type_info in type_list)
-
-                if self.ref_libs.get_field_byname(section.name, entry.name, field_name)["required"]:
-                    raise Exception("Data type mismatch! [{}].{}.{} = ({}), should be a type of: {}"
-                         .format(section.name, entry.name, field_name, field_value, types_str))
-                elif field_value != "":
-                    logger.error("Data_type mismatch! [{}].{}.{} = ({}), should be a type of: {}"
-                         .format(section.name, entry.name, field_name, field_value, types_str))
-                    if VENDOR_SPECIFIC.validate(field_value):
-                        field_data = VENDOR_SPECIFIC(field_value)
-                    else:
-                        field_data = UNDEFINED(field_value)
-
-        field = Field(entry, field_name, field_data, len(entry.fields))
-
-        field._data_types = ref_data_types
-        entry.fields.append(field)
-
-        return field
+        return entry.add_field(field_value, field_data_type)
 
     def remove_section(self, section_name, removetree = False):
         section = self.get_section(section_name)
@@ -573,8 +541,63 @@ class Entry:
         self.hcomment = ""
         self.fcomment = ""
 
-    def add_field(self, field_value, datatype = None):
-        return self.parent.parent.add_field(self.parent.name, self.name, field_value, datatype)
+    def get_ref_libs(self):
+        parent_section = self.parent
+        parent_eds = parent_section.parent
+        return parent_eds.ref_libs
+
+    def add_field(self, field_value, field_data_type=None):
+
+        entry_name = self.name
+        section_name = self.parent.name
+        ref_libs = self.get_ref_libs()
+
+        field_data_object = None # This going to be an instance of CIP_TYPE
+        field_name = "field{}".format(len(self.fields))
+
+        # Try to find a proper CIP_TYPE for this field using the reference libraries.
+        if ref_libs.has_field(section_name, entry_name, len(self.fields)):
+            field_name = field_name.rstrip("N") + str(len(self.fields) + 1)
+            dt = ref_libs.find_proper_data_type_for_field_value(section_name, entry_name, len(self.fields), field_value)
+            if dt is None:
+                # Wasn't able to assign a data type to field using available references
+                # Introduce the list of acceptable data types for this specific field
+                ref_data_types = ref_libs.get_field_data_types(section_name, entry_name, len(self.fields))
+                types_str = ", ".join("<{}({})>".format(ref_libs.get_type(type_name).__name__, type_info) for type_name, type_info in ref_data_types.items())
+
+                if ref_libs.is_required_field(section_name, entry_name, len(self.fields)):
+                    raise Exception("Data type mismatch! [{}].{}.{} = ({}), Field should be of type: {}".format(section_name, entry_name, field_name, field_value, types_str))
+                elif field_value != "":
+                    logger.error("Data_type mismatch! [{}].{}.{} = ({}), Field should be of type: {}".format(section_name, entry_name, field_name, field_value, types_str))
+            else:
+                # CIP_TYPE is found: instantiate it
+                type_name, type_info = dt
+                field_data_object = ref_libs.get_type(type_name)(field_value, type_info)
+
+                assert field_data_object is not None
+
+        if field_data_object is None:
+            # Wasn't able to assign a CIP_TYPE to the field
+            if field_data_type is not None:
+                field_data_object = field_data_type(field_value)
+            elif field_value == "":
+                logger.info("Field [{}].{}.{} has no value. Switched to EMPTY field.".format(section_name, entry_name, field_name))
+                field_data_object = EMPTY(field_value)
+            else:
+                if VENDOR_SPECIFIC.validate(field_value):
+                    logger.warning("Unknown Field [{}].{}.{} = {}. Switched to VENDOR_SPECIFIC field.".format(section_name, entry_name, field_name, field_value))
+                    field_data_object = VENDOR_SPECIFIC(field_value)
+                else:
+                    logger.warning("Unknown Field [{}].{}.{} = {}. Switched to UNDEFINED field.".format(section_name, entry_name, field_name, field_value))
+                    field_data_object = UNDEFINED(field_value)
+
+        assert field_data_object is not None
+
+        field = Field(self, field_name, field_data_object, len(self.fields))
+        field.data_types = ref_libs.get_field_data_types(section_name, entry_name, len(self.fields))
+        self.fields.append(field)
+
+        return field
 
     def has_field(self, field):
         if isinstance(field, str): # field name
@@ -588,13 +611,6 @@ class Entry:
             raise TypeError("Inappropriate data type: {}".format(type(field)))
 
     def get_field(self, field_index):
-        """
-        if isinstance(field, str): # field name
-            fieldname = field.replace(" ", "").lower()
-            for field in self.fields:
-                if fieldname == field:
-                    return field
-        """
         if field_index < len(self.fields):
             return self.fields[field_index]
         return None
@@ -645,7 +661,7 @@ class Field:
                     self.data = datatype(value, valid_data)
                     return
         types_str = ", ".join("<{}>{}".format(datatype.__name__, valid_data)
-                                for datatype, valid_data in self._data_types)
+                                for datatype, valid_data in self.data_types)
         raise Exception("Unable to set Field value! Data_type mismatch!"
             " [{}].{}.{} = ({}), should be a type of: {}"
             .format(self.parent.parent.name, self.parent.name, self.name, value, types_str))

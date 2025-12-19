@@ -554,7 +554,7 @@
           "name": "Enumeration",
           "required": false,
           "enumerated_fields": {
-            "first_enum_field": 2,
+            "first_enum_field": 1,
             "enum_member_count": 2
           },
           "fields": [
