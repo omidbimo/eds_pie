@@ -590,15 +590,26 @@ class Entry:
             raise TypeError("Inappropriate data type: {}".format(type(field)))
 
     def get_field(self, field_index):
-        if field_index < len(self.fields):
-            return self.fields[field_index]
-        return None
+        """
+        Also works with Negative indexing
+        """
+        field = None
+        try:
+            field = self.fields[field_index]
+        except:
+            pass
+        return field
 
     def get_value(self, field_index=0):
-        field = self.get_field(field_index)
-        if field:
-            return field.value
-        return None
+        """
+        Also works with Negative indexing
+        """
+        value = None
+        try:
+            value = self.fields[field_index].value
+        except:
+            pass
+        return value
 
     def list(self, indent=0):
         print("".ljust(indent, " ") + self.__repr__())
