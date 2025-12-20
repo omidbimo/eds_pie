@@ -28,17 +28,18 @@ $  Changes in this file can cause configuration or communication problems.
 $
 $ ****************************************************************************
 
-[File]
+[File] $ comment1
         DescText = "A Demo EDS file";
+        $ comment12
         CreateDate = 01-01-2021;
         CreateTime = 10:50:30;
         ModDate = 01-01-2021;
         ModTime = 10:50:30;
         Revision = 1.1;
         HomeURL = "https://github.com/omidbimo/eds_pie";
-
+$ comment 122
 [Device]
-        VendCode = 65535;
+        VendCode = 65535;$ Vendor Code
         VendName = "omidbimo";
         ProdType = 12;
         ProdTypeStr = "Communications Adapter";
@@ -46,6 +47,75 @@ $ ****************************************************************************
         MajRev = 1;
         MinRev = 1;
         ProdName = "EDS pie";
+        IconContents =
+                "AvvBAAEAIHGQAAAAAAD+AUITFgKUZ/AACgAAAAgAAAAQAAAAAEABAAAAAAAAAAA"
+                "AvvAAAAAAHGAEAAAABAAAUITAAKUZ/AgICAAIAAAAD/AAAAgIAAAP//AAAAgAAA"
+                "AvvAAACAgHGA//8AAACAAUIT/wKUZ/AAIAA/wD/AMDAwAD///8A////////////"
+                "/vv//////HG//////////UIT//KUZ//////////////////////////////////"
+                "/vv//////HG//////////UITERKUZ/R7v////////7uERYAAAEREAEf/////+ER"
+                "AvvRHu7u7HGhAf////4QAUIT7uKUZ/u7u7u7hDv///gHu7u7u7u7u7u7uERHv//"
+                "Hvvu7u7u7HGu7hEQEQ7//UIT/+KUZ/u7u7u7uERERER7/8R7u7u7u7u7u4REQAB"
+                "Evv/4RHu7HGu7uEREREREUIT//KUZ/QHu7uERERERERERERDv/xEQ7hERERERER"
+                "EvvRERHv/HGREREREREREUITERKUZ/QH/8RERERERERERERERERER7/4RERERER"
+                "EvvREREREHGO//EREREREUITERKUZ/REREREf/+ERERERERERERERERARH//xER"
+                "EvvREREREHGRERER///xEUITERKUZ/QERERERABEf//8RERERERERERERERER7/"
+                "/vvRAREREHGREREREREf/UIT4RKUZ/REREREREREREe//////4RERERERERER7v"
+                "/vv/////8HGREREe7////UIT//KUZ//////7v//////////////////////////"
+                "/vv//////HG//////////UIT//KUZ//////////////////////////////////"
+                "/vv//////HGAAAAAAAAAAUITAAKUZ/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                "AvvAAAAAAHGAAAAAAAAAAUITAAKUZ/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                "AvvAAAAAAHGAAAAAAAAAAUITAAKUZ/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                "AvvAAAAAAHGAAAAAAAAAAUITAAKUZ/AAAA=";
 
 [Device Classification]
         Class1 = EtherNetIP;
+
+[TCP/IP Interface Class]
+        Revision = 1;
+        MaxInst = 22;
+        Number_Of_Static_Instances = 1;
+        Max_Number_Of_Dynamic_Instances = 0;
+        Class_Attributes =
+                1,
+                2,
+                3,
+                6,
+                7;
+        Instance_Attributes =
+                1,
+                2,
+                3,
+                4,
+                5,
+                6;
+        Class_Services =
+                0x01,
+                0x0E;
+        Instance_Services =
+                0x01,
+                0x02,
+                0x0E,
+                0x10;
+
+[Params]
+
+    $
+    $ 	EtherNet Link object vendor specific class attributes
+    $
+
+        Param101 =
+                0,                      $ reserved, shall equal 0
+                6,"20 F6 24 00 30 65",  $ Link Path Size, Link Path
+                0x0010,                 $ Descriptor: read only
+                0xD3,                   $ Data Type : DWORD
+                4,                      $ Data Size in bytes
+                "Global Link Status",   $ name
+                "",                     $ units
+                "on = active, off = not active",    $ help string
+                0x00000000,0x1FFFFFF,0, $ min, max, default data values
+                ,,,,                    $ mult, div, base, offset scaling
+                ,,,,                    $ mult, div, base, offset links
+                ;                       $ decimal places
+$ ****************************************************************************
+$ EOF
+$ ****************************************************************************
