@@ -55,7 +55,7 @@ class Parser:
 
                 self.expect(token, TOKEN_TYPES.IDENTIFIER)
                 self.entry_in_process = None
-                self.entry_in_process = self.eds.add_entry(self.section_in_process.name, token.value)
+                self.entry_in_process = self.eds.add_entry(self.section_in_process.keyword, token.value)
 
                 if self.entry_in_process is None:
                     raise Exception("Unable to create Entry: {}".format(token.value))
@@ -69,7 +69,7 @@ class Parser:
 
                 if self.match(token, TOKEN_TYPES.SEPARATOR, SYMBOLS.SEMICOLON) or self.match(token, TOKEN_TYPES.SEPARATOR, SYMBOLS.COMMA):
                     # Empty Field
-                    self.field_in_process = self.eds.add_field(self.section_in_process.name, self.entry_in_process.name, "")
+                    self.field_in_process = self.eds.add_field(self.section_in_process.keyword, self.entry_in_process.keyword, "")
                 else:
                     # Store token data to concatenate field values if required
                     field_value = token.value
@@ -83,7 +83,7 @@ class Parser:
                     else:
                         token = self.lexer.get_token()
 
-                    self.field_in_process = self.eds.add_field(self.section_in_process.name, self.entry_in_process.name, field_value)
+                    self.field_in_process = self.eds.add_field(self.section_in_process.keyword, self.entry_in_process.keyword, field_value)
 
                 if self.field_in_process is None:
                     raise Exception("Unable to create Field: {}".format(token.value))
@@ -109,7 +109,7 @@ class Parser:
 
                 self.expect(token, TOKEN_TYPES.IDENTIFIER)
                 self.entry_in_process = None
-                self.entry_in_process = self.eds.add_entry(self.section_in_process.name, token.value)
+                self.entry_in_process = self.eds.add_entry(self.section_in_process.keyword, token.value)
                 if self.entry_in_process is None:
                     raise Exception("Unable to create entry: {}".format(token.value))
                 # Expecting at least one field.

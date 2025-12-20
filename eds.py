@@ -224,42 +224,42 @@ class EDS:
         """
         To get an field by its section name/section id, its entry name and its field anme/field index
         """
-        entry = self.get_entry(section, entry_keyword)
+        entry = self.get_entry(section_keyword, entry_keyword)
         if entry:
             return entry.get_field(field_index)
         return None
 
-    def get_value(self, section, entry_keyword, field):
-        field = self.get_field(section, entry_keyword, field)
+    def get_value(self, section_keyword, entry_keyword, field):
+        field = self.get_field(section_keyword, entry_keyword, field)
         if field:
             return field.value
         return None
 
-    def set_value(self, section, entry_keyword, field, value):
-        field = self.get_field(section, entry_keyword, field)
+    def set_value(self, section_keyword, entry_keyword, field, value):
+        field = self.get_field(section_keyword, entry_keyword, field)
         if field is None:
             raise Exception("Not a valid field! Unable to set the field value.")
         field.value = value
 
 
-    def has_section(self, section):
+    def has_section(self, section_keyword):
         """
         To check if the EDS contains a section by its EDS keyword or by its CIP classID.
         """
-        if isinstance(section, str):
-            return section in self.sections.keys()
-        if isinstance(section, numbers.Number):
-            return self.ref_libs.get_section_name(section, self.protocol) in self.sections.keys()
-        raise TypeError("Inappropriate data type: {}".format(type(section)))
+        if isinstance(section_keyword, str):
+            return section_keyword in self.sections.keys()
+        if isinstance(section_keyword, numbers.Number):
+            return self.ref_libs.get_section_name(section_keyword, self.protocol) in self.sections.keys()
+        raise TypeError("Inappropriate data type: {}".format(type(section_keyword)))
 
-    def has_entry(self, section, entry_keyword):
-        section = self.get_section(section)
-        if section:
-            return entry_keyword in section.entries.keys()
+    def has_entry(self, section_keyword, entry_keyword):
+        section_keyword = self.get_section(section_keyword)
+        if section_keyword:
+            return entry_keyword in section_keyword.entries.keys()
         return False
 
-    def has_field(self, section, entry_keyword, field_index):
-        entry = self.get_entry(section, entry_keyword)
+    def has_field(self, section_keyword, entry_keyword, field_index):
+        entry = self.get_entry(section_keyword, entry_keyword)
         if entry:
             return field_index < len(entry.fields)
         return False
@@ -271,10 +271,14 @@ class EDS:
         if section_keyword in self.sections.keys():
             raise Exception("Duplicate section! [{}}".format(section_keyword))
 
-        if self.ref_libs.has_section(section_keyword) == False:
+        section_name = section_keyword
+        try:
+            section_name = self.ref_libs.get_section(section_keyword)["name"]
+        except Exception as ex:
+            #print(ex)
             logger.warning("Unknown Section [{}]".format(section_keyword))
 
-        section = Section(self, section_keyword, self.ref_libs.get_section_id(section_keyword))
+        section = Section(self, section_keyword, section_name, self.ref_libs.get_section_id(section_keyword))
         self.sections.update({section_keyword: section})
 
         return section
@@ -308,11 +312,11 @@ class EDS:
             del self.sections[section_keyword]
         elif removetree:
             for entry in section.entries:
-                self.remove_entry(section_keyword, entry.name, removetree)
+                self.remove_entry(section_keyword, entry.keyword, removetree)
             del self.sections[section_keyword]
         else:
             logger.error("Unable to remove section! [{}] contains one or more entries."
-                "Remove the entries first or use removetree = True".format(section.name))
+                "Remove the entries first or use removetree = True".format(section.keyword))
 
     def remove_entry(self, section_keyword, entry_keyword, removetree = False):
         entry = self.get_entry(section_keyword, entry_keyword)
@@ -324,53 +328,12 @@ class EDS:
             entry.fields = []
         else:
             logger.error("Unable to remove entry! [{}].{} contains one or more fields."
-                "Remove the fields first or use removetree = True".format(section.name, entry.name))
+                "Remove the fields first or use removetree = True".format(section.keyword, entry.keyword))
 
     def remove_field(self, section_keyword, sentryname, fieldindex):
         # TODO
         pass
 
-    def semantic_check(self):
-        required_sections = self.ref_libs.get_required_sections()
-
-        for section_keyword, section in required_sections.items():
-            if self.has_section(section_keyword):
-                continue
-            raise Exception("Missing required section! [{}]".format(section_keyword))
-        """
-        #TODO: re-enable this part
-        for section in self.sections:
-            requiredentries = self.ref.get_required_entries(section.name)
-            for entry in requiredentries:
-                if self.has_entry(section.name, entry.keyword) == False:
-                    logger.error("Missing required entry! [{}].\"{}\"{}"
-                        .format(section.name, entry.keyword, entry.name))
-
-            for entry in section.entries:
-                requiredfields = self.ref.get_required_fields(section.name, entry.name)
-                for field in requiredfields:
-                    if self.has_field(section.name, entry.name, field.placement) == False:
-                        logger.error("Missing required field! [{}].{}.{} #{}"
-                            .format(section.name, entry.name, field.name, field.placement))
-        """
-        """
-        if type_name == "EDS_TYPEREF":
-
-            Type of a field is determined by value of another field. A referenced-type has to be validated.
-            The name of the ref field that contains the a data_type, is listed in the primary field"s
-            datatype.valid_ranges(typeinfo) which itself is a list of names
-            Example: The datatype of Params.Param1.MinimumValue is determined by Params.Param1.DataType
-
-            # TODO: here we read only the first item of the reference field list. Iterating the list might be a better way
-            typeid = self.get_field(section_keyword, entry_keyword, typeinfo[0]).value
-            try:
-                dtype = self.ref_libs.get_type(typeid)
-                if dtype.validate(field_value, []):
-                    field_data = dtype(field_value, [])
-                    break
-            except:
-                field_data = UNDEFINED(field_value)
-        """
     def save(self, filename, overwrite = False):
         if os.path.isfile(filename) and overwrite == False:
             raise Exception("Failed to write to file! \"{}\" already exists and overrwite is not enabled.".format(filename))
@@ -414,7 +377,6 @@ class EDS:
 
         return " ".join(item for item in items)
 
-
     def __str__(self):
         indent = 4
         if self.hcomment != "":
@@ -429,7 +391,7 @@ class EDS:
         for section in sorted_sections:
             if section.hcomment != "":
                 eds_str += "".join("$ {}\n".format(line.strip()) for line in section.hcomment.splitlines())
-            eds_str += "\n[{}]".format(section.name)
+            eds_str += "\n[{}]".format(section.keyword)
 
             if section.fcomment != "":
                 eds_str += "\n"
@@ -442,7 +404,7 @@ class EDS:
 
                 if entry.hcomment != "":
                     eds_str += "".join("".ljust(indent, " ") + "$ {}\n".format(line.strip()) for line in entry.hcomment.splitlines())
-                eds_str += "".ljust(indent, " ") + "{} =".format(entry.name)
+                eds_str += "".ljust(indent, " ") + "{} =".format(entry.keyword)
 
                 # fields
                 if len(entry.fields) == 1:
@@ -482,27 +444,32 @@ class EDS:
         return eds_str
 
 class Section:
-    def __init__(self, eds, name, class_id=0):
+    def __init__(self, eds, keyword, name, class_id=0):
         self.parent  = eds
-        self.class_id = class_id
+        self.keyword = keyword
         self.name = name
+        self.class_id = class_id
         self.entries = {}
         self.hcomment = ""
         self.fcomment = ""
 
     def add_entry(self, entry_keyword):
         if entry_keyword == "":
-            raise Exception("Invalid Entry name! [{}]\"{}\"".format(self.name, entry_keyword))
+            raise Exception("Invalid Entry keyword! [{}]\"{}\"".format(self.keyword, entry_keyword))
 
         if entry_keyword in self.entries.keys():
-            raise Exception("Duplicate Entry! [{}]\"{}\"".format(self.name, entry_keyword))
+            raise Exception("Duplicate Entry! [{}]\"{}\"".format(self.keyword, entry_keyword))
 
+        entry_name = entry_keyword
         # Search for the same section:entry inside the reference lib
         ref_libs = self.get_ref_libs()
-        if ref_libs.has_entry(self.name, entry_keyword) == False:
-            logger.warning("Unknown Entry [{}].{}".format(self.name, entry_keyword))
+        try:
+            entry_name = ref_libs.get_entry(self.keyword, entry_keyword)["name"]
+        except Exception as ex:
+            #print(ex)
+            logger.warning("Unknown Entry [{}].{}".format(self.keyword, entry_keyword))
 
-        entry = Entry(self, entry_keyword)
+        entry = Entry(self, entry_keyword, entry_name)
         self.entries[entry_keyword] = entry
 
         return entry
@@ -534,15 +501,16 @@ class Section:
             entry.list(indent+4)
 
     def __str__(self):
-        return self.name
+        return self.keyword
 
     def __repr__(self):
-        return "SECTION({})".format(self.name)
+        return "SECTION({})".format(self.keyword)
 
 class Entry:
 
-    def __init__(self, section, name):
+    def __init__(self, section, keyword, name):
         self.parent = section
+        self.keyword = keyword
         self.name = name
         self.fields = [] # Unlike the sections and entries, fields are implemented as a list.
         self.hcomment = ""
@@ -555,8 +523,8 @@ class Entry:
 
     def add_field(self, field_value, field_data_type=None):
 
-        entry_keyword = self.name
-        section_keyword = self.parent.name
+        entry_keyword = self.keyword
+        section_keyword = self.parent.keyword
         ref_libs = self.get_ref_libs()
 
         field_data_object = None # This going to be an instance of CIP_TYPE
@@ -671,7 +639,7 @@ class Field:
                                 for datatype, valid_data in self.data_types)
         raise Exception("Unable to set Field value! Data_type mismatch!"
             " [{}].{}.{} = ({}), should be a type of: {}"
-            .format(self.parent.parent.name, self.parent.name, self.name, value, types_str))
+            .format(self.parent.parent.keyword, self.parent.keyword, self.name, value, types_str))
 
     @property
     def datatype(self):
