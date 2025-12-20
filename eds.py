@@ -191,8 +191,8 @@ class EDS_RefLib:
 class EDS:
 
     def __init__(self):
-        self.protocol  = None
-        self.sections  = {}
+        self.protocol = None
+        self.sections = {}
         self.ref_libs = EDS_RefLib()
         self.hcomment = "" # Heading comment
         self.fcomment = "" # End comment
@@ -209,7 +209,6 @@ class EDS:
             return self.sections.get(section_keyword)
 
         return self.sections.get(self.ref_libs.get_section_name(class_id))
-
 
     def get_entry(self, section_keyword, entry_keyword):
         """
@@ -229,18 +228,17 @@ class EDS:
             return entry.get_field(field_index)
         return None
 
-    def get_value(self, section_keyword, entry_keyword, field):
-        field = self.get_field(section_keyword, entry_keyword, field)
+    def get_value(self, section_keyword, entry_keyword, field_index=0):
+        field = self.get_field(section_keyword, entry_keyword, field_index)
         if field:
             return field.value
         return None
 
-    def set_value(self, section_keyword, entry_keyword, field, value):
-        field = self.get_field(section_keyword, entry_keyword, field)
+    def set_value(self, section_keyword, entry_keyword, field_index, value):
+        field = self.get_field(section_keyword, entry_keyword, field_index)
         if field is None:
             raise Exception("Not a valid field! Unable to set the field value.")
         field.value = value
-
 
     def has_section(self, section_keyword):
         """
@@ -491,6 +489,12 @@ class Section:
             return entry.get_field(field_index)
         return None
 
+    def get_value(self, entry_keyword, field_index=0):
+        field = self.get_field(entry_keyword, field_index)
+        if field:
+            return field.value
+        return None
+
     def get_ref_libs(self):
         parent_eds = self.parent
         return parent_eds.ref_libs
@@ -588,6 +592,12 @@ class Entry:
     def get_field(self, field_index):
         if field_index < len(self.fields):
             return self.fields[field_index]
+        return None
+
+    def get_value(self, field_index=0):
+        field = self.get_field(field_index)
+        if field:
+            return field.value
         return None
 
     def list(self, indent=0):
