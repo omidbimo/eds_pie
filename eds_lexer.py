@@ -152,7 +152,7 @@ class Lexer():
         self.cursor.offset += 1
 
         if self.cursor.offset  < self.eds_length:
-            ch = chr(self.eds_data[self.cursor.offset])
+            ch = self.eds_data[self.cursor.offset]
 
             self.cursor.col += 1
             if ch == SYMBOLS.LF:
@@ -165,7 +165,7 @@ class Lexer():
 
     def look_ahead(self, offset = 1):
         if self.cursor.offset + offset < self.eds_length:
-            return chr(self.eds_data[self.cursor.offset + offset])
+            return self.eds_data[self.cursor.offset + offset]
         return SYMBOLS.LF
 
     def lookbehind(self, offset = 1):

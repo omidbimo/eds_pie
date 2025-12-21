@@ -589,7 +589,7 @@ class Entry:
         else:
             raise TypeError("Inappropriate data type: {}".format(type(field)))
 
-    def get_field(self, field_index):
+    def get_field(self, field_index=0):
         """
         Also works with Negative indexing
         """
