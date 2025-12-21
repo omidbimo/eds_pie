@@ -181,13 +181,7 @@ class EDS_RefLib:
         if field:
             return field.get("required", False)
         return False
-    """
-    def is_required_field(self, section_keyword, entry_keyword, field_name):
-        field = self.get_field_byname(section_keyword, entry_keyword, field_name)
-        if field:
-            return field["required"]
-        return False
-    """
+
 class EDS:
 
     def __init__(self):
@@ -544,9 +538,7 @@ class Entry:
                 ref_data_types = ref_libs.get_field_data_types(section_keyword, entry_keyword, len(self.fields))
                 types_str = ", ".join("<{}({})>".format(ref_libs.get_type(type_name).__name__, type_info) for type_name, type_info in ref_data_types.items())
 
-                if ref_libs.is_required_field(section_keyword, entry_keyword, len(self.fields)):
-                    raise Exception("Data type mismatch! [{}].{}.{} = ({}), Field should be of type: {}".format(section_keyword, entry_keyword, field_name, field_value, types_str))
-                elif field_value != "":
+                if field_value != "":
                     logger.error("Data_type mismatch! [{}].{}.{} = ({}), Field should be of type: {}".format(section_keyword, entry_keyword, field_name, field_value, types_str))
             else:
                 # CIP_TYPE is found: instantiate it
