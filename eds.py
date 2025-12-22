@@ -256,7 +256,7 @@ class EDS:
             return field_index < len(entry.fields)
         return False
 
-    def add_section(self, section_keyword):
+    def add_section(self, section_keyword, line_number=0):
         if section_keyword == "":
             raise Exception("Invalid section keyword! [{}]".format(section_keyword))
 
@@ -270,19 +270,19 @@ class EDS:
             #print(ex)
             logger.warning("Unknown Section [{}]".format(section_keyword))
 
-        section = Section(self, section_keyword, section_name, self.ref_libs.get_section_id(section_keyword))
+        section = Section(self, section_keyword, section_name, self.ref_libs.get_section_id(section_keyword), line_number)
         self.sections.update({section_keyword: section})
 
         return section
 
-    def add_entry(self, section_keyword, entry_keyword):
+    def add_entry(self, section_keyword, entry_keyword, line_number=0):
         section = self.get_section(section_keyword)
         if section is None:
             raise Exception("Section not found! [{}]".format(section_keyword))
-        return section.add_entry(entry_keyword)
+        return section.add_entry(entry_keyword, line_number)
 
 
-    def add_field(self, section_keyword, entry_keyword, field_value, field_data_type=None):
+    def add_field(self, section_keyword, entry_keyword, field_value, field_data_type=None, line_number=0):
         """
         Fields must be added in order and no random access is allowed.
         """
@@ -294,7 +294,7 @@ class EDS:
         entry = section.get_entry(entry_keyword)
         if entry is None:
             raise Exception("Entry not found! [{}]".format(entry_keyword))
-        return entry.add_field(field_value, field_data_type)
+        return entry.add_field(field_value, field_data_type, line_number)
 
     def remove_section(self, section_keyword, removetree = False):
         section = self.get_section(section_keyword)
@@ -371,6 +371,8 @@ class EDS:
 
     def __str__(self):
         indent = 4
+        eds_str = ""
+
         if self.hcomment != "":
             eds_str = "".join("$ {}\n".format(line.strip()) for line in self.hcomment.splitlines())
 
@@ -381,71 +383,63 @@ class EDS:
         sorted_sections += [section for key, section in self.sections.items() if section not in sorted_sections]
 
         for section in sorted_sections:
-            if section.hcomment != "":
-                eds_str += "".join("$ {}\n".format(line.strip()) for line in section.hcomment.splitlines())
+            if section.hcomment:
+                eds_str += "\n" + "".join("$ {}".format(line.strip()) for line in section.hcomment.splitlines())
             eds_str += "\n[{}]".format(section.keyword)
 
             if section.fcomment != "":
-                eds_str += "\n"
-                eds_str += "\n".join("".ljust(indent, " ") + "$ {}".format(line.strip()) for line in section.fcomment.splitlines())
-
+                eds_str += "".ljust(indent, " ") + "$ {}".format(section.fcomment.strip())
             eds_str += "\n"
 
             # Entries
-            for key, entry in section.entries.items():
+            for _, entry in section.entries.items():
 
-                if entry.hcomment != "":
+                if entry.hcomment:
                     eds_str += "".join("".ljust(indent, " ") + "$ {}\n".format(line.strip()) for line in entry.hcomment.splitlines())
-                eds_str += "".ljust(indent, " ") + "{} =".format(entry.keyword)
+                eds_str += "".ljust(indent, " ") + "{} = ".format(entry.keyword)
 
                 # fields
-                if len(entry.fields) == 1:
-                    if "\n" in str(entry.fields[0].data):
-                        eds_str += "\n"
-                        eds_str += "\n".join("".ljust(2 * indent, " ") + line
-                            for line in str(entry.fields[0].data).splitlines())
-                        eds_str += ";"
-                    else:
-                        eds_str += "{};".format(entry.fields[0].data)
-                    if entry.fields[0].fcomment != "":
-                        eds_str += "".join("".ljust(indent, " ") +
-                            "$ {}\n".format(line.strip()) for line in entry.fields[0].fcomment.splitlines())
-                    eds_str += "\n"
-                else: # entry has multiple fields
-                    eds_str += "\n"
 
-                    for fieldindex, field in enumerate(entry.fields):
-                        singleline_field_str = "".ljust(2 * indent, " ") + "{}".format(field.data)
+                if len(entry.fields) == 1 and len(str(entry.fields[0].data).splitlines()) <= 1:
+                    # Print entry, field and comment on the same line
+                    eds_str += "{};".format(str(entry.fields[0].data))
+                    if entry.fields[0].fcomment:
+                        eds_str += "".ljust(indent, " ") + "$ {}".format(entry.fields[0].fcomment)
+                    eds_str += "\n"
+                else:
+                    # print fields on the next line in multiple lines
+                    eds_str += "\n"
+                    for index, field in enumerate(entry.fields):
+                        eds_str += "".ljust(2 * indent)
+                        field_str = ""
+                        field_str += "\n".ljust((2 * indent)+1, " ").join(line.strip() for line in str(field.data).splitlines())
 
-                        # separator
-                        if (fieldindex + 1) == len(entry.fields):
-                            singleline_field_str += ";"
+                        if index + 1 == len(entry.fields):
+                            field_str += ";"
                         else:
-                            singleline_field_str += ","
+                            field_str += ","
 
-                        # footer comment
-                        if field.fcomment != "":
-                            singleline_field_str = singleline_field_str.ljust(30, " ")
-                            singleline_field_str += "".join("$ {}".format(line.strip()) for line in field.fcomment.splitlines())
-                        eds_str += singleline_field_str + "\n"
-
+                        if field.fcomment:
+                            field_str = field_str.ljust(6 * indent, " ") + "$ {}".format(field.fcomment.strip())
+                        eds_str += field_str + "\n"
         # end comment
         eds_str += "\n"
-        if self.fcomment != "":
+        if self.fcomment:
             eds_str += "".join("$ {}\n".format(line.strip()) for line in self.fcomment.splitlines())
         return eds_str
 
 class Section:
-    def __init__(self, eds, keyword, name, class_id=0):
+    def __init__(self, eds, keyword, name, class_id=0, line_number=0):
         self.parent  = eds
         self.keyword = keyword
         self.name = name
         self.class_id = class_id
+        self.line_number = line_number # line number in the eds data. required for comment assignment
         self.entries = {}
         self.hcomment = ""
         self.fcomment = ""
 
-    def add_entry(self, entry_keyword):
+    def add_entry(self, entry_keyword, line_number=0):
         if entry_keyword == "":
             raise Exception("Invalid Entry keyword! [{}]\"{}\"".format(self.keyword, entry_keyword))
 
@@ -461,7 +455,7 @@ class Section:
             #print(ex)
             logger.warning("Unknown Entry [{}].{}".format(self.keyword, entry_keyword))
 
-        entry = Entry(self, entry_keyword, entry_name)
+        entry = Entry(self, entry_keyword, entry_name, line_number)
         self.entries[entry_keyword] = entry
 
         return entry
@@ -506,10 +500,11 @@ class Section:
 
 class Entry:
 
-    def __init__(self, section, keyword, name):
+    def __init__(self, section, keyword, name, line_number=0):
         self.parent = section
         self.keyword = keyword
         self.name = name
+        self.line_number = line_number # line number in the eds data. required for comment assignment
         self.fields = [] # Unlike the sections and entries, fields are implemented as a list.
         self.hcomment = ""
         self.fcomment = ""
@@ -519,7 +514,7 @@ class Entry:
         parent_eds = parent_section.parent
         return parent_eds.ref_libs
 
-    def add_field(self, field_value, field_data_type=None):
+    def add_field(self, field_value, field_data_type=None, line_number=0):
 
         entry_keyword = self.keyword
         section_keyword = self.parent.keyword
@@ -564,7 +559,7 @@ class Entry:
 
         assert field_data_object is not None
 
-        field = Field(self, field_name, field_data_object, len(self.fields))
+        field = Field(self, field_name, field_data_object, len(self.fields), line_number)
         field.data_types = ref_libs.get_field_data_types(section_keyword, entry_keyword, len(self.fields))
         self.fields.append(field)
 
@@ -621,10 +616,11 @@ class Entry:
         return "ENTRY({})".format(self.name)
 
 class Field:
-    def __init__(self, entry, name, data, index):
+    def __init__(self, entry, name, data, index, line_number=0):
         self.index = index
         self.parent = entry
         self.name = name
+        self.line_number = line_number # line number in the eds data. required for comment assignment
         self.data = data # datatype object. Actually is the Field value containing also its type information
         self.data_types = [] # Valid datatypes a field supports
 
@@ -659,11 +655,8 @@ class Field:
         return (type(self.data), self.data.range)
 
     def __str__(self):
-        if self.data is None:
-            return "\"\""
-        # TODO: If a field of STRING contains multi lines of string, print each line as a seperate string.
-        return "FIELD(index: {}, name: \"{}\", value: ({}), type: <{}>{})".format(
-            self.index, self.name, str(self.data), type(self.data).__name__, self.data.range)
+        data = "\"\"" if self.data is None else self.data
+        return str(data)
 
     def __repr__(self):
         if self.data is None:
