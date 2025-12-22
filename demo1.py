@@ -11,5 +11,7 @@ with open('demo.eds', 'rb') as srcfile:
 
 eds = CIP_EDS(eds_content)
 
-#eds.list()
+eds.list()
 print(eds)
+eds.save("my_demo.eds", overwrite=True)
+
