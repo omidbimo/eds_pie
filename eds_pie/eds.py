@@ -1,9 +1,8 @@
 import os
-import sys
 import json
+from pathlib import Path
 
 from .cip_eds_types import *
-
 
 class EDS:
 
@@ -500,12 +499,14 @@ class EDS_RefLib:
     def __init__(self):
         self.libs = {}
 
-        for file in os.listdir():
-            if file.endswith(".json"):
-                with open(file, "r") as src:
-                    data = json.loads(src.read())
-                    if data.get("project", None) ==  "eds_pie" and file != "edslib_schema.json":
-                        self.libs[data["protocol"].lower()] = data
+        module_dir = Path(__file__).parent
+        json_files = [f for f in module_dir.iterdir() if f.suffix==".json"]
+
+        for file in json_files:
+            with file.open("r", encoding="utf-8") as src:
+                data = json.loads(src.read())
+                if data.get("project", None) ==  "eds_pie" and file != "edslib_schema.json":
+                    self.libs[data["protocol"].lower()] = data
 
     def get_lib_name(self, section_keyword):
         for _, lib in self.libs.items():
@@ -636,7 +637,7 @@ class EDS_RefLib:
         return required_sections
 
     def get_type(self, type_name):
-        return getattr(__import__("cip_eds_types"), type_name, None)
+        return getattr(__import__("eds_pie.cip_eds_types", fromlist=[type_name]), type_name, None)
 
     def get_field_data_types(self, section_keyword, entry_keyword, field_index):
         field = self.get_field_byindex(section_keyword, entry_keyword, field_index)
