@@ -203,7 +203,7 @@ class EDS:
         eds_str = ""
 
         if self.hcomment != "":
-            eds_str = "".join("$ {}\n".format(line.strip()) for line in self.hcomment.splitlines())
+            eds_str = "\n".join("$ {}".format(line.strip()) for line in self.hcomment.splitlines())
 
         # sections
         sorted_sections = [self.get_section("File")]
@@ -213,7 +213,7 @@ class EDS:
 
         for section in sorted_sections:
             if section.hcomment:
-                eds_str += "\n" + "".join("$ {}".format(line.strip()) for line in section.hcomment.splitlines())
+                eds_str += "\n" + "\n".join("$ {}".format(line.strip()) for line in section.hcomment.splitlines())
             eds_str += "\n[{}]".format(section.keyword)
 
             if section.fcomment != "":
@@ -228,12 +228,11 @@ class EDS:
                 eds_str += "".ljust(indent, " ") + "{} = ".format(entry.keyword)
 
                 # fields
-
                 if len(entry.fields) == 1 and len(str(entry.fields[0].data).splitlines()) <= 1:
                     # Print entry, field and comment on the same line
                     eds_str += "{};".format(str(entry.fields[0].data))
                     if entry.fields[0].fcomment:
-                        eds_str += "".ljust(indent, " ") + "$ {}".format(entry.fields[0].fcomment)
+                        eds_str += "".ljust(indent, " ") + "$ " + " ".join("{}".format(line.strip()) for line in entry.fields[0].fcomment.splitlines())
                     eds_str += "\n"
                 else:
                     # print fields on the next line in multiple lines
@@ -241,7 +240,7 @@ class EDS:
                     for index, field in enumerate(entry.fields):
                         eds_str += "".ljust(2 * indent)
                         field_str = ""
-                        field_str += "\n".ljust((2 * indent)+1, " ").join(line.strip() for line in str(field.data).splitlines())
+                        field_str += "\n".ljust((2 * indent) + 1, " ").join(line.strip() for line in str(field.data).splitlines())
 
                         if index + 1 == len(entry.fields):
                             field_str += ";"
