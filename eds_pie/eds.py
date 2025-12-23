@@ -499,8 +499,11 @@ class EDS_RefLib:
     def __init__(self):
         self.libs = {}
 
-        module_dir = Path(__file__).parent
-        json_files = [f for f in module_dir.iterdir() if f.suffix==".json"]
+        ref_dir = Path(__file__).parent / "references"
+        json_files = [f for f in ref_dir.iterdir() if f.suffix==".json"]
+
+        if not json_files:
+            logger.warning("No reference libraries found! Semantic checking cannot be performed.")
 
         for file in json_files:
             with file.open("r", encoding="utf-8") as src:

@@ -19,7 +19,7 @@ packages = ["eds_pie"]
 include-package-data = true
 
 [tool.setuptools.package-data]
-"eds_pie" = ["*.json"]
+"eds_pie" = ["references/*.json"]
 
 [tool.black]
 line-length = 88

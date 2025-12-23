@@ -54,7 +54,25 @@ $ comment 122
         ProdName = "EDS pie";
         Catalog = "100.200.300";
         Icon = "myicon.ico";
-
+        IconContents =
+                "AAABAAEAICAQAAAAAAD+AgAAFgAAACgAAAAgAAAAQAAAAAEABAAAAAAAAAAA"
+                "AAAAAAAAAAAAEAAAABAAAAAAAAAAgICAAIAAAAD/AAAAgIAAAP//AAAAgAAA"
+                "AP8AAACAgAAA//8AAACAAAAA/wCAAIAA/wD/AMDAwAD///8A////////////"
+                "////////////////////////////////////////////////////////////"
+                "/////////////////////u7hERER7v////////7uERYAAAEREAEf/////+ER"
+                "AAARHu7u7u7hAf////4QAR7u7u7u7u7u7hDv///gHu7u7u7u7u7u7uERHv//"
+                "Hv7u7u7u7u7u7hEQEQ7//x7u/+7u7u7u7uERERER7/8R7u7u7u7u7u4REQAB"
+                "EO//4RHu7u7u7uEREREREREe//EQHu7uERERERERERERDv/xEQ7hERERERER"
+                "ERERERHv/hEREREREREREREREREQH/8RERERERERERERERERER7/4RERERER"
+                "EREREREREREO//EREREREREREREREREREf/+ERERERERERERERERARH//xER"
+                "ERERERERERERERER///xEREREREQERERERABEf//8RERERERERERERERER7/"
+                "//8RAREREREREREREREf////4RAREREREREREREe//////4RERERERERER7v"
+                "////////8REREREe7///////////////7v//////////////////////////"
+                "////////////////////////////////////////////////////////////"
+                "//////////8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
 [Device Classification]
         Class1 = EtherNetIP;
 
