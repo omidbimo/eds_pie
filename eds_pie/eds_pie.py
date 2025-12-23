@@ -3,6 +3,8 @@ from .cip_eds_types import *
 from .eds_lexer import Lexer, TOKEN_TYPES, SYMBOLS
 from .eds import EDS
 
+from ._version import __version__
+
 import logging
 
 logging.basicConfig(level=logging.DEBUG,
