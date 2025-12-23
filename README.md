@@ -20,6 +20,10 @@ An Electronic Data Sheet (EDS), in the context of industrial communication, is a
 * Serialization of in-memory EDS objects back into a valid EDS plain-text file
 
 
+## Setup
+```
+pip install git+https://github.com/omidbimo/eds_pie.git
+```
 
 ## Usage
 
@@ -62,6 +66,7 @@ print(eds) # Prints out the serialized EDS
 - EDS.__str__() # Or str(eds) returns a pretty print string representation of the EDS objects
 - EDS.protocol 	# CIP Protocol recognized during the parsing
 - EDS.sections  # Representation of all EDS sections as a dictionary of {section_keyword: section_object}
+- EDS.hcomment # EDS File Header comment
 - EDS.fcomment # End comment of the EDS file
 
 ### Section object
