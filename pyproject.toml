@@ -11,6 +11,8 @@ license = { file = "LICENSE" }
 authors = [
     { name = "omidbimo", email = "kompani.omid@gmail.com" }
 ]
+requires-python = ">=3.8"
+dependencies = []
 
 [tool.setuptools]
 packages = ["eds_pie"]
@@ -18,9 +20,6 @@ include-package-data = true
 
 [tool.setuptools.package-data]
 "eds_pie" = ["*.json"]
-
-requires-python = ">=3.8"
-dependencies = []
 
 [tool.black]
 line-length = 88
