@@ -1,3 +1,5 @@
+$ EZ-EDS Version 3.38.20251024 Generated Electronic Data Sheet
+
 $ ****************************************************************************
 $ MIT License
 $
@@ -28,8 +30,10 @@ $  Changes in this file can cause configuration or communication problems.
 $
 $ ****************************************************************************
 
-[File]
+[File]          $ comment1
+    $ comment2
         DescText = "A Demo EDS file";
+    $ comment12
         CreateDate = 01-01-2021;
         CreateTime = 10:50:30;
         ModDate = 01-01-2021;
@@ -37,8 +41,10 @@ $ ****************************************************************************
         Revision = 1.1;
         HomeURL = "https://github.com/omidbimo/eds_pie";
 
-[Device]
-        VendCode = 65535;
+$ comment 122
+[Device]        $ comment 11
+        VendCode = 65535;               $ Vendor Code
+    $ Omid
         VendName = "omidbimo";
         ProdType = 12;
         ProdTypeStr = "Communications Adapter";
@@ -46,8 +52,61 @@ $ ****************************************************************************
         MajRev = 1;
         MinRev = 1;
         ProdName = "EDS pie";
+        Catalog = "100.200.300";
+        Icon = "myicon.ico";
 
 [Device Classification]
         Class1 = EtherNetIP;
 
+[Params]
 
+    $
+    $ 	EtherNet Link object vendor specific class attributes
+    $
+
+        Param101 =
+                0,                      $ reserved, shall equal 0
+                6,"20 F6 24 00 30 65",  $ Link Path Size, Link Path
+                0x0010,                 $ Descriptor: read only
+                0xD3,                   $ Data Type : DWORD
+                4,                      $ Data Size in bytes
+                "Global Link Status",   $ name
+                "",                     $ units
+                "on = active, off = not active",    $ help string
+                0x00000000,0x1FFFFFF,0, $ min, max, default data values
+                ,,,,                    $ mult, div, base, offset scaling
+                ,,,,                    $ mult, div, base, offset links
+                ;                       $ decimal places
+
+[TCP/IP Interface Class]
+        Revision = 1;
+        Object_Name = "TCP/IP Interface Object";
+        Object_Class_Code = 0xF5;
+        MaxInst = 22;
+        Number_Of_Static_Instances = 1;
+        Max_Number_Of_Dynamic_Instances = 0;
+        Class_Attributes =
+                1,
+                2,
+                3,
+                6,
+                7;
+        Instance_Attributes =
+                1,
+                2,
+                3,
+                4,
+                5,
+                6;
+        Class_Services =
+                0x01,
+                0x0E;
+        Instance_Services =
+                0x01,
+                0x02,
+                0x0E,
+                0x10;
+
+$ ****************************************************************************
+$ EOF
+$ ****************************************************************************
