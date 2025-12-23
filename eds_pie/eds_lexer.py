@@ -1,6 +1,5 @@
 
-from cip_eds_types import *
-import cip_eds_types as EDS_Types
+from .cip_eds_types import *
 
 import logging
 logging.basicConfig(level=logging.DEBUG,

@@ -2,7 +2,7 @@ import os
 import sys
 import json
 
-from cip_eds_types import *
+from .cip_eds_types import *
 
 class EDS_RefLib:
     def __init__(self):

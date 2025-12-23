@@ -1,7 +1,7 @@
 
-from cip_eds_types import *
-from eds_lexer import Lexer, TOKEN_TYPES, SYMBOLS
-from eds import EDS
+from .cip_eds_types import *
+from .eds_lexer import Lexer, TOKEN_TYPES, SYMBOLS
+from .eds import EDS
 
 import logging
 
