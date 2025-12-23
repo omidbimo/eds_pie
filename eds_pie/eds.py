@@ -4,183 +4,6 @@ import json
 
 from .cip_eds_types import *
 
-class EDS_RefLib:
-    def __init__(self):
-        self.libs = {}
-
-        for file in os.listdir():
-            if file.endswith(".json"):
-                with open(file, "r") as src:
-                    data = json.loads(src.read())
-                    if data.get("project", None) ==  "eds_pie" and file != "edslib_schema.json":
-                        self.libs[data["protocol"].lower()] = data
-
-    def get_lib_name(self, section_keyword):
-        for _, lib in self.libs.items():
-            if section_keyword in lib["sections"]:
-                return lib["protocol"]
-        return None
-
-    def get_section_name(self, class_id):
-        """
-        To get a protocol specific EDS section_keyword by its CIP class ID
-        """
-        for _, lib in self.libs.items():
-            for section in lib["sections"]:
-                if section["class_id"] == class_id:
-                    return section
-        return ""
-
-    def get_section_id(self, section_keyword):
-        section = self.get_section(section_keyword)
-        if section:
-            return section["class_id"]
-        return None
-
-    def has_section(self, section_keyword):
-        """
-        Checks the existence of a section by its name
-        """
-        for _, lib in self.libs.items():
-            if section_keyword in lib["sections"]:
-                return True
-        return False
-
-    def get_section(self, section_keyword, protocol=None):
-        section = None
-        for _, lib in self.libs.items():
-            section = lib["sections"].get(section_keyword, None)
-            if section:
-                break
-            else:
-                continue
-        return section
-
-    def has_entry(self, section_keyword, entry_keyword):
-        """
-        To get an entry dictionary by its section name and entry name
-        """
-        return self.get_entry(section_keyword, entry_keyword) is not None
-
-    def get_entry(self, section_keyword, entry_keyword):
-        """
-        To get an entry dictionary by its section name and entry name
-        """
-        entry = None
-
-        if entry_keyword[-1].isdigit(): # Enumerated Entry
-            entry_keyword = entry_keyword.rstrip(digits) + "N"
-
-        section = self.get_section(section_keyword)
-        if section:
-            # First check if the entry is in common class object
-            if section["class_id"] and section["class_id"] != 0:
-                common_section = self.get_section("Common Object Class")
-                entry = common_section["entries"].get(entry_keyword, None)
-
-            if entry is None:
-                entry = section["entries"].get(entry_keyword, None)
-        return entry
-
-    def has_field(self, section_keyword, entry_keyword, field_index):
-        field = None
-        entry = self.get_entry(section_keyword, entry_keyword)
-        if entry:
-            """
-            If the requested index is greater than listed fields in the lib,
-            the field is possibly an enumerated field. re-calculate the index.
-            """
-            fields = entry.get("fields")
-            if field_index < len(entry["fields"]) or entry.get("enumerated_fields", None):
-                return True
-        return False
-
-    def get_field_byindex(self, section_keyword, entry_keyword, field_index):
-        """
-        To get a field dictionary by its section name and entry name and field index
-        """
-        field = None
-        entry = self.get_entry(section_keyword, entry_keyword)
-        if entry:
-            """
-            If the requested index is greater than listed fields in the lib,
-            the field is possibly an enumerated field. re-calculate the index.
-            """
-            fields = entry.get("fields")
-
-            if field_index < len(entry["fields"]) or entry.get("enumerated_fields", None):
-                if field_index >= len(entry["fields"]):
-                    # Calculating reference field index
-                    field_index = (field_index % entry["enumerated_fields"]["enum_member_count"]) + entry["enumerated_fields"]["first_enum_field"] - 1
-                field = entry["fields"][field_index]
-        return field
-
-    def get_field_byname(self, section_keyword, entry_keyword, field_name):
-        """
-        To get a field dictionary by its section name and entry name and field name
-        """
-        field = None
-        entry = self.get_entry(section_keyword, entry_keyword)
-        if entry:
-            if field_name[-1].isdigit(): # Incremental field_name
-                field_name = field_name.rstrip(digits) + "N"
-
-            for fld in entry["fields"]:
-                if fld["name"] == field_name:
-                    field = fld
-        return field
-    """
-    def get_type(self, cip_typeid):
-        return self.supported_data_types[cip_typeid]
-    """
-    def get_required_sections(self):
-        required_sections = {}
-
-        for _, lib in self.libs.items():
-            for section_keyword, section in lib["sections"].items():
-                if section["required"] == True:
-                    required_sections.update({section_keyword: section})
-
-        return required_sections
-
-    def get_type(self, type_name):
-        return getattr(__import__("cip_eds_types"), type_name, None)
-
-    def get_field_data_types(self, section_keyword, entry_keyword, field_index):
-        field = self.get_field_byindex(section_keyword, entry_keyword, field_index)
-        if field is not None:
-            return field.get("data_types", None)
-        return None
-
-    def get_field_name(self, section_keyword, entry_keyword, field_index):
-        field = self.get_field_byindex(section_keyword, entry_keyword, field_index)
-        if field is not None:
-            return field.get("name", None)
-        return None
-
-    def find_proper_data_type_for_field_value(self, section_keyword, entry_keyword, field_index, field_value):
-        ref_field = self.get_field_byindex(section_keyword, entry_keyword, field_index)
-        if ref_field is not None:
-            cip_data_instance = None
-            ref_data_types = ref_field.get("data_types", {})
-
-            for type_name, type_info in ref_data_types.items():
-                if self.validate(type_name, type_info, field_value):
-                    return type_name, type_info
-
-        return None
-
-    def validate(self, type_name, type_info, value):
-        dt = self.get_type(type_name)
-        if dt:
-            return dt.validate(value, type_info)
-        return False
-
-    def is_required_field(self, section_keyword, entry_keyword, field_index):
-        field = self.get_field_byindex(section_keyword, entry_keyword, field_index)
-        if field:
-            return field.get("required", False)
-        return False
 
 class EDS:
 
@@ -368,6 +191,13 @@ class EDS:
                 raise Exception("Invalid EPATH format! item[\"{}\"] in [{}]".format(item, path))
 
         return " ".join(item for item in items)
+
+    def validate(self):
+        """
+        Semantic validation of EDS objects.
+        Verify whether EDS content make sense according to the CIP/EDS specification.
+        """
+        raise NotImplementedError
 
     def __str__(self):
         indent = 4
@@ -665,3 +495,181 @@ class Field:
         # TODO: If a field of STRING contains multi lines of string, print each line as a seperate string.
         return "FIELD(index: {}, name: \"{}\", value: ({}), type: <{}>{})".format(
             self.index, self.name, str(self.data), type(self.data).__name__, self.data.range)
+
+class EDS_RefLib:
+    def __init__(self):
+        self.libs = {}
+
+        for file in os.listdir():
+            if file.endswith(".json"):
+                with open(file, "r") as src:
+                    data = json.loads(src.read())
+                    if data.get("project", None) ==  "eds_pie" and file != "edslib_schema.json":
+                        self.libs[data["protocol"].lower()] = data
+
+    def get_lib_name(self, section_keyword):
+        for _, lib in self.libs.items():
+            if section_keyword in lib["sections"]:
+                return lib["protocol"]
+        return None
+
+    def get_section_name(self, class_id):
+        """
+        To get a protocol specific EDS section_keyword by its CIP class ID
+        """
+        for _, lib in self.libs.items():
+            for section in lib["sections"]:
+                if section["class_id"] == class_id:
+                    return section
+        return ""
+
+    def get_section_id(self, section_keyword):
+        section = self.get_section(section_keyword)
+        if section:
+            return section["class_id"]
+        return None
+
+    def has_section(self, section_keyword):
+        """
+        Checks the existence of a section by its name
+        """
+        for _, lib in self.libs.items():
+            if section_keyword in lib["sections"]:
+                return True
+        return False
+
+    def get_section(self, section_keyword, protocol=None):
+        section = None
+        for _, lib in self.libs.items():
+            section = lib["sections"].get(section_keyword, None)
+            if section:
+                break
+            else:
+                continue
+        return section
+
+    def has_entry(self, section_keyword, entry_keyword):
+        """
+        To get an entry dictionary by its section name and entry name
+        """
+        return self.get_entry(section_keyword, entry_keyword) is not None
+
+    def get_entry(self, section_keyword, entry_keyword):
+        """
+        To get an entry dictionary by its section name and entry name
+        """
+        entry = None
+
+        if entry_keyword[-1].isdigit(): # Enumerated Entry
+            entry_keyword = entry_keyword.rstrip(digits) + "N"
+
+        section = self.get_section(section_keyword)
+        if section:
+            # First check if the entry is in common class object
+            if section["class_id"] and section["class_id"] != 0:
+                common_section = self.get_section("Common Object Class")
+                entry = common_section["entries"].get(entry_keyword, None)
+
+            if entry is None:
+                entry = section["entries"].get(entry_keyword, None)
+        return entry
+
+    def has_field(self, section_keyword, entry_keyword, field_index):
+        field = None
+        entry = self.get_entry(section_keyword, entry_keyword)
+        if entry:
+            """
+            If the requested index is greater than listed fields in the lib,
+            the field is possibly an enumerated field. re-calculate the index.
+            """
+            fields = entry.get("fields")
+            if field_index < len(entry["fields"]) or entry.get("enumerated_fields", None):
+                return True
+        return False
+
+    def get_field_byindex(self, section_keyword, entry_keyword, field_index):
+        """
+        To get a field dictionary by its section name and entry name and field index
+        """
+        field = None
+        entry = self.get_entry(section_keyword, entry_keyword)
+        if entry:
+            """
+            If the requested index is greater than listed fields in the lib,
+            the field is possibly an enumerated field. re-calculate the index.
+            """
+            fields = entry.get("fields")
+
+            if field_index < len(entry["fields"]) or entry.get("enumerated_fields", None):
+                if field_index >= len(entry["fields"]):
+                    # Calculating reference field index
+                    field_index = (field_index % entry["enumerated_fields"]["enum_member_count"]) + entry["enumerated_fields"]["first_enum_field"] - 1
+                field = entry["fields"][field_index]
+        return field
+
+    def get_field_byname(self, section_keyword, entry_keyword, field_name):
+        """
+        To get a field dictionary by its section name and entry name and field name
+        """
+        field = None
+        entry = self.get_entry(section_keyword, entry_keyword)
+        if entry:
+            if field_name[-1].isdigit(): # Incremental field_name
+                field_name = field_name.rstrip(digits) + "N"
+
+            for fld in entry["fields"]:
+                if fld["name"] == field_name:
+                    field = fld
+        return field
+    """
+    def get_type(self, cip_typeid):
+        return self.supported_data_types[cip_typeid]
+    """
+    def get_required_sections(self):
+        required_sections = {}
+
+        for _, lib in self.libs.items():
+            for section_keyword, section in lib["sections"].items():
+                if section["required"] == True:
+                    required_sections.update({section_keyword: section})
+
+        return required_sections
+
+    def get_type(self, type_name):
+        return getattr(__import__("cip_eds_types"), type_name, None)
+
+    def get_field_data_types(self, section_keyword, entry_keyword, field_index):
+        field = self.get_field_byindex(section_keyword, entry_keyword, field_index)
+        if field is not None:
+            return field.get("data_types", None)
+        return None
+
+    def get_field_name(self, section_keyword, entry_keyword, field_index):
+        field = self.get_field_byindex(section_keyword, entry_keyword, field_index)
+        if field is not None:
+            return field.get("name", None)
+        return None
+
+    def find_proper_data_type_for_field_value(self, section_keyword, entry_keyword, field_index, field_value):
+        ref_field = self.get_field_byindex(section_keyword, entry_keyword, field_index)
+        if ref_field is not None:
+            cip_data_instance = None
+            ref_data_types = ref_field.get("data_types", {})
+
+            for type_name, type_info in ref_data_types.items():
+                if self.validate(type_name, type_info, field_value):
+                    return type_name, type_info
+
+        return None
+
+    def validate(self, type_name, type_info, value):
+        dt = self.get_type(type_name)
+        if dt:
+            return dt.validate(value, type_info)
+        return False
+
+    def is_required_field(self, section_keyword, entry_keyword, field_index):
+        field = self.get_field_byindex(section_keyword, entry_keyword, field_index)
+        if field:
+            return field.get("required", False)
+        return False
