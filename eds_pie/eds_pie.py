@@ -190,6 +190,6 @@ class CIP_EDS():
     def __new__(cls, eds_data):
         if isinstance(eds_data, bytes):
             eds_data = eds_data.decode("ascii")
-        return Parser(eds_data).parse()
-
-
+        eds = Parser(eds_data).parse().validate()
+        eds.validate()
+        return eds

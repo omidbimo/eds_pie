@@ -8,6 +8,7 @@ class EDS:
 
     def __init__(self):
         self.protocol = None
+        self.classification = None
         self.sections = {}
         self.ref_libs = EDS_RefLib()
         self.hcomment = "" # Heading comment
@@ -196,7 +197,43 @@ class EDS:
         Semantic validation of EDS objects.
         Verify whether EDS content make sense according to the CIP/EDS specification.
         """
-        raise NotImplementedError
+        # Check if required sections are at required positions
+        sections_list = list(self.sections) # Create a list of dictionary keys
+        if len(self.sections) > 0 and sections_list[0] != "File":
+            logger.warning("First section expected to be [File]. Found: [{}]".format(sections_list[0]))
+
+        if len(self.sections) > 1 and sections_list[1] != "Device":
+            logger.warning("Second section expected to be [Device]. Found: [{}]".format(sections_list[1]))
+
+        device_classification_section = self.sections.get("Device Classification", None)
+        if len(self.sections) > 2 and device_classification_section is None:
+            logger.warning("Missing required section [Device Classification]")
+
+        # Device Classification
+        if device_classification_section is not None:
+            public_classification = ["CompoNet", "ControlNet", "DeviceNet",
+                                     "EtherNetIP", "EtherNetIP_In_Cabinet",
+                                     "EtherNetIP_UDP_Only", "ModbusSL",
+                                     "ModbusTCP", "Safety", "HART", "IOLink"]
+
+            classifications = list(device_classification_section.entries.items())
+            if len(classifications) == 0:
+                logger.warning("Missing required entry [Device Classification].Class1")
+            else:
+                index = 0
+                for keyword, entry in classifications:
+                    index += 1
+                    if keyword != "Class{}".format(index):
+                        logger.warning("Unexpected [Device Classification].{} at position {}".format(index, keyword))
+                    if index == 1 and entry.value in public_classification and len(classifications) > 1:
+                            logger.warning("[Device Classification].Class1 is a public classification. No further classifications are allowed but found {} more classification(s).".format(len(classifications) - 1))
+                    if entry.value in public_classification and self.classification is None:
+                        self.classification = entry.value
+                        if "EtherNetIP" in entry.value:
+                            self.protocol = "EtherNetIP"
+                        else:
+                            self.protocol = entry.value
+
 
     def __str__(self):
         indent = 4
