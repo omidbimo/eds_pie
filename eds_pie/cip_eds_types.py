@@ -900,9 +900,13 @@ class VENDOR_SPECIFIC(CIP_EDS_BASE_TYPE):
 
     @staticmethod
     def validate(value, *args):
-        if isinstance(value, str) and value != '': #TODO
-            if value[0].isdigit():
-                return True
+        # Vendor specific value: 123_vendorSepcific_value
+        if isinstance(value, str) and value != '':
+            items = value.split("_")
+            if len(items) >= 2 and items[0].isdigit():
+                # Leading zeros are invalid
+                if str(int(items[0])) == items[0]:
+                    return True
         return False
 
 
