@@ -187,9 +187,9 @@ class Parser:
         return False
 
 class CIP_EDS():
-    def __new__(cls, eds_data):
+    def __new__(cls, eds_data=""):
         if isinstance(eds_data, bytes):
             eds_data = eds_data.decode("ascii")
-        eds = Parser(eds_data).parse().validate()
+        eds = Parser(eds_data).parse()
         eds.validate()
         return eds

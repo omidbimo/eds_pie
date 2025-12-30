@@ -243,9 +243,16 @@ class EDS:
             eds_str = "\n".join("$ {}".format(line.strip()) for line in self.hcomment.splitlines())
 
         # sections
-        sorted_sections = [self.get_section("File")]
-        sorted_sections.append(self.get_section("Device"))
-        sorted_sections.append(self.get_section("Device Classification"))
+        sorted_sections = []
+        section = self.get_section("File")
+        if section: sorted_sections.append(section)
+
+        section = self.get_section("Device")
+        if section: sorted_sections.append(section)
+
+        section = self.get_section("Device Classification")
+        if section: sorted_sections.append(section)
+
         sorted_sections += [section for key, section in self.sections.items() if section not in sorted_sections]
 
         for section in sorted_sections:
