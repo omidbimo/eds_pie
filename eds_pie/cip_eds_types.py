@@ -902,10 +902,10 @@ class VENDOR_SPECIFIC(CIP_EDS_BASE_TYPE):
     def validate(value, *args):
         # Vendor specific value: 123_vendorSepcific_value
         if isinstance(value, str) and value != '':
-            items = value.split("_")
-            if len(items) >= 2 and items[0].isdigit():
+            elements = value.split("_")
+            if len(elements) >= 2 and elements[0].isdigit():
                 # Leading zeros are invalid
-                if str(int(items[0])) == items[0]:
+                if str(int(elements[0])) == elements[0]:
                     return True
         return False
 

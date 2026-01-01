@@ -234,7 +234,21 @@ class EDS:
                         else:
                             self.protocol = entry.value
 
-
+        for _, section in self.sections.items():
+           for _, entry in section.entries.items():
+               for field in entry.fields:
+                   if isinstance(field.data, REF):
+                       if "Param" in field.value:
+                           if self.get_entry("Params", field.value) is None:
+                            logger.error("Missing referenced Entry [Params].{} required by [{}].{}.{}".format(
+                                field.value, section.keyword, entry.keyword, field.name))
+                       elif "Assem" in field.value:
+                           if self.get_entry("Assembly", field.value) is None:
+                            logger.error("Missing referenced Entry [Assembly].{} required by [{}].{}.{}".format(
+                                field.value, section.keyword, entry.keyword, field.name))
+                       else:
+                           logger.warning("Reference checking not implemented!")
+                           # TODO
     def __str__(self):
         indent = 4
         eds_str = ""
@@ -310,6 +324,7 @@ class Section:
         self.entries = {}
         self.hcomment = ""
         self.fcomment = ""
+        self.ref_lib = None # The Reference library containing information about this section
 
     def add_entry(self, entry_keyword, line_number=0):
         if entry_keyword == "":
@@ -380,6 +395,7 @@ class Entry:
         self.fields = [] # Unlike the sections and entries, fields are implemented as a list.
         self.hcomment = ""
         self.fcomment = ""
+        self.ref_lib = None # The Reference library containing information about this section
 
     def get_ref_libs(self):
         parent_section = self.parent
@@ -495,7 +511,7 @@ class Field:
         self.line_number = line_number # line number in the eds data. required for comment assignment
         self.data = data # datatype object. Actually is the Field value containing also its type information
         self.data_types = [] # Valid datatypes a field supports
-
+        self.ref_lib = None # The Reference library containing information about this section
         self.hcomment = ""
         self.fcomment = ""
 
