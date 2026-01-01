@@ -136,8 +136,14 @@ class Token():
 class Cursor():
     def __init__(self):
         self.offset = -1
-        self.col = 0
+        self.col = 1
         self.line = 1
+
+    def __str__(self):
+        return '[Pos: {}, Ln: {}, Col: {}]'.format(
+            str(self.offset).rjust(5),
+            str(self.line).rjust(4),
+            str(self.col).rjust(3))
 
 class Lexer():
     def __init__(self, eds_data):
@@ -156,7 +162,7 @@ class Lexer():
             self.cursor.col += 1
             if ch == SYMBOLS.LF:
                 self.cursor.line += 1
-                self.cursor.col = 0
+                self.cursor.col = 1
         else: # EOF
             ch = SYMBOLS.EOF
 
@@ -231,6 +237,8 @@ class Lexer():
                 if ch in SYMBOLS.SEPARATORS:
                     token = Token(TOKEN_TYPES.SEPARATOR, ch, self.cursor)
                     break
+
+                raise Exception("Unsupported symbol: \"{}\" @{}".format(ch, self.cursor))
 
             if token.type == TOKEN_TYPES.COMMENT:
                 if ch == SYMBOLS.LF or ch == SYMBOLS.CR or ch == SYMBOLS.EOF:
