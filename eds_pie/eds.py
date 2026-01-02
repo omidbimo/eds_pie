@@ -9,8 +9,8 @@ class EDS:
     def __init__(self):
         self.protocol = None
         self.classification = None
+        self.protocol_db = EDS_RefLib()
         self.sections = {}
-        self.ref_libs = EDS_RefLib()
         self.hcomment = "" # Heading comment
         self.fcomment = "" # End comment
 
@@ -25,7 +25,7 @@ class EDS:
         if section_keyword:
             return self.sections.get(section_keyword)
 
-        return self.sections.get(self.ref_libs.get_section_name(class_id))
+        return self.sections.get(self.protocol_db.get_section_name(class_id))
 
     def get_entry(self, section_keyword, entry_keyword):
         """
@@ -64,7 +64,7 @@ class EDS:
         if isinstance(section_keyword, str):
             return section_keyword in self.sections.keys()
         if isinstance(section_keyword, numbers.Number):
-            return self.ref_libs.get_section_name(section_keyword, self.protocol) in self.sections.keys()
+            return self.protocol_db.get_section_name(section_keyword, self.protocol) in self.sections.keys()
         raise TypeError("Inappropriate data type: {}".format(type(section_keyword)))
 
     def has_entry(self, section_keyword, entry_keyword):
@@ -86,14 +86,8 @@ class EDS:
         if section_keyword in self.sections.keys():
             raise Exception("Duplicate section! [{}}".format(section_keyword))
 
-        section_name = section_keyword
-        try:
-            section_name = self.ref_libs.get_section(section_keyword)["name"]
-        except Exception as ex:
-            #print(ex)
-            logger.warning("Unknown Section [{}]".format(section_keyword))
-
-        section = Section(self, section_keyword, section_name, self.ref_libs.get_section_id(section_keyword), line_number)
+        section_name = section_keyword # using section keyword as the default section name
+        section = Section(self, section_keyword, section_name, self.protocol_db.get_section_id(section_keyword), line_number)
         self.sections.update({section_keyword: section})
 
         return section
@@ -146,8 +140,7 @@ class EDS:
                 "Remove the fields first or use removetree = True".format(section.keyword, entry.keyword))
 
     def remove_field(self, section_keyword, sentryname, fieldindex):
-        # TODO
-        pass
+        raise NotImplementedError
 
     def save(self, filename, overwrite = False):
         if os.path.isfile(filename) and overwrite == False:
@@ -162,7 +155,7 @@ class EDS:
     def get_cip_section_name(self, class_id, protocol=None):
         if protocol is None:
             protocol = self.protocol
-        return self.ref_libs.get_section_name(class_id, protocol)
+        return self.protocol_db.get_section_name(class_id, protocol)
 
     def resolve_epath(self, epath):
         """
@@ -234,21 +227,47 @@ class EDS:
                         else:
                             self.protocol = entry.value
 
+        # Validate sections, entries and fields then assign a data type to each field if possible
+        for _, section in self.sections.items():
+            section_name = self.protocol_db.get_section_name(section.keyword)
+            if section_name is None:
+                logger.warning("Unknown Section [{}]".format(section.keyword))
+            else:
+                # replace the default name with the correct one from reflib
+                section.name = section_name
+
+            for _, entry in section.entries.items():
+                entry_name = self.protocol_db.get_entry_name(section.keyword, entry.keyword)
+                if entry_name is None:
+                    logger.warning("Unknown Entry [{}].{}".format(section.keyword, entry.keyword))
+                else:
+                    # replace the default name with the correct one from reflib
+                    entry.name = entry_name
+
+                for field_index, field in enumerate(entry.fields):
+                    if self.protocol_db.has_field(section.keyword, entry.keyword, field_index):
+                        field.data_types = self.protocol_db.get_field_data_types(section.keyword, entry.keyword, field_index)
+                        field_data_object = self.protocol_db.assign_type_to_field(section.keyword, entry.keyword, field_index, field.value)
+                        if field_data_object is not None:
+                            field.data = field_data_object
+                    else:
+                        logger.warning("Unknown Field [{}].{}.{}".format(section.keyword, entry.keyword, field.name))
+
         for _, section in self.sections.items():
            for _, entry in section.entries.items():
-               for field in entry.fields:
-                   if isinstance(field.data, REF):
-                       if "Param" in field.value:
-                           if self.get_entry("Params", field.value) is None:
-                            logger.error("Missing referenced Entry [Params].{} required by [{}].{}.{}".format(
-                                field.value, section.keyword, entry.keyword, field.name))
-                       elif "Assem" in field.value:
-                           if self.get_entry("Assembly", field.value) is None:
-                            logger.error("Missing referenced Entry [Assembly].{} required by [{}].{}.{}".format(
-                                field.value, section.keyword, entry.keyword, field.name))
-                       else:
-                           logger.warning("Reference checking not implemented!")
-                           # TODO
+                for field in entry.fields:
+                    if isinstance(field.data, REF):
+                        if "Param" in field.value:
+                            if self.get_entry("Params", field.value) is None:
+                                logger.error("Missing referenced Entry [Params].{} required by [{}].{}.{}".format(
+                                    field.value, section.keyword, entry.keyword, field.name))
+                        elif "Assem" in field.value:
+                            if self.get_entry("Assembly", field.value) is None:
+                                logger.error("Missing referenced Entry [Assembly].{} required by [{}].{}.{}".format(
+                                    field.value, section.keyword, entry.keyword, field.name))
+                        else:
+                            logger.warning("Reference checking not implemented!")
+                            # TODO
     def __str__(self):
         indent = 4
         eds_str = ""
@@ -324,7 +343,6 @@ class Section:
         self.entries = {}
         self.hcomment = ""
         self.fcomment = ""
-        self.ref_lib = None # The Reference library containing information about this section
 
     def add_entry(self, entry_keyword, line_number=0):
         if entry_keyword == "":
@@ -333,15 +351,7 @@ class Section:
         if entry_keyword in self.entries.keys():
             raise Exception("Duplicate Entry! [{}]\"{}\"".format(self.keyword, entry_keyword))
 
-        entry_name = entry_keyword
-        # Search for the same section:entry inside the reference lib
-        ref_libs = self.get_ref_libs()
-        try:
-            entry_name = ref_libs.get_entry(self.keyword, entry_keyword)["name"]
-        except Exception as ex:
-            #print(ex)
-            logger.warning("Unknown Entry [{}].{}".format(self.keyword, entry_keyword))
-
+        entry_name = entry_keyword # using entry keyword as the default entry name
         entry = Entry(self, entry_keyword, entry_name, line_number)
         self.entries[entry_keyword] = entry
 
@@ -370,10 +380,6 @@ class Section:
             return field.value
         return None
 
-    def get_ref_libs(self):
-        parent_eds = self.parent
-        return parent_eds.ref_libs
-
     def list(self, indent=0):
         print ("".ljust(indent, " ") + self.__repr__())
         for key, entry in self.entries.items():
@@ -395,60 +401,24 @@ class Entry:
         self.fields = [] # Unlike the sections and entries, fields are implemented as a list.
         self.hcomment = ""
         self.fcomment = ""
-        self.ref_lib = None # The Reference library containing information about this section
-
-    def get_ref_libs(self):
-        parent_section = self.parent
-        parent_eds = parent_section.parent
-        return parent_eds.ref_libs
 
     def add_field(self, field_value, field_data_type=None, line_number=0):
-
         entry_keyword = self.keyword
         section_keyword = self.parent.keyword
-        ref_libs = self.get_ref_libs()
 
         field_data_object = None # This going to be an instance of CIP_TYPE
         field_name = "field{}".format(len(self.fields))
 
-        # Try to find a proper CIP_TYPE for this field using the reference libraries.
-        if ref_libs.has_field(section_keyword, entry_keyword, len(self.fields)):
-            field_name = field_name.rstrip("N") + str(len(self.fields) + 1)
-            dt = ref_libs.find_proper_data_type_for_field_value(section_keyword, entry_keyword, len(self.fields), field_value)
-            if dt is None:
-                # Wasn't able to assign a data type to field using available references
-                # Introduce the list of acceptable data types for this specific field
-                ref_data_types = ref_libs.get_field_data_types(section_keyword, entry_keyword, len(self.fields))
-                types_str = ", ".join("<{}({})>".format(ref_libs.get_type(type_name).__name__, type_info) for type_name, type_info in ref_data_types.items())
-
-                if field_value != "":
-                    logger.error("Data_type mismatch! [{}].{}.{} = ({}), Field should be of type: {}".format(section_keyword, entry_keyword, field_name, field_value, types_str))
-            else:
-                # CIP_TYPE is found: instantiate it
-                type_name, type_info = dt
-                field_data_object = ref_libs.get_type(type_name)(field_value, type_info)
-
-                assert field_data_object is not None
-
-        if field_data_object is None:
-            # Wasn't able to assign a CIP_TYPE to the field
-            if field_data_type is not None:
-                field_data_object = field_data_type(field_value)
-            elif field_value == "":
-                logger.info("Field [{}].{}.{} has no value. Switched to EMPTY field.".format(section_keyword, entry_keyword, field_name))
-                field_data_object = EMPTY(field_value)
-            else:
-                if VENDOR_SPECIFIC.validate(field_value):
-                    logger.warning("Unknown Field [{}].{}.{} = {}. Switched to VENDOR_SPECIFIC field.".format(section_keyword, entry_keyword, field_name, field_value))
-                    field_data_object = VENDOR_SPECIFIC(field_value)
-                else:
-                    logger.warning("Unknown Field [{}].{}.{} = {}. Switched to UNDEFINED field.".format(section_keyword, entry_keyword, field_name, field_value))
-                    field_data_object = UNDEFINED(field_value)
-
-        assert field_data_object is not None
+        if field_data_type:
+            field_data_object = field_data_type(field_value)
+        elif field_value == "":
+            field_data_object = EMPTY(field_value)
+        elif VENDOR_SPECIFIC.validate(field_value):
+            field_data_object = VENDOR_SPECIFIC(field_value)
+        else:
+            field_data_object = UNDEFINED(field_value)
 
         field = Field(self, field_name, field_data_object, len(self.fields), line_number)
-        field.data_types = ref_libs.get_field_data_types(section_keyword, entry_keyword, len(self.fields))
         self.fields.append(field)
 
         return field
@@ -511,7 +481,6 @@ class Field:
         self.line_number = line_number # line number in the eds data. required for comment assignment
         self.data = data # datatype object. Actually is the Field value containing also its type information
         self.data_types = [] # Valid datatypes a field supports
-        self.ref_lib = None # The Reference library containing information about this section
         self.hcomment = ""
         self.fcomment = ""
 
@@ -576,7 +545,7 @@ class EDS_RefLib:
                 return lib["protocol"]
         return None
 
-    def get_section_name(self, class_id):
+    def get_section_name_byclass_id(self, class_id):
         """
         To get a protocol specific EDS section_keyword by its CIP class ID
         """
@@ -585,6 +554,15 @@ class EDS_RefLib:
                 if section["class_id"] == class_id:
                     return section
         return ""
+
+    def get_section_name(self, section_keyword):
+        """
+        To get a protocol specific EDS section name by its section keyword
+        """
+        section = self.get_section(section_keyword)
+        if section:
+            return section["name"]
+        return None
 
     def get_section_id(self, section_keyword):
         section = self.get_section(section_keyword)
@@ -637,6 +615,12 @@ class EDS_RefLib:
                 entry = section["entries"].get(entry_keyword, None)
         return entry
 
+    def get_entry_name(self, section_keyword, entry_keyword):
+        entry = self.get_entry(section_keyword, entry_keyword)
+        if entry:
+            return entry["name"]
+        return None
+
     def has_field(self, section_keyword, entry_keyword, field_index):
         field = None
         entry = self.get_entry(section_keyword, entry_keyword)
@@ -684,10 +668,7 @@ class EDS_RefLib:
                 if fld["name"] == field_name:
                     field = fld
         return field
-    """
-    def get_type(self, cip_typeid):
-        return self.supported_data_types[cip_typeid]
-    """
+
     def get_required_sections(self):
         required_sections = {}
 
@@ -713,16 +694,23 @@ class EDS_RefLib:
             return field.get("name", None)
         return None
 
-    def find_proper_data_type_for_field_value(self, section_keyword, entry_keyword, field_index, field_value):
+    def assign_type_to_field(self, section_keyword, entry_keyword, field_index, field_value):
         ref_field = self.get_field_byindex(section_keyword, entry_keyword, field_index)
         if ref_field is not None:
-            cip_data_instance = None
             ref_data_types = ref_field.get("data_types", {})
 
-            for type_name, type_info in ref_data_types.items():
-                if self.validate(type_name, type_info, field_value):
-                    return type_name, type_info
+            for type_name, type_meta in ref_data_types.items():
+                if self.validate(type_name, type_meta, field_value):
+                    return self.get_type(type_name)(field_value, type_meta)
 
+            # Wasn't able to assign a data type to this field using available protocol
+            # references. Introduce the list of acceptable data types for this specific field
+            types_str = ", ".join("<{}({})>".format(type_name, type_meta)
+                                    for type_name, type_meta in ref_data_types.items())
+
+            if field_value != "":
+                logger.error("Data_type mismatch! [{}].{}.{} = ({}), Field should be of type: {}".format(
+                    section_keyword, entry_keyword, field_index, field_value, types_str))
         return None
 
     def validate(self, type_name, type_info, value):
