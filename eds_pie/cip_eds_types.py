@@ -755,31 +755,6 @@ class REVISION(CIP_EDS_BASE_TYPE):
                 return False
         return True
 
-
-class ETH_MAC_ADDR(CIP_EDS_BASE_TYPE):
-
-    def __new__(cls, value, *args):
-        if cls.validate(value):
-            return super(ETH_MAC_ADDR, cls).__new__(cls)
-        else:
-            raise Exception(__name__ + ":> Invalid value: {} for ".format(value)
-                                     + "<{}> data type."
-                                       .format(cls.__name__, cls._typeid))
-
-    def __init__(self, value, *args):
-        super(ETH_MAC_ADDR, self).__init__(value)
-
-    @staticmethod
-    def validate(value, *args):
-        macaddr = value.rstrip('}').lstrip('{').strip().replace(':', '-').replace('.', '-').split('-')
-        if len(macaddr) != 6:
-            return False
-        for field in macaddr:
-            if USINT.validate(field) == False:
-                return False
-        return True
-
-
 class REF(CIP_EDS_BASE_TYPE):
     def __new__(cls, value, *args):
         if cls.validate(value, *args):
