@@ -61,7 +61,8 @@ print(eds) # Prints out the serialized EDS
 - EDS.add_section( section_keyword )
 - EDS.add_entry( section_keyword, entry_keyword )
 - EDS.add_field( section_keyword, entry_keyword, field_value, *[field_data_type]*=None ) # field_data_type must be one of defined CIP_TYPES from cip_eds_types module 
-- EDS.list() # Lists all objects in the EDS 
+- EDS.list() # Lists all objects in the EDS
+- EDS.validate() # Performs semantic validation of the EDS data structure. Validation is automatically executed after each parsing operation. It may also be invoked explicitly at any time to validate the current state of the EDS contents.
 - EDS.save( filename, *[overwrite]*=False )	# To save the EDS contents into a file
 - EDS.__str__() # Or str(eds) returns a pretty print string representation of the EDS objects
 - EDS.protocol 	# CIP Protocol recognized during the parsing
