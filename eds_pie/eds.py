@@ -9,7 +9,7 @@ class EDS:
     def __init__(self):
         self.protocol = None
         self.classification = None
-        self.protocol_db = EDS_RefLib()
+        self.protocol_db = EDS_RefDatabase()
         self.sections = {}
         self.hcomment = "" # Heading comment
         self.fcomment = "" # End comment
@@ -204,23 +204,20 @@ class EDS:
 
         # Device Classification
         if device_classification_section is not None:
-            public_classification = ["CompoNet", "ControlNet", "DeviceNet",
-                                     "EtherNetIP", "EtherNetIP_In_Cabinet",
-                                     "EtherNetIP_UDP_Only", "ModbusSL",
-                                     "ModbusTCP", "Safety", "HART", "IOLink"]
 
             classifications = list(device_classification_section.entries.items())
             if len(classifications) == 0:
                 logger.warning("Missing required entry [Device Classification].Class1")
             else:
                 index = 0
+                public_classifications = self.protocol_db.get_field_data_types("Device Classification", "ClassN", 0)["KEYWORD"]
                 for keyword, entry in classifications:
                     index += 1
                     if keyword != "Class{}".format(index):
                         logger.warning("Unexpected [Device Classification].{} at position {}".format(index, keyword))
-                    if index == 1 and entry.value in public_classification and len(classifications) > 1:
+                    if index == 1 and entry.value in public_classifications and len(classifications) > 1:
                             logger.warning("[Device Classification].Class1 is a public classification. No further classifications are allowed but found {} more classification(s).".format(len(classifications) - 1))
-                    if entry.value in public_classification and self.classification is None:
+                    if entry.value in public_classifications and self.classification is None:
                         self.classification = entry.value
                         if "EtherNetIP" in entry.value:
                             self.protocol = "EtherNetIP"
@@ -229,7 +226,7 @@ class EDS:
 
         # Validate sections, entries and fields then assign a data type to each field if possible
         for _, section in self.sections.items():
-            section_name = self.protocol_db.get_section_name(section.keyword)
+            section_name = self.protocol_db.get_section_name(section.keyword, protocol=self.protocol)
             if section_name is None:
                 if not VENDOR_SPECIFIC.validate(section.keyword):
                     logger.warning("Unknown Section [{}]".format(section.keyword))
@@ -543,39 +540,39 @@ class Field:
         return "FIELD(index: {}, name: \"{}\", value: ({}), type: <{}>{})".format(
             self.index, self.name, str(self.data), type(self.data).__name__, self.data.range)
 
-class EDS_RefLib:
+class EDS_RefDatabase:
     def __init__(self):
-        self.libs = {}
+        self.db = {}
 
         ref_dir = Path(__file__).parent / "references"
         json_files = [f for f in ref_dir.iterdir() if f.suffix==".json"]
 
         if not json_files:
-            logger.warning("No reference libraries found! Semantic checking cannot be performed.")
+            logger.warning("Found no reference Databases! Semantic checking cannot be performed.")
 
         for file in json_files:
             with file.open("r", encoding="utf-8") as src:
                 data = json.loads(src.read())
                 if data.get("project", None) == "eds_pie" and file != "edslib_schema.json":
-                    self.libs[data["protocol"].lower()] = data
+                    self.db[data["protocol"]] = data
 
     def get_lib_name(self, section_keyword):
-        for _, lib in self.libs.items():
+        for _, lib in self.db.items():
             if section_keyword in lib["sections"]:
                 return lib["protocol"]
         return None
 
-    def get_section_name_byclass_id(self, class_id):
+    def get_section_name_byclass_id(self, class_id, protocol=None):
         """
         To get a protocol specific EDS section_keyword by its CIP class ID
         """
-        for _, lib in self.libs.items():
+        for _, lib in self.db.items():
             for section in lib["sections"]:
                 if section["class_id"] == class_id:
                     return section
         return ""
 
-    def get_section_name(self, section_keyword):
+    def get_section_name(self, section_keyword, protocol=None):
         """
         To get a protocol specific EDS section name by its section keyword
         """
@@ -584,24 +581,24 @@ class EDS_RefLib:
             return section["name"]
         return None
 
-    def get_section_id(self, section_keyword):
+    def get_section_id(self, section_keyword, protocol=None):
         section = self.get_section(section_keyword)
         if section:
             return section.get("class_id", None)
         return None
 
-    def has_section(self, section_keyword):
+    def has_section(self, section_keyword, protocol=None):
         """
         Checks the existence of a section by its name
         """
-        for _, lib in self.libs.items():
+        for _, lib in self.db.items():
             if section_keyword in lib["sections"]:
                 return True
         return False
 
     def get_section(self, section_keyword, protocol=None):
         section = None
-        for _, lib in self.libs.items():
+        for _, lib in self.db.items():
             section = lib["sections"].get(section_keyword, None)
             if section:
                 break
@@ -609,13 +606,13 @@ class EDS_RefLib:
                 continue
         return section
 
-    def has_entry(self, section_keyword, entry_keyword):
+    def has_entry(self, section_keyword, entry_keyword, protocol=None):
         """
         To get an entry dictionary by its section name and entry name
         """
         return self.get_entry(section_keyword, entry_keyword) is not None
 
-    def get_entry(self, section_keyword, entry_keyword):
+    def get_entry(self, section_keyword, entry_keyword, protocol=None):
         """
         To get an entry dictionary by its section name and entry name
         """
@@ -629,20 +626,19 @@ class EDS_RefLib:
         if section_id and section_id != 0:
             common_section = self.get_section("CommonObjectClass")
             entry = common_section["entries"].get(entry_keyword, None)
-
         if entry is None:
             section = self.get_section(section_keyword)
             if section:
                 entry = section["entries"].get(entry_keyword, None)
         return entry
 
-    def get_entry_name(self, section_keyword, entry_keyword):
+    def get_entry_name(self, section_keyword, entry_keyword, protocol=None):
         entry = self.get_entry(section_keyword, entry_keyword)
         if entry:
             return entry["name"]
         return None
 
-    def has_field(self, section_keyword, entry_keyword, field_index):
+    def has_field(self, section_keyword, entry_keyword, field_index, protocol=None):
         field = None
         entry = self.get_entry(section_keyword, entry_keyword)
         if entry:
@@ -655,7 +651,7 @@ class EDS_RefLib:
                 return True
         return False
 
-    def get_field_byindex(self, section_keyword, entry_keyword, field_index):
+    def get_field_byindex(self, section_keyword, entry_keyword, field_index, protocol=None):
         """
         To get a field dictionary by its section name and entry name and field index
         """
@@ -675,7 +671,7 @@ class EDS_RefLib:
                 field = entry["fields"][field_index]
         return field
 
-    def get_field_byname(self, section_keyword, entry_keyword, field_name):
+    def get_field_byname(self, section_keyword, entry_keyword, field_name, protocol=None):
         """
         To get a field dictionary by its section name and entry name and field name
         """
@@ -690,10 +686,10 @@ class EDS_RefLib:
                     field = fld
         return field
 
-    def get_required_sections(self):
+    def get_required_sections(self, protocol=None):
         required_sections = {}
 
-        for _, lib in self.libs.items():
+        for _, lib in self.db.items():
             for section_keyword, section in lib["sections"].items():
                 if section["required"] == True:
                     required_sections.update({section_keyword: section})
@@ -703,19 +699,19 @@ class EDS_RefLib:
     def get_type(self, type_name):
         return getattr(__import__("eds_pie.cip_eds_types", fromlist=[type_name]), type_name, None)
 
-    def get_field_data_types(self, section_keyword, entry_keyword, field_index):
+    def get_field_data_types(self, section_keyword, entry_keyword, field_index, protocol=None):
         field = self.get_field_byindex(section_keyword, entry_keyword, field_index)
         if field is not None:
             return field.get("data_types", None)
         return None
 
-    def get_field_name(self, section_keyword, entry_keyword, field_index):
+    def get_field_name(self, section_keyword, entry_keyword, field_index, protocol=None):
         field = self.get_field_byindex(section_keyword, entry_keyword, field_index)
         if field is not None:
             return field.get("name", None)
         return None
 
-    def assign_type_to_field(self, section_keyword, entry_keyword, field_index, field_value):
+    def assign_type_to_field(self, section_keyword, entry_keyword, field_index, field_value, protocol=None):
         ref_field = self.get_field_byindex(section_keyword, entry_keyword, field_index)
         if ref_field is not None:
             ref_data_types = ref_field.get("data_types", {})
@@ -723,7 +719,6 @@ class EDS_RefLib:
             for type_name, type_meta in ref_data_types.items():
                 if self.validate(type_name, type_meta, field_value):
                     return self.get_type(type_name)(field_value, type_meta)
-
         return None
 
     def validate(self, type_name, type_info, value):
@@ -732,7 +727,7 @@ class EDS_RefLib:
             return dt.validate(value, type_info)
         return False
 
-    def is_required_field(self, section_keyword, entry_keyword, field_index):
+    def is_required_field(self, section_keyword, entry_keyword, field_index, protocol=None):
         field = self.get_field_byindex(section_keyword, entry_keyword, field_index)
         if field:
             return field.get("required", False)
