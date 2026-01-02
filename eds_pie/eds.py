@@ -235,7 +235,7 @@ class EDS:
                 section.name = section_name
 
             for _, entry in section.entries.items():
-                entry_name = self.protocol_db.get_entry_name(section.keyword, entry.keyword)
+                entry_name = self.protocol_db.get_entry_name(section.keyword, entry.keyword, protocol=self.protocol)
                 if entry_name is None:
                     if not VENDOR_SPECIFIC.validate(section.keyword) and not VENDOR_SPECIFIC.validate(entry.keyword):
                         logger.warning("Unknown Entry [{}].{}".format(section.keyword, entry.keyword))
@@ -244,9 +244,9 @@ class EDS:
                     entry.name = entry_name
 
                 for field_index, field in enumerate(entry.fields):
-                    if self.protocol_db.has_field(section.keyword, entry.keyword, field_index):
-                        field.data_types = self.protocol_db.get_field_data_types(section.keyword, entry.keyword, field_index)
-                        field_data_object = self.protocol_db.assign_type_to_field(section.keyword, entry.keyword, field_index, field.value)
+                    if self.protocol_db.has_field(section.keyword, entry.keyword, field_index, protocol=self.protocol):
+                        field.data_types = self.protocol_db.get_field_data_types(section.keyword, entry.keyword, field_index, protocol=self.protocol)
+                        field_data_object = self.protocol_db.assign_type_to_field(section.keyword, entry.keyword, field_index, field.value, protocol=self.protocol)
 
                         # Failed to find a proper data type for the field. Handle special case of EnumN keyword
                         if field_data_object is None and section.name == "Parameters" and "Enum" in entry.keyword:
@@ -554,13 +554,28 @@ class EDS_RefDatabase:
             with file.open("r", encoding="utf-8") as src:
                 data = json.loads(src.read())
                 if data.get("project", None) == "eds_pie" and file != "edslib_schema.json":
-                    self.db[data["protocol"]] = data
+                    self.db[data["lib_name"]] = data
 
     def get_lib_name(self, section_keyword):
         for _, lib in self.db.items():
             if section_keyword in lib["sections"]:
                 return lib["protocol"]
         return None
+
+    def get_section(self, section_keyword, protocol=None):
+        section = None
+
+        if protocol is None: # Search all available databases
+            for _, lib in self.db.items():
+                section = lib["sections"].get(section_keyword, None)
+                if section: break
+            return section
+
+        for lib_name, lib in self.db.items():
+            if lib_name in ["MetaEDS", "Common Object Class", protocol]:
+                section = lib["sections"].get(section_keyword, None)
+                if section: break
+        return section
 
     def get_section_name_byclass_id(self, class_id, protocol=None):
         """
@@ -576,41 +591,33 @@ class EDS_RefDatabase:
         """
         To get a protocol specific EDS section name by its section keyword
         """
-        section = self.get_section(section_keyword)
+        section = self.get_section(section_keyword, protocol=protocol)
         if section:
             return section["name"]
         return None
 
     def get_section_id(self, section_keyword, protocol=None):
-        section = self.get_section(section_keyword)
+        section = self.get_section(section_keyword, protocol=protocol)
         if section:
             return section.get("class_id", None)
         return None
 
     def has_section(self, section_keyword, protocol=None):
-        """
-        Checks the existence of a section by its name
-        """
-        for _, lib in self.db.items():
-            if section_keyword in lib["sections"]:
-                return True
-        return False
+        if protocol is None: # Search all available databases
+            for _, lib in self.db.items():
+                if section_keyword in lib["sections"]: return True
+            return False
 
-    def get_section(self, section_keyword, protocol=None):
-        section = None
-        for _, lib in self.db.items():
-            section = lib["sections"].get(section_keyword, None)
-            if section:
-                break
-            else:
-                continue
-        return section
+        for lib_name, lib in self.db.items(): # Search only Generic libs + specified Protocol
+            if lib_name in ["MetaEDS", "Common Object Class", protocol]:
+                if section_keyword in lib["sections"]: return True
+            return False
 
     def has_entry(self, section_keyword, entry_keyword, protocol=None):
         """
         To get an entry dictionary by its section name and entry name
         """
-        return self.get_entry(section_keyword, entry_keyword) is not None
+        return self.get_entry(section_keyword, entry_keyword, protocol=protocol) is not None
 
     def get_entry(self, section_keyword, entry_keyword, protocol=None):
         """
@@ -622,25 +629,25 @@ class EDS_RefDatabase:
             entry_keyword = entry_keyword.rstrip(digits) + "N"
 
         # First check if the entry is in common class object
-        section_id = self.get_section_id(section_keyword)
+        section_id = self.get_section_id(section_keyword, protocol=protocol)
         if section_id and section_id != 0:
             common_section = self.get_section("CommonObjectClass")
             entry = common_section["entries"].get(entry_keyword, None)
         if entry is None:
-            section = self.get_section(section_keyword)
+            section = self.get_section(section_keyword, protocol=protocol)
             if section:
                 entry = section["entries"].get(entry_keyword, None)
         return entry
 
     def get_entry_name(self, section_keyword, entry_keyword, protocol=None):
-        entry = self.get_entry(section_keyword, entry_keyword)
+        entry = self.get_entry(section_keyword, entry_keyword, protocol=protocol)
         if entry:
             return entry["name"]
         return None
 
     def has_field(self, section_keyword, entry_keyword, field_index, protocol=None):
         field = None
-        entry = self.get_entry(section_keyword, entry_keyword)
+        entry = self.get_entry(section_keyword, entry_keyword, protocol=protocol)
         if entry:
             """
             If the requested index is greater than listed fields in the lib,
@@ -656,7 +663,7 @@ class EDS_RefDatabase:
         To get a field dictionary by its section name and entry name and field index
         """
         field = None
-        entry = self.get_entry(section_keyword, entry_keyword)
+        entry = self.get_entry(section_keyword, entry_keyword, protocol=protocol)
         if entry:
             """
             If the requested index is greater than listed fields in the lib,
@@ -676,7 +683,7 @@ class EDS_RefDatabase:
         To get a field dictionary by its section name and entry name and field name
         """
         field = None
-        entry = self.get_entry(section_keyword, entry_keyword)
+        entry = self.get_entry(section_keyword, entry_keyword, protocol=protocol)
         if entry:
             if field_name[-1].isdigit(): # Incremental field_name
                 field_name = field_name.rstrip(digits) + "N"
@@ -689,30 +696,37 @@ class EDS_RefDatabase:
     def get_required_sections(self, protocol=None):
         required_sections = {}
 
-        for _, lib in self.db.items():
-            for section_keyword, section in lib["sections"].items():
-                if section["required"] == True:
-                    required_sections.update({section_keyword: section})
+        if protocol is None:
+            for _, lib in self.db.items():
+                for section_keyword, section in lib["sections"].items():
+                    if section["required"] == True:
+                        required_sections.update({section_keyword: section})
+            return required_sections
 
+        for lib_name, lib in self.db.items():
+            if lib_name in ["MetaEDS", "Common Object Class", protocol]:
+                for section_keyword, section in lib["sections"].items():
+                    if section["required"] == True:
+                        required_sections.update({section_keyword: section})
         return required_sections
 
     def get_type(self, type_name):
         return getattr(__import__("eds_pie.cip_eds_types", fromlist=[type_name]), type_name, None)
 
     def get_field_data_types(self, section_keyword, entry_keyword, field_index, protocol=None):
-        field = self.get_field_byindex(section_keyword, entry_keyword, field_index)
+        field = self.get_field_byindex(section_keyword, entry_keyword, field_index, protocol=protocol)
         if field is not None:
             return field.get("data_types", None)
         return None
 
     def get_field_name(self, section_keyword, entry_keyword, field_index, protocol=None):
-        field = self.get_field_byindex(section_keyword, entry_keyword, field_index)
+        field = self.get_field_byindex(section_keyword, entry_keyword, field_index, protocol=protocol)
         if field is not None:
             return field.get("name", None)
         return None
 
     def assign_type_to_field(self, section_keyword, entry_keyword, field_index, field_value, protocol=None):
-        ref_field = self.get_field_byindex(section_keyword, entry_keyword, field_index)
+        ref_field = self.get_field_byindex(section_keyword, entry_keyword, field_index, protocol=protocol)
         if ref_field is not None:
             ref_data_types = ref_field.get("data_types", {})
 
@@ -728,7 +742,7 @@ class EDS_RefDatabase:
         return False
 
     def is_required_field(self, section_keyword, entry_keyword, field_index, protocol=None):
-        field = self.get_field_byindex(section_keyword, entry_keyword, field_index)
+        field = self.get_field_byindex(section_keyword, entry_keyword, field_index, protocol=protocol)
         if field:
             return field.get("required", False)
         return False

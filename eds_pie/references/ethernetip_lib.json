@@ -2,7 +2,7 @@
   "schema_verison": 1,
   "schema_file": "edslib_schema.json",
   "project": "eds_pie",
-  "lib_name": "EtherNet/IP",
+  "lib_name": "EtherNetIP",
   "protocol": "EtherNetIP",
   "comment": "All CIP and EtherNet/IP related classes.",
   "sections": {
