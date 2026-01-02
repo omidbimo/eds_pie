@@ -231,7 +231,8 @@ class EDS:
         for _, section in self.sections.items():
             section_name = self.protocol_db.get_section_name(section.keyword)
             if section_name is None:
-                logger.warning("Unknown Section [{}]".format(section.keyword))
+                if not VENDOR_SPECIFIC.validate(section.keyword):
+                    logger.warning("Unknown Section [{}]".format(section.keyword))
             else:
                 # replace the default name with the correct one from reflib
                 section.name = section_name
@@ -239,7 +240,8 @@ class EDS:
             for _, entry in section.entries.items():
                 entry_name = self.protocol_db.get_entry_name(section.keyword, entry.keyword)
                 if entry_name is None:
-                    logger.warning("Unknown Entry [{}].{}".format(section.keyword, entry.keyword))
+                    if not VENDOR_SPECIFIC.validate(section.keyword) and not VENDOR_SPECIFIC.validate(entry.keyword):
+                        logger.warning("Unknown Entry [{}].{}".format(section.keyword, entry.keyword))
                 else:
                     # replace the default name with the correct one from reflib
                     entry.name = entry_name
@@ -248,10 +250,28 @@ class EDS:
                     if self.protocol_db.has_field(section.keyword, entry.keyword, field_index):
                         field.data_types = self.protocol_db.get_field_data_types(section.keyword, entry.keyword, field_index)
                         field_data_object = self.protocol_db.assign_type_to_field(section.keyword, entry.keyword, field_index, field.value)
+
+                        # Failed to find a proper data type for the field. Handle special case of EnumN keyword
+                        if field_data_object is None and section.name == "Parameters" and "Enum" in entry.keyword:
+                            associated_param_field = self.get_field("Params", entry.keyword.replace("Enum", "Param"), 4)
+                            type_name = CIP_TYPES.stringify(getnumber(associated_param_field.value))
+                            if type_name:
+                                field_data_object = self.protocol_db.get_type(type_name)(field.value)
+
                         if field_data_object is not None:
                             field.data = field_data_object
+                        else:
+                            # Wasn't able to assign a data type to this field.
+                            # Introduce the list of acceptable data types for this specific field
+                            data_types = self.protocol_db.get_field_data_types(section.keyword, entry.keyword, field_index)
+                            types_str = ", ".join("<{}({})>".format(type_name, type_meta)
+                                                    for type_name, type_meta in data_types.items())
+                            if field.value != "":
+                                logger.error("Data_type mismatch! [{}].{}.{} = ({}), Field should be of type: {}".format(
+                                    section.keyword, entry.keyword, field_index, field.value, types_str))
                     else:
-                        logger.warning("Unknown Field [{}].{}.{}".format(section.keyword, entry.keyword, field.name))
+                        if not VENDOR_SPECIFIC.validate(section.keyword) and not VENDOR_SPECIFIC.validate(entry.keyword):
+                            logger.warning("Unknown Field [{}].{}.{}".format(section.keyword, entry.keyword, field.name))
 
         for _, section in self.sections.items():
            for _, entry in section.entries.items():
@@ -703,14 +723,6 @@ class EDS_RefLib:
                 if self.validate(type_name, type_meta, field_value):
                     return self.get_type(type_name)(field_value, type_meta)
 
-            # Wasn't able to assign a data type to this field using available protocol
-            # references. Introduce the list of acceptable data types for this specific field
-            types_str = ", ".join("<{}({})>".format(type_name, type_meta)
-                                    for type_name, type_meta in ref_data_types.items())
-
-            if field_value != "":
-                logger.error("Data_type mismatch! [{}].{}.{} = ({}), Field should be of type: {}".format(
-                    section_keyword, entry_keyword, field_index, field_value, types_str))
         return None
 
     def validate(self, type_name, type_info, value):

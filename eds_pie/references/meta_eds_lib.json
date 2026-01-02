@@ -562,10 +562,7 @@
               "name": "Enum",
               "required": false,
               "data_types": {
-                "USINT": [],
-                "REF": [
-                  "ParamN"
-                ]
+                "USINT": []
               }
             },
             {
