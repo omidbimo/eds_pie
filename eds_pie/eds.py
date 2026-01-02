@@ -5,11 +5,10 @@ from pathlib import Path
 from .cip_eds_types import *
 
 class EDS:
-
     def __init__(self):
         self.protocol = None
         self.classification = None
-        self.protocol_db = EDS_RefDatabase()
+        self.ref_db = EDS_RefDatabase()
         self.sections = {}
         self.hcomment = "" # Heading comment
         self.fcomment = "" # End comment
@@ -64,7 +63,7 @@ class EDS:
         if isinstance(section_keyword, str):
             return section_keyword in self.sections.keys()
         if isinstance(section_keyword, numbers.Number):
-            return self.protocol_db.get_section_name(section_keyword, self.protocol) in self.sections.keys()
+            return self.protocol_db.get_section_name(section_keyword) in self.sections.keys()
         raise TypeError("Inappropriate data type: {}".format(type(section_keyword)))
 
     def has_entry(self, section_keyword, entry_keyword):
@@ -87,7 +86,7 @@ class EDS:
             raise Exception("Duplicate section! [{}}".format(section_keyword))
 
         section_name = section_keyword # using section keyword as the default section name
-        section = Section(self, section_keyword, section_name, self.protocol_db.get_section_id(section_keyword), line_number)
+        section = Section(self, section_keyword, section_name, None, line_number)
         self.sections.update({section_keyword: section})
 
         return section
@@ -152,11 +151,6 @@ class EDS:
         hfile.write(eds_content)
         hfile.close()
 
-    def get_cip_section_name(self, class_id, protocol=None):
-        if protocol is None:
-            protocol = self.protocol
-        return self.protocol_db.get_section_name(class_id, protocol)
-
     def resolve_epath(self, epath):
         """
         EPATH data types can contain references to param entries in params section.
@@ -210,7 +204,7 @@ class EDS:
                 logger.warning("Missing required entry [Device Classification].Class1")
             else:
                 index = 0
-                public_classifications = self.protocol_db.get_field_data_types("Device Classification", "ClassN", 0)["KEYWORD"]
+                public_classifications = self.ref_db.get_field_data_types("Device Classification", "ClassN", 0)["KEYWORD"]
                 for keyword, entry in classifications:
                     index += 1
                     if keyword != "Class{}".format(index):
@@ -223,19 +217,21 @@ class EDS:
                             self.protocol = "EtherNetIP"
                         else:
                             self.protocol = entry.value
+                        self.ref_db.set_protocol(self.protocol)
 
         # Validate sections, entries and fields then assign a data type to each field if possible
         for _, section in self.sections.items():
-            section_name = self.protocol_db.get_section_name(section.keyword, protocol=self.protocol)
+            section_name = self.ref_db.get_section_name(section.keyword)
             if section_name is None:
                 if not VENDOR_SPECIFIC.validate(section.keyword):
                     logger.warning("Unknown Section [{}]".format(section.keyword))
             else:
                 # replace the default name with the correct one from reflib
                 section.name = section_name
+                section.class_id = self.ref_db.get_section_class_id(section.keyword)
 
             for _, entry in section.entries.items():
-                entry_name = self.protocol_db.get_entry_name(section.keyword, entry.keyword, protocol=self.protocol)
+                entry_name = self.ref_db.get_entry_name(section.keyword, entry.keyword)
                 if entry_name is None:
                     if not VENDOR_SPECIFIC.validate(section.keyword) and not VENDOR_SPECIFIC.validate(entry.keyword):
                         logger.warning("Unknown Entry [{}].{}".format(section.keyword, entry.keyword))
@@ -244,23 +240,23 @@ class EDS:
                     entry.name = entry_name
 
                 for field_index, field in enumerate(entry.fields):
-                    if self.protocol_db.has_field(section.keyword, entry.keyword, field_index, protocol=self.protocol):
-                        field.data_types = self.protocol_db.get_field_data_types(section.keyword, entry.keyword, field_index, protocol=self.protocol)
-                        field_data_object = self.protocol_db.assign_type_to_field(section.keyword, entry.keyword, field_index, field.value, protocol=self.protocol)
+                    if self.ref_db.has_field(section.keyword, entry.keyword, field_index):
+                        field.data_types = self.ref_db.get_field_data_types(section.keyword, entry.keyword, field_index)
+                        field_data_object = self.ref_db.assign_type_to_field(section.keyword, entry.keyword, field_index, field.value)
 
                         # Failed to find a proper data type for the field. Handle special case of EnumN keyword
                         if field_data_object is None and section.name == "Parameters" and "Enum" in entry.keyword:
                             associated_param_field = self.get_field("Params", entry.keyword.replace("Enum", "Param"), 4)
                             type_name = CIP_TYPES.stringify(getnumber(associated_param_field.value))
                             if type_name:
-                                field_data_object = self.protocol_db.get_type(type_name)(field.value)
+                                field_data_object = self.ref_db.get_type(type_name)(field.value)
 
                         if field_data_object is not None:
                             field.data = field_data_object
                         else:
                             # Wasn't able to assign a data type to this field.
                             # Introduce the list of acceptable data types for this specific field
-                            data_types = self.protocol_db.get_field_data_types(section.keyword, entry.keyword, field_index)
+                            data_types = self.ref_db.get_field_data_types(section.keyword, entry.keyword, field_index)
                             types_str = ", ".join("<{}({})>".format(type_name, type_meta)
                                                     for type_name, type_meta in data_types.items())
                             if field.value != "":
@@ -536,13 +532,17 @@ class Field:
         if self.data is None:
             return "FIELD(index: {}, name: \"{}\", value: ({}), type: <{}>{})".format(
                 self.index, self.name, "", "", "")
-        # TODO: If a field of STRING contains multi lines of string, print each line as a seperate string.
+
         return "FIELD(index: {}, name: \"{}\", value: ({}), type: <{}>{})".format(
             self.index, self.name, str(self.data), type(self.data).__name__, self.data.range)
 
 class EDS_RefDatabase:
     def __init__(self):
-        self.db = {}
+        self.multi_protocol_db = {}
+        self.meta_db = {}
+        self.common_object_db = {}
+        self.protocol = None # Default: Generic
+        self.protocol_db = {}
 
         ref_dir = Path(__file__).parent / "references"
         json_files = [f for f in ref_dir.iterdir() if f.suffix==".json"]
@@ -553,73 +553,86 @@ class EDS_RefDatabase:
         for file in json_files:
             with file.open("r", encoding="utf-8") as src:
                 data = json.loads(src.read())
-                if data.get("project", None) == "eds_pie" and file != "edslib_schema.json":
-                    self.db[data["lib_name"]] = data
+                if data.get("project", None) == "eds_pie" and data["lib_name"] == "MetaEDS":
+                    self.meta_db = data
+                elif data.get("project", None) == "eds_pie" and data["lib_name"] == "Common Object Class":
+                    self.common_object_db = data
+                elif data.get("project", None) == "eds_pie" and file != "edslib_schema.json":
+                    self.multi_protocol_db[data["lib_name"]] = data
+        assert self.meta_db
+        assert self.common_object_db
+        self.protocol_db = self.multi_protocol_db
 
-    def get_lib_name(self, section_keyword):
-        for _, lib in self.db.items():
-            if section_keyword in lib["sections"]:
-                return lib["protocol"]
-        return None
+    def set_protocol(self, protocol):
+        if protocol in ["CompoNet", "ControlNet", "DeviceNet", "EtherNetIP"]:
+            if protocol in self.multi_protocol_db:
+                self.protocol = protocol
+                self.protocol_db = {protocol: self.multi_protocol_db[protocol]}
+                logger.info("Protocol Database access restricted to {}.".format(protocol))
+            else:
+                logger.error("Requested Protocol Database \"{}\" not available!".format(protocol))
+        else:
+            logger.error("Requested Protocol Database \"{}\" not a valid protocol!".format(protocol))
 
-    def get_section(self, section_keyword, protocol=None):
+    def reset_protocol(self):
+        self.protocol = None
+        self.protocol_db = self.multi_protocol_db
+        logger.info("Protocol Database access set to Generic.")
+
+    def get_section(self, section_keyword):
         section = None
 
-        if protocol is None: # Search all available databases
-            for _, lib in self.db.items():
+        section = self.meta_db["sections"].get(section_keyword, None)
+        if section is None:
+            for lib_name, lib in self.protocol_db.items():
                 section = lib["sections"].get(section_keyword, None)
-                if section: break
-            return section
-
-        for lib_name, lib in self.db.items():
-            if lib_name in ["MetaEDS", "Common Object Class", protocol]:
-                section = lib["sections"].get(section_keyword, None)
-                if section: break
+                if section:
+                    if self.protocol is None:
+                        # Section found in a protocol specific database. Restrict the access to other protocols
+                        self.set_protocol(lib_name)
+                    break
         return section
 
-    def get_section_name_byclass_id(self, class_id, protocol=None):
+    def get_section_name_byclass_id(self, class_id):
         """
         To get a protocol specific EDS section_keyword by its CIP class ID
         """
-        for _, lib in self.db.items():
+        for lib_name, lib in self.protocol_db.items():
             for section in lib["sections"]:
                 if section["class_id"] == class_id:
                     return section
         return ""
 
-    def get_section_name(self, section_keyword, protocol=None):
+    def get_section_name(self, section_keyword):
         """
         To get a protocol specific EDS section name by its section keyword
         """
-        section = self.get_section(section_keyword, protocol=protocol)
+        section = self.get_section(section_keyword)
         if section:
             return section["name"]
         return None
 
-    def get_section_id(self, section_keyword, protocol=None):
-        section = self.get_section(section_keyword, protocol=protocol)
+    def get_section_class_id(self, section_keyword):
+        section = self.get_section(section_keyword)
         if section:
             return section.get("class_id", None)
         return None
 
-    def has_section(self, section_keyword, protocol=None):
-        if protocol is None: # Search all available databases
-            for _, lib in self.db.items():
-                if section_keyword in lib["sections"]: return True
-            return False
+    def has_section(self, section_keyword):
+        if section_keyword in self.meta_db["sections"]:
+            return True
+        for lib_name, lib in self.protocol_db.items():
+            if section_keyword in lib["sections"]:
+                return True
+        return False
 
-        for lib_name, lib in self.db.items(): # Search only Generic libs + specified Protocol
-            if lib_name in ["MetaEDS", "Common Object Class", protocol]:
-                if section_keyword in lib["sections"]: return True
-            return False
-
-    def has_entry(self, section_keyword, entry_keyword, protocol=None):
+    def has_entry(self, section_keyword, entry_keyword):
         """
         To get an entry dictionary by its section name and entry name
         """
-        return self.get_entry(section_keyword, entry_keyword, protocol=protocol) is not None
+        return self.get_entry(section_keyword, entry_keyword) is not None
 
-    def get_entry(self, section_keyword, entry_keyword, protocol=None):
+    def get_entry(self, section_keyword, entry_keyword):
         """
         To get an entry dictionary by its section name and entry name
         """
@@ -629,25 +642,24 @@ class EDS_RefDatabase:
             entry_keyword = entry_keyword.rstrip(digits) + "N"
 
         # First check if the entry is in common class object
-        section_id = self.get_section_id(section_keyword, protocol=protocol)
-        if section_id and section_id != 0:
-            common_section = self.get_section("CommonObjectClass")
-            entry = common_section["entries"].get(entry_keyword, None)
+        section_id = self.get_section_class_id(section_keyword)
+        if section_id and section_id > 0:
+            entry = self.common_object_db["sections"]["CommonObjectClass"]["entries"].get(entry_keyword, None)
         if entry is None:
-            section = self.get_section(section_keyword, protocol=protocol)
+            section = self.get_section(section_keyword)
             if section:
                 entry = section["entries"].get(entry_keyword, None)
         return entry
 
-    def get_entry_name(self, section_keyword, entry_keyword, protocol=None):
-        entry = self.get_entry(section_keyword, entry_keyword, protocol=protocol)
+    def get_entry_name(self, section_keyword, entry_keyword):
+        entry = self.get_entry(section_keyword, entry_keyword)
         if entry:
             return entry["name"]
         return None
 
-    def has_field(self, section_keyword, entry_keyword, field_index, protocol=None):
+    def has_field(self, section_keyword, entry_keyword, field_index):
         field = None
-        entry = self.get_entry(section_keyword, entry_keyword, protocol=protocol)
+        entry = self.get_entry(section_keyword, entry_keyword)
         if entry:
             """
             If the requested index is greater than listed fields in the lib,
@@ -658,12 +670,12 @@ class EDS_RefDatabase:
                 return True
         return False
 
-    def get_field_byindex(self, section_keyword, entry_keyword, field_index, protocol=None):
+    def get_field_byindex(self, section_keyword, entry_keyword, field_index):
         """
         To get a field dictionary by its section name and entry name and field index
         """
         field = None
-        entry = self.get_entry(section_keyword, entry_keyword, protocol=protocol)
+        entry = self.get_entry(section_keyword, entry_keyword)
         if entry:
             """
             If the requested index is greater than listed fields in the lib,
@@ -678,12 +690,12 @@ class EDS_RefDatabase:
                 field = entry["fields"][field_index]
         return field
 
-    def get_field_byname(self, section_keyword, entry_keyword, field_name, protocol=None):
+    def get_field_byname(self, section_keyword, entry_keyword, field_name):
         """
         To get a field dictionary by its section name and entry name and field name
         """
         field = None
-        entry = self.get_entry(section_keyword, entry_keyword, protocol=protocol)
+        entry = self.get_entry(section_keyword, entry_keyword)
         if entry:
             if field_name[-1].isdigit(): # Incremental field_name
                 field_name = field_name.rstrip(digits) + "N"
@@ -693,40 +705,23 @@ class EDS_RefDatabase:
                     field = fld
         return field
 
-    def get_required_sections(self, protocol=None):
-        required_sections = {}
-
-        if protocol is None:
-            for _, lib in self.db.items():
-                for section_keyword, section in lib["sections"].items():
-                    if section["required"] == True:
-                        required_sections.update({section_keyword: section})
-            return required_sections
-
-        for lib_name, lib in self.db.items():
-            if lib_name in ["MetaEDS", "Common Object Class", protocol]:
-                for section_keyword, section in lib["sections"].items():
-                    if section["required"] == True:
-                        required_sections.update({section_keyword: section})
-        return required_sections
-
     def get_type(self, type_name):
         return getattr(__import__("eds_pie.cip_eds_types", fromlist=[type_name]), type_name, None)
 
-    def get_field_data_types(self, section_keyword, entry_keyword, field_index, protocol=None):
-        field = self.get_field_byindex(section_keyword, entry_keyword, field_index, protocol=protocol)
+    def get_field_data_types(self, section_keyword, entry_keyword, field_index):
+        field = self.get_field_byindex(section_keyword, entry_keyword, field_index)
         if field is not None:
             return field.get("data_types", None)
         return None
 
-    def get_field_name(self, section_keyword, entry_keyword, field_index, protocol=None):
-        field = self.get_field_byindex(section_keyword, entry_keyword, field_index, protocol=protocol)
+    def get_field_name(self, section_keyword, entry_keyword, field_index):
+        field = self.get_field_byindex(section_keyword, entry_keyword, field_index)
         if field is not None:
             return field.get("name", None)
         return None
 
-    def assign_type_to_field(self, section_keyword, entry_keyword, field_index, field_value, protocol=None):
-        ref_field = self.get_field_byindex(section_keyword, entry_keyword, field_index, protocol=protocol)
+    def assign_type_to_field(self, section_keyword, entry_keyword, field_index, field_value):
+        ref_field = self.get_field_byindex(section_keyword, entry_keyword, field_index)
         if ref_field is not None:
             ref_data_types = ref_field.get("data_types", {})
 
@@ -741,8 +736,8 @@ class EDS_RefDatabase:
             return dt.validate(value, type_info)
         return False
 
-    def is_required_field(self, section_keyword, entry_keyword, field_index, protocol=None):
-        field = self.get_field_byindex(section_keyword, entry_keyword, field_index, protocol=protocol)
+    def is_required_field(self, section_keyword, entry_keyword, field_index):
+        field = self.get_field_byindex(section_keyword, entry_keyword, field_index)
         if field:
             return field.get("required", False)
         return False
