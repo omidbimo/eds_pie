@@ -556,7 +556,7 @@ class EDS_RefLib:
         for file in json_files:
             with file.open("r", encoding="utf-8") as src:
                 data = json.loads(src.read())
-                if data.get("project", None) ==  "eds_pie" and file != "edslib_schema.json":
+                if data.get("project", None) == "eds_pie" and file != "edslib_schema.json":
                     self.libs[data["protocol"].lower()] = data
 
     def get_lib_name(self, section_keyword):
@@ -587,7 +587,7 @@ class EDS_RefLib:
     def get_section_id(self, section_keyword):
         section = self.get_section(section_keyword)
         if section:
-            return section["class_id"]
+            return section.get("class_id", None)
         return None
 
     def has_section(self, section_keyword):
@@ -624,14 +624,15 @@ class EDS_RefLib:
         if entry_keyword[-1].isdigit(): # Enumerated Entry
             entry_keyword = entry_keyword.rstrip(digits) + "N"
 
-        section = self.get_section(section_keyword)
-        if section:
-            # First check if the entry is in common class object
-            if section["class_id"] and section["class_id"] != 0:
-                common_section = self.get_section("Common Object Class")
-                entry = common_section["entries"].get(entry_keyword, None)
+        # First check if the entry is in common class object
+        section_id = self.get_section_id(section_keyword)
+        if section_id and section_id != 0:
+            common_section = self.get_section("CommonObjectClass")
+            entry = common_section["entries"].get(entry_keyword, None)
 
-            if entry is None:
+        if entry is None:
+            section = self.get_section(section_keyword)
+            if section:
                 entry = section["entries"].get(entry_keyword, None)
         return entry
 
