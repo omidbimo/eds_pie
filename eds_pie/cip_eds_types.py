@@ -264,8 +264,7 @@ class CIP_EDS_BASE_TYPE(object):
 class CIP_EDS_BASE_INT(CIP_EDS_BASE_TYPE):
 
     def __init__(self, value, *args):
-        self._value = value
-        #sele._range = *args
+        self._value = getnumber(value)
 
     @classmethod
     def validate(cls, value, *args):
@@ -320,7 +319,6 @@ class CIP_EDS_BASE_INT(CIP_EDS_BASE_TYPE):
     def __len__(self):
         return self._size
 
-
 class BOOL(CIP_EDS_BASE_TYPE):
     _typeid = CIP_TYPES.BOOL
     _range = RANGE(0, 1)
@@ -338,7 +336,6 @@ class BOOL(CIP_EDS_BASE_TYPE):
 
     def __str__(self):
         return str(self._value != 0)
-
 
 class USINT(CIP_EDS_BASE_INT):
     _typeid = CIP_TYPES.USINT
@@ -483,6 +480,8 @@ class BYTE(CIP_EDS_BASE_INT):
     def __init__(self, value, *args):
         super(BYTE, self).__init__(value)
 
+    def __str__(self):
+        return "0x{:02X}".format(self._value)
 
 class WORD(CIP_EDS_BASE_INT):
     _typeid = CIP_TYPES.WORD
@@ -499,6 +498,8 @@ class WORD(CIP_EDS_BASE_INT):
     def __init__(self, value, *args):
         super(WORD, self).__init__(value)
 
+    def __str__(self):
+        return "0x{:04X}".format(self._value)
 
 class DWORD(CIP_EDS_BASE_INT):
     _typeid = CIP_TYPES.DWORD
@@ -515,6 +516,8 @@ class DWORD(CIP_EDS_BASE_INT):
     def __init__(self, value, *args):
         super(DWORD, self).__init__(value)
 
+    def __str__(self):
+        return "0x{:08X}".format(self._value)
 
 class LWORD(CIP_EDS_BASE_INT):
     _typeid = CIP_TYPES.LWORD
