@@ -141,23 +141,26 @@ class Parser:
 
         return self.eds
 
-    def add_comment(self, comment, line_number):
+    def add_comment(self, comment, line):
         if self.section_in_process is None:
             self.eds.hcomment += comment.strip() + '\n'
         elif self.field_in_process:
-            if line_number == self.field_in_process.line_number:
+            if line == self.field_in_process.line_number:
                 self.field_in_process.fcomment += comment.strip() + '\n'
-            elif line_number > self.field_in_process.line_number:
-                self.cached_comment += comment.strip() + '\n'
+            elif line > self.field_in_process.line_number:
+                if self.state == State.EXPECT_FIELD: # The last field can hold only one line of comment (after semicolon)
+                    self.field_in_process.fcomment += comment.strip() + '\n'
+                else:
+                    self.cached_comment += comment.strip() + '\n'
         elif self.entry_in_process:
-            if line_number == self.entry_in_process.line_number:
+            if line == self.entry_in_process.line_number:
                 self.entry_in_process.fcomment += comment.strip() + '\n'
-            elif line_number > self.entry_in_process.line_number:
+            elif line > self.entry_in_process.line_number:
                 self.cached_comment += comment.strip() + '\n'
         elif self.section_in_process:
-            if line_number == self.section_in_process.line_number:
+            if line == self.section_in_process.line_number:
                 self.section_in_process.fcomment += comment.strip() + '\n'
-            elif line_number > self.section_in_process.line_number:
+            elif line > self.section_in_process.line_number:
                 self.cached_comment += comment.strip() + '\n'
         else:
             assert False

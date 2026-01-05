@@ -320,18 +320,17 @@ class EDS:
                 eds_str += "".ljust(indent, " ") + "{} = ".format(entry.keyword)
 
                 # fields
+                # Entry has only one field and the field's value has only one line of Data
                 if len(entry.fields) == 1 and len(str(entry.fields[0].data).splitlines()) <= 1:
                     # Print entry, field and comment on the same line
-                    eds_str += "{};".format(str(entry.fields[0].data))
+                    field_str = "{};".format(str(entry.fields[0].data))
                     if entry.fields[0].fcomment:
-                        eds_str += "".ljust(indent, " ") + "$ " + " ".join("{}".format(line.strip()) for line in entry.fields[0].fcomment.splitlines())
-                    eds_str += "\n"
-                else:
-                    # print fields on the next line in multiple lines
-                    eds_str += "\n"
+                        field_str += " $ ".rjust(indent, " ") + ("\n" + " $ ".rjust(32, " ")).join("{}".format(line.strip()) for line in entry.fields[0].fcomment.splitlines())
+                    eds_str += field_str + "\n"
+                else: # Entry holds multiple Fields
+                    # print fields on a new line separated by commas
                     for index, field in enumerate(entry.fields):
-                        eds_str += "".ljust(2 * indent)
-                        field_str = ""
+                        field_str = "\n" + "".ljust(2 * indent) # Indent for the first field
                         field_str += "\n".ljust((2 * indent) + 1, " ").join(line.strip() for line in str(field.data).splitlines())
 
                         if index + 1 == len(entry.fields):
@@ -340,8 +339,10 @@ class EDS:
                             field_str += ","
 
                         if field.fcomment:
-                            field_str = field_str.ljust(6 * indent, " ") + "$ {}".format(field.fcomment.strip())
-                        eds_str += field_str + "\n"
+                            field_str += " $ ".rjust(33-len(field_str), " ") # Indent for the first field
+                            field_str +=  ("\n" + " $ ".rjust(32, " ")).join("{}".format(line.strip()) for line in field.fcomment.splitlines())
+
+                        eds_str += field_str
         # end comment
         eds_str += "\n"
         if self.fcomment:
