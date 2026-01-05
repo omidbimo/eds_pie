@@ -343,6 +343,7 @@ class EDS:
                             field_str +=  ("\n" + " $ ".rjust(32, " ")).join("{}".format(line.strip()) for line in field.fcomment.splitlines())
 
                         eds_str += field_str
+                    eds_str += "\n"
         # end comment
         eds_str += "\n"
         if self.fcomment:
