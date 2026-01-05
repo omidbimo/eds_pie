@@ -241,6 +241,7 @@ class EDS:
 
                 for field_index, field in enumerate(entry.fields):
                     if self.ref_db.has_field(section.keyword, entry.keyword, field_index):
+                        field.name = self.ref_db.get_field_name(section.keyword, entry.keyword, field_index)
                         field.data_types = self.ref_db.get_field_data_types(section.keyword, entry.keyword, field_index)
                         field_data_object = self.ref_db.assign_type_to_field(section.keyword, entry.keyword, field_index, field.value)
 
@@ -253,6 +254,7 @@ class EDS:
 
                         if field_data_object is not None:
                             field.data = field_data_object
+
                         else:
                             # Wasn't able to assign a data type to this field.
                             # Introduce the list of acceptable data types for this specific field
