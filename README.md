@@ -26,6 +26,27 @@ pip install git+https://github.com/omidbimo/eds_pie.git
 ```
 
 ## Usage
+**EDS Pie** consists of two primary components: a **parser/serializer** and a **semantic checker**.  
+
+To validate the contents of an Electronic Datasheet correctly, EDS Pie relies on **protocol-specific reference definitions**. These references describe the valid sections, entries, and fields as specified by **ODVA** for each supported protocol.
+
+### Current Implementation
+
+The current implementation provides a reference library only for **EtherNet/IP**, located at: **eds_pie/references/ethernetip_lib.json**
+
+
+### Adding Support for Other Protocols
+
+To support additional protocols—such as **DeviceNet**—a corresponding protocol-specific reference must be added to the `eds_pie/references/` directory.  
+
+Requirements for the reference:
+
+- Must be in **JSON format**.
+- Must strictly conform to the schema defined in: **eds_pie/references/edslib_schema.json**  
+
+Once such a reference is added, EDS Pie can process and semantically validate EDS files for the corresponding protocol without further changes to the core codebase.
+
+
 
 ```python
 # Demo1.py
@@ -36,10 +57,11 @@ with open('demo.eds', 'r') as src:
     eds_content = src.read()
 
 eds = CIP_EDS(eds_content)
+print("EDS Protocol: {}".format(eds.protocol or "Generic"))  
 
 eds.list() # Lists all objects in the EDS file 
 # or
-print(eds) # Prints out the serialized EDS
+print(eds) # Print the serialized EDS
 
 ```
 
@@ -123,4 +145,13 @@ eds = CIP_EDS(eds_content)
 ```
 
 ![image-debugmode](readme-images/image-debug-mode.png)
+
+
+## Contributing
+
+EDS Pie is designed to be **extensible and collaborative**. Contributions are appreciated in several forms, including:  
+
+- Adding new **protocol-specific reference libraries**.
+- Improving or extending the functionality.
+- Enhancing **documentation** or providing usage examples.
 
