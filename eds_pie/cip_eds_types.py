@@ -728,8 +728,9 @@ class EPATH(CIP_EDS_BASE_TYPE):
         return True
 
     def __str__(self):
-        return "\"{}\"".format(self.value)
-
+        if self.value:
+            return "\"{}\"".format(self.value)
+        return ""
 
 class REVISION(CIP_EDS_BASE_TYPE):
 
