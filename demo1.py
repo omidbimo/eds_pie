@@ -8,8 +8,9 @@ from eds_pie.eds_pie import CIP_EDS, __version__
 
 with open('demo.eds', 'rb') as srcfile:
     eds_content = srcfile.read()
-print(__version__)
+
 eds = CIP_EDS(eds_content)
+print("EDS Protocol: {}".format(eds.protocol or "Generic"))
 
 eds.list()
 print(eds)

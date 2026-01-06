@@ -1,27 +1,5 @@
-$ EZ-EDS Version 3.38.20251024 Generated Electronic Data Sheet
+$ EtherNet/IP Electronic Data Sheet
 
-$ ****************************************************************************
-$ MIT License
-$
-$ Copyright (c) 2021 Omid Kompani
-$
-$ Permission is hereby granted, free of charge, to any person obtaining a copy
-$ of this software and associated documentation files (the "Software"), to deal
-$ in the Software without restriction, including without limitation the rights
-$ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-$ copies of the Software, and to permit persons to whom the Software is
-$ furnished to do so, subject to the following conditions:
-$
-$ The above copyright notice and this permission notice shall be included in all
-$ copies or substantial portions of the Software.
-$
-$ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-$ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-$ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-$ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-$ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-$ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-$ SOFTWARE.
 $ ****************************************************************************
 $
 $ ATTENTION:
@@ -31,149 +9,164 @@ $
 $ ****************************************************************************
 
 [File]
-        DescText = "A Demo EDS file";
-        CreateDate = 01-01-2021;
-        CreateTime = 10:50:30;
-        ModDate = 01-01-2021;
-        ModTime = 10:50:30;
-        Revision = 1.1;
-        HomeURL = "https://github.com/omidbimo/eds_pie";
-
-[TCP/IP Interface Class]
-        Revision = 1;
-        Object_Name = "TCP/IP Interface Object";
-        Object_Class_Code = 0xF5;
-        MaxInst = 22;
-        Number_Of_Static_Instances = 1;
-        Max_Number_Of_Dynamic_Instances = 0;
-        Class_Attributes =
-                1,
-                2,
-                3,
-                6,
-                7;
-        Instance_Attributes =
-                1,
-                2,
-                3,
-                4,
-                5,
-                6;
-        Class_Services =
-                0x01,
-                0x0E;
-        Instance_Services =
-                0x01,
-                0x02,
-                0x0E,
-                0x10;
+    DescText = "A Demo EDS file";
+    CreateDate = 01-01-2021;
+    CreateTime = 10:50:30;
+    ModDate = 01-01-2021;
+    ModTime = 10:50:30;
+    Revision = 1.1;
+    HomeURL = "https://github.com/omidbimo/eds_pie";
 
 [Device]
-        VendCode = 65535; $ Vendor Id
-        VendName = "omidbimo";
-        ProdType = 12;
-        ProdTypeStr = "Communications Adapter";
-        ProdCode = 1;
-        MajRev = 1;
-        MinRev = 1;
-        ProdName = "EDS pie";
-        Catalog = "100.200.300";
-        Icon = "myicon.ico";
-        IconContents =
-                "AAABAAEAICAQAAAAAAD+AgAAFgAAACgAAAAgAAAAQAAAAAEABAAAAAAAAAAA"
-                "AAAAAAAAAAAAEAAAABAAAAAAAAAAgICAAIAAAAD/AAAAgIAAAP//AAAAgAAA"
-                "AP8AAACAgAAA//8AAACAAAAA/wCAAIAA/wD/AMDAwAD///8A////////////"
-                "////////////////////////////////////////////////////////////"
-                "/////////////////////u7hERER7v////////7uERYAAAEREAEf/////+ER"
-                "AAARHu7u7u7hAf////4QAR7u7u7u7u7u7hDv///gHu7u7u7u7u7u7uERHv//"
-                "Hv7u7u7u7u7u7hEQEQ7//x7u/+7u7u7u7uERERER7/8R7u7u7u7u7u4REQAB"
-                "EO//4RHu7u7u7uEREREREREe//EQHu7uERERERERERERDv/xEQ7hERERERER"
-                "ERERERHv/hEREREREREREREREREQH/8RERERERERERERERERER7/4RERERER"
-                "EREREREREREO//EREREREREREREREREREf/+ERERERERERERERERARH//xER"
-                "ERERERERERERERER///xEREREREQERERERABEf//8RERERERERERERERER7/"
-                "//8RAREREREREREREREf////4RAREREREREREREe//////4RERERERERER7v"
-                "////////8REREREe7///////////////7v//////////////////////////"
-                "////////////////////////////////////////////////////////////"
-                "//////////8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+    VendCode = 65535;  $ Vendor Id
+    VendName = "omidbimo";
+    ProdType = 12;
+    ProdTypeStr = "Communications Adapter";
+    ProdCode = 1;
+    MajRev = 1;
+    MinRev = 1;
+    ProdName = "EDS pie";
+    Catalog = "100.200.300";
+    Icon = "myicon.ico";
+    IconContents =
+        "AAABAAEAICAQAAAAAAD+AgAAFgAAACgAAAAgAAAAQAAAAAEABAAAAAAAAAAA"
+        "AAAAAAAAAAAAEAAAABAAAAAAAAAAgICAAIAAAAD/AAAAgIAAAP//AAAAgAAA"
+        "AP8AAACAgAAA//8AAACAAAAA/wCAAIAA/wD/AMDAwAD///8A////////////"
+        "////////////////////////////////////////////////////////////"
+        "/////////////////////u7hERER7v////////7uERYAAAEREAEf/////+ER"
+        "AAARHu7u7u7hAf////4QAR7u7u7u7u7u7hDv///gHu7u7u7u7u7u7uERHv//"
+        "Hv7u7u7u7u7u7hEQEQ7//x7u/+7u7u7u7uERERER7/8R7u7u7u7u7u4REQAB"
+        "EO//4RHu7u7u7uEREREREREe//EQHu7uERERERERERERDv/xEQ7hERERERER"
+        "ERERERHv/hEREREREREREREREREQH/8RERERERERERERERERER7/4RERERER"
+        "EREREREREREO//EREREREREREREREREREf/+ERERERERERERERERARH//xER"
+        "ERERERERERERERER///xEREREREQERERERABEf//8RERERERERERERERER7/"
+        "//8RAREREREREREREREf////4RAREREREREREREe//////4RERERERERER7v"
+        "////////8REREREe7///////////////7v//////////////////////////"
+        "////////////////////////////////////////////////////////////"
+        "//////////8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
 
 [Device Classification]
-        Class1 = 12345_MyProtocol;
-        Class2 = EtherNetIP;
+    Class1 = 12345_MyProtocol;
+    Class2 = EtherNetIP;
+
+[TCP/IP Interface Class]
+    Revision = 1;
+    Object_Name = "TCP/IP Interface Object";
+    Object_Class_Code = 245;
+    MaxInst = 22;
+    Number_Of_Static_Instances = 1;
+    Max_Number_Of_Dynamic_Instances = 0;
+    Class_Attributes =
+        1,
+        2,
+        3,
+        6,
+        7;
+    Instance_Attributes =
+        1,
+        2,
+        3,
+        4,
+        5,
+        6;
+    Class_Services =
+        0x01,
+        0x0E;
+    Instance_Services =
+        0x01,
+        0x02,
+        0x0E,
+        0x10;
 
 [Params]
-        Param1000 =
-                0,                      $ reserved, shall equal 0
-                ,,                      $ Link Path Size, Link Packed EPATH
-                0x0210,                 $ Descriptor: read only
-                0xC8,                   $ Data Type : UDINT
-                4,                      $ Data Size in bytes
-                "RPI Range",            $ Parameter Name
-                "",                     $ Units String
-                "",                     $ Help String
-                1000,1000000,500000,    $ min, max, default data values
-                ,,,,                    $ mult, div, base, offset scaling
-                ,,,,                    $ mult, div, base, offset links
-                ;                       $ Decimal Precision
+    Param1000 =
+        0,                    $ reserved, shall equal 0
+        ,
+        ,                     $ Link Path Size, Link Packed EPATH
+        0x0210,               $ Descriptor: read only
+        200,                  $ Data Type : UDINT
+        4,                    $ Data Size in bytes
+        "RPI Range",          $ Parameter Name
+        ,                     $ Units String
+        ,                     $ Help String
+        1000,
+        1000000,
+        500000,               $ min, max, default data values
+        ,
+        ,
+        ,
+        ,                     $ mult, div, base, offset scaling
+        ,
+        ,
+        ,
+        ,                     $ mult, div, base, offset links
+        ;                     $ Decimal Precision
 
 [Connection Manager]
-        Object_Name = "Connection Manager Object";
-        Object_Class_Code = 0x06;
-        PITNS = Yes;                    $ Support of Network Segment: Production Inhibit Time Milliseconds
-
-        Connection1 =
-                0x04010002,             $ trigger & transport
-                                        $  0-15  = supported transport classes (class 1)
-                                        $  16 = cyclic (1 = supported)
-                                        $  17 = change of state (0 = not supported)
-                                        $  18 = on demand (0 = not supported)
-                                        $  19-23 = reserved (must be zero)
-                                        $  24-27 = exclusive owner
-                                        $  28-30 = reserved (must be zero)
-                                        $  31 = client 0 / server = 1
-                0x44640405,             $ Connection parameters
-                                        $   0     = O->T fixed (1 = supported)
-                                        $   1     = O->T variable (0 = not supported)
-                                        $   2     = T->O fixed (1 = supported)
-                                        $   3     = T->O variable (0 = not supported)
-                                        $  4-7   = reserved (must be zero)
-                                        $  8-10  = O->T Real time transfer format: 32-bit run/idle header
-                                        $  11  = reserved (must be zero)
-                                        $  12-14 = T->O Real time transfer format: Modeless
-                                        $  15  = reserved (must be zero)
-                                        $  16-19 = O->T connection type: point-to-point
-                                        $  20-23 = T->O connection type: multicast or point-to-point
-                                        $  24-27 = O->T priority: scheduled
-                                        $  28-31 = T->O priority: scheduled
-                Param1000,,Assem1000,   $ O->T RPI, Size, Format
-                Param1000,,Assem1001,   $ T->O RPI, Size, Format
-                ,,                      $ Proxy Config Size, Format
-                ,,                      $ Target Config Size, Format
-                "Exclusive Owner ",     $ Connection name
-                "",                     $ Help string
-                "20 04 24 01 2C 02 2C 03";    $ Connection path
+    Object_Name = "Connection Manager Object";
+    Object_Class_Code = 6;
+    PITNS = Yes;  $ Support of Network Segment: Production Inhibit Time Milliseconds
+    Connection1 =
+        0x04010002,           $ trigger & transport
+                              $ 0-15  = supported transport classes (class 1)
+                              $ 16 = cyclic (1 = supported)
+                              $ 17 = change of state (0 = not supported)
+                              $ 18 = on demand (0 = not supported)
+                              $ 19-23 = reserved (must be zero)
+                              $ 24-27 = exclusive owner
+                              $ 28-30 = reserved (must be zero)
+                              $ 31 = client 0 / server = 1
+        0x44640405,           $ Connection parameters
+                              $ 0     = O->T fixed (1 = supported)
+                              $ 1     = O->T variable (0 = not supported)
+                              $ 2     = T->O fixed (1 = supported)
+                              $ 3     = T->O variable (0 = not supported)
+                              $ 4-7   = reserved (must be zero)
+                              $ 8-10  = O->T Real time transfer format: 32-bit run/idle header
+                              $ 11  = reserved (must be zero)
+                              $ 12-14 = T->O Real time transfer format: Modeless
+                              $ 15  = reserved (must be zero)
+                              $ 16-19 = O->T connection type: point-to-point
+                              $ 20-23 = T->O connection type: multicast or point-to-point
+                              $ 24-27 = O->T priority: scheduled
+                              $ 28-31 = T->O priority: scheduled
+        Param1000,
+        ,
+        Assem1000,            $ O->T RPI, Size, Format
+        Param1000,
+        ,
+        Assem1001,            $ T->O RPI, Size, Format
+        ,
+        ,                     $ Proxy Config Size, Format
+        ,
+        ,                     $ Target Config Size, Format
+        "Exclusive Owner ",   $ Connection name
+        ,                     $ Help string
+        "20 04 24 01 2C 02 2C 03"; $ Connection path
 
 [Assembly]
-        Revision = 2;
-
-        Assem1000 =
-                "Reset Command",        $ Name
-                "21 04 00 25 02 00 30 03", $ Padded EPATH
-                1,                      $ Size
-                0x0000,                 $ Descriptor
-                ,,                      $ Reserved
-                1,;                     $ Member size, Member reference
-
-        Assem1001 =
-                "Status",               $ Name
-                "21 04 00 25 32 00 30 03", $ Padded EPATH
-                1,                      $ Size
-                0x0000,                 $ Descriptor
-                ,,                      $ Reserved
-                1,;                     $ Member size, Member reference
-
+    Revision = 2;
+    Assem1000 =
+        "Reset Command",      $ Name
+        "21 04 00 25 02 00 30 03", $ Padded EPATH
+        1,                    $ Size
+        0x0000,               $ Descriptor
+        ,
+        ,                     $ Reserved
+        1,
+        ;                     $ Member size, Member reference
+    Assem1001 =
+        "Status",             $ Name
+        "21 04 00 25 32 00 30 03", $ Padded EPATH
+        1,                    $ Size
+        0x0000,               $ Descriptor
+        ,
+        ,                     $ Reserved
+        1,
+        ;                     $ Member size, Member reference
 $ ****************************************************************************
 $ EOF
 $ ****************************************************************************
