@@ -1395,7 +1395,22 @@
       "name": "Ingress Egress Class",
       "required": false,
       "class_id": 99,
-      "entries": {}
+      "entries": {
+        "Maintain_Existing_Connection": {
+          "name": "Maintain Existing Connection",
+          "required": true,
+          "enumerated_fields": null,
+          "fields": [
+            {
+              "name": "Maintain Existing Connection",
+              "required": true,
+              "data_types": {
+                "BOOL": []
+              }
+            }
+          ]
+        }
+      }
     },
     "Connection Configuration": {
       "name": "Connection Configuration Class",
