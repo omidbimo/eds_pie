@@ -18,6 +18,7 @@ An Electronic Data Sheet (EDS), in the context of industrial communication, is a
 * Parsing EDS text files into a structured, hierarchical representation of sections, entries, and fields, as defined by the CIP specification
 * Programmatic creation, modification, and removal of sections, entries, and fields
 * Serialization of in-memory EDS objects back into a valid EDS plain-text file
+* Converting EDS data to JSON fromat
 
 
 ## Setup
