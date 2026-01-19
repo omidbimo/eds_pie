@@ -1,4 +1,5 @@
 import logging
+import json
 
 logging.basicConfig(level=logging.WARNING,
     format='%(asctime)s - %(name)s.%(levelname)-8s %(message)s')
@@ -29,4 +30,6 @@ eds.fcomment = """**************************************************************
                  ****************************************************************************"""
 
 eds.save("my_demo.eds", overwrite=True)
+# Converting EDS to JSON format
+print(json.dumps(eds.to_json(),indent=4))
 
