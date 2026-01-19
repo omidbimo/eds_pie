@@ -410,6 +410,7 @@
               "name": "Minimum Value",
               "required": false,
               "data_types": {
+                "UINT": [],
                 "DATATYPE_REF": [
                   "Data Type"
                 ],
@@ -420,6 +421,7 @@
               "name": "Maximum Value",
               "required": false,
               "data_types": {
+                "UINT": [],
                 "DATATYPE_REF": [
                   "Data Type"
                 ],
