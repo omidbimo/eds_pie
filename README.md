@@ -91,6 +91,7 @@ print(eds) # Print the serialized EDS
 - EDS.sections  # Representation of all EDS sections as a dictionary of {section_keyword: section_object}
 - EDS.hcomment # EDS File Header comment
 - EDS.fcomment # End comment of the EDS file
+- EDS.to_json() # Export EDS data to as a JSON object
 
 ### Section object
 
