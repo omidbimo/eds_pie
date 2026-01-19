@@ -151,6 +151,50 @@ class EDS:
         hfile.write(eds_content)
         hfile.close()
 
+    def sort_sections(self):
+        # sections
+        sorted_sections = []
+        section = self.get_section("File")
+        if section: sorted_sections.append(section)
+
+        section = self.get_section("Device")
+        if section: sorted_sections.append(section)
+
+        section = self.get_section("Device Classification")
+        if section: sorted_sections.append(section)
+
+        sorted_sections += [section for key, section in self.sections.items() if section not in sorted_sections]
+        return sorted_sections
+
+    def to_json(self):
+        json_doc = json.loads("{}")
+        sorted_sections = self.sort_sections()
+        for section in sorted_sections:
+            json_doc[section.keyword] = {}
+            # Entries
+            for _, entry in section.entries.items():
+                json_doc[section.keyword][entry.keyword] = ""
+                # fields
+                # Entry has only one field and the field's value has only one line of Data
+                if len(entry.fields) == 1:
+                    if isinstance(entry.fields[0].data, BOOL):
+                        json_doc[section.keyword][entry.keyword] = entry.fields[0].value >= 1
+                    elif isinstance(entry.fields[0].data, CIP_EDS_BASE_INT):
+                        json_doc[section.keyword][entry.keyword] = entry.fields[0].value
+                    else:
+                        json_doc[section.keyword][entry.keyword] = str(entry.fields[0].data)
+                else: # Entry holds multiple Fields
+                    json_doc[section.keyword][entry.keyword] = []
+                    for field in entry.fields:
+                        if isinstance(field.data, BOOL):
+                            json_doc[section.keyword][entry.keyword].append(field.value >= 1)
+                        elif isinstance(field.data, CIP_EDS_BASE_INT):
+                            json_doc[section.keyword][entry.keyword].append(field.value)
+                        else:
+                            json_doc[section.keyword][entry.keyword].append(str(field.data))
+
+        return json_doc
+
     def resolve_epath(self, epath):
         """
         EPATH data types can contain references to param entries in params section.
@@ -323,7 +367,10 @@ class EDS:
                 # Entry has only one field and the field's value has only one line of Data
                 if len(entry.fields) == 1 and len(str(entry.fields[0].data).splitlines()) <= 1:
                     # Print entry, field and comment on the same line
-                    field_str = "{};".format(str(entry.fields[0].data))
+                    if isinstance(entry.fields[0].data, STRING) or isinstance(entry.fields[0].data, EPATH):
+                        field_str = "\"{}\";".format(str(entry.fields[0].data))
+                    else:
+                        field_str = "{};".format(str(entry.fields[0].data))
                     if entry.fields[0].fcomment:
                         field_str += " $ ".rjust(indent, " ") + ("\n" + " $ ".rjust(32, " ")).join("{}".format(line.strip()) for line in entry.fields[0].fcomment.splitlines())
                     eds_str += field_str + "\n"
@@ -331,8 +378,10 @@ class EDS:
                     # print fields on a new line separated by commas
                     for index, field in enumerate(entry.fields):
                         field_str = "\n" + "".ljust(2 * indent) # Indent for the first field
-                        field_str += "\n".ljust((2 * indent) + 1, " ").join(line.strip() for line in str(field.data).splitlines())
-
+                        if isinstance(field.data, STRING) or isinstance(field.data, EPATH) and field.value:
+                            field_str += "\"" + "\n".ljust((2 * indent) + 1, " ").join(line.strip() for line in str(field.data).splitlines()) + "\""
+                        else:
+                            field_str += "\n".ljust((2 * indent) + 1, " ").join(line.strip() for line in str(field.data).splitlines())
                         if index + 1 == len(entry.fields):
                             field_str += ";"
                         else:

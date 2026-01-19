@@ -319,7 +319,7 @@ class CIP_EDS_BASE_INT(CIP_EDS_BASE_TYPE):
     def __len__(self):
         return self._size
 
-class BOOL(CIP_EDS_BASE_TYPE):
+class BOOL(CIP_EDS_BASE_INT):
     _typeid = CIP_TYPES.BOOL
     _range = RANGE(0, 1)
 
@@ -333,9 +333,6 @@ class BOOL(CIP_EDS_BASE_TYPE):
 
     def __init__(self, value, *args):
         super(BOOL, self).__init__(value)
-
-    def __str__(self):
-        return str(self._value != 0)
 
 class USINT(CIP_EDS_BASE_INT):
     _typeid = CIP_TYPES.USINT
@@ -598,9 +595,7 @@ class STRING(CIP_EDS_BASE_TYPE):
         return isinstance(value, str)
 
     def __str__(self):
-        return '\n'.join('\"{}\"'.format(self.value[offset : offset + 60])
-            for offset in range(0, len(self.value), 60))
-
+        return self.value
 
 class STRINGI(CIP_EDS_BASE_TYPE):
     _typeid = CIP_TYPES.STRINGI
@@ -728,9 +723,7 @@ class EPATH(CIP_EDS_BASE_TYPE):
         return True
 
     def __str__(self):
-        if self.value:
-            return "\"{}\"".format(self.value)
-        return ""
+        return self.value
 
 class REVISION(CIP_EDS_BASE_TYPE):
 
