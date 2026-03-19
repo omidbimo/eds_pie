@@ -25,104 +25,110 @@ SOFTWARE.
 """
 
 from collections import namedtuple
-from calendar    import monthrange
-from string      import digits
-from datetime    import datetime, timedelta
-import inspect
-
-from collections import namedtuple
-RANGE = namedtuple('RANGE', 'min max')
-
+from calendar import monthrange
+from datetime import datetime, timedelta
 import logging
-logging.basicConfig(level=logging.DEBUG,
-    format='%(asctime)s - %(name)s.%(levelname)-8s %(message)s')
+
+RANGE = namedtuple("RANGE", "min max")
+
+logging.basicConfig(
+    level=logging.DEBUG, format="%(asctime)s - %(name)s.%(levelname)-8s %(message)s"
+)
 logger = logging.getLogger(__name__)
 
+
 class ENUMS(object):
-
-    def stringify(self, enum):
-        for attr in vars(self.__class__):
-            if isinstance(self.__class__.__dict__[attr], int) and self.__class__.__dict__[attr] == enum: return '{}'.format(attr)
-        for base in self.__class__.__bases__:
-            for attr in vars(base):
-                if isinstance(base.__dict__[attr], int) and base.__dict__[attr] == enum: return '{}'.format(attr)
-        return ''
-
     @classmethod
     def stringify(cls, enum):
         for attr in vars(cls):
-            if isinstance(cls.__dict__[attr], int) and cls.__dict__[attr] == enum: return '{}'.format(attr)
+            if isinstance(cls.__dict__[attr], int) and cls.__dict__[attr] == enum:
+                return f"{attr}"
         for base in cls.__bases__:
             for attr in vars(base):
-                if isinstance(base.__dict__[attr], int) and base.__dict__[attr] == enum: return '{}'.format(attr)
-        return ''
+                if isinstance(base.__dict__[attr], int) and base.__dict__[attr] == enum:
+                    return f"{attr}"
+        return ""
+
 
 class CIP_TYPES(ENUMS):
-    UTIME         = 0xC0
-    BOOL          = 0xC1
-    SINT          = 0xC2
-    INT           = 0xC3
-    DINT          = 0xC4
-    LINT          = 0xC5
-    USINT         = 0xC6
-    UINT          = 0xC7
-    UDINT         = 0xC8
-    ULINT         = 0xC9
-    REAL          = 0xCA
-    LREAL         = 0xCB
-    STIME         = 0xCC
-    DATE          = 0xCD
-    TIME_OF_DAY   = 0xCE
+    UTIME = 0xC0
+    BOOL = 0xC1
+    SINT = 0xC2
+    INT = 0xC3
+    DINT = 0xC4
+    LINT = 0xC5
+    USINT = 0xC6
+    UINT = 0xC7
+    UDINT = 0xC8
+    ULINT = 0xC9
+    REAL = 0xCA
+    LREAL = 0xCB
+    STIME = 0xCC
+    DATE = 0xCD
+    TIME_OF_DAY = 0xCE
     DATE_AND_TIME = 0xCF
-    STRING        = 0xD0
-    BYTE          = 0xD1
-    WORD          = 0xD2
-    DWORD         = 0xD3
-    LWORD         = 0xD4
-    STRING2       = 0xD5
-    FTIME         = 0xD6
-    LTIME         = 0xD7
-    ITIME         = 0xD8
-    STRINGN       = 0xD9
-    SHORT_STRING  = 0xDA
-    TIME          = 0xDB
-    EPATH         = 0xDC
-    ENGUNIT       = 0xDD
-    STRINGI       = 0xDE
-    NTIME         = 0xDF
+    STRING = 0xD0
+    BYTE = 0xD1
+    WORD = 0xD2
+    DWORD = 0xD3
+    LWORD = 0xD4
+    STRING2 = 0xD5
+    FTIME = 0xD6
+    LTIME = 0xD7
+    ITIME = 0xD8
+    STRINGN = 0xD9
+    SHORT_STRING = 0xDA
+    TIME = 0xDB
+    EPATH = 0xDC
+    ENGUNIT = 0xDD
+    STRINGI = 0xDE
+    NTIME = 0xDF
 
 
 def getnumber(data):
-    '''
+    """
     Converts an input of string type into its numeric representaion.
-    '''
-    if data is None:  return None
-    if data == '':    return None
-    if isint(data):   return int(data)
-    if isfloat(data): return float(data)
-    if ishex(data):   return int(data, 16)
-    if isbin(data):   return int(data, 2)
+    """
+    if data is None:
+        return None
+    if data == "":
+        return None
+    if isint(data):
+        return int(data)
+    if isfloat(data):
+        return float(data)
+    if ishex(data):
+        return int(data, 16)
+    if isbin(data):
+        return int(data, 2)
     return None
 
 
 def isnumber(data):
-    '''
+    """
     Checks if a string represents a numeric value.
-    '''
-    if data is None:  return False
-    if data == '':    return False
-    if isint(data):   return True
-    if isfloat(data): return True
-    if ishex(data):   return True
-    if isbin(data):   return True
+    """
+    if data is None:
+        return False
+    if data == "":
+        return False
+    if isint(data):
+        return True
+    if isfloat(data):
+        return True
+    if ishex(data):
+        return True
+    if isbin(data):
+        return True
     return False
 
 
 def isint(data):
-    '''
+    """
     Checks if a string represents a decimal coded numeric value.
-    '''
-    if data is None: return False
+    """
+    if data is None:
+        return False
     try:
         int(data)
     except ValueError:
@@ -131,10 +137,11 @@ def isint(data):
 
 
 def isfloat(data):
-    '''
+    """
     Checks if a string represents a floating point numeric value.
-    '''
-    if data is None: return False
+    """
+    if data is None:
+        return False
     try:
         float(data)
     except ValueError:
@@ -143,10 +150,11 @@ def isfloat(data):
 
 
 def ishex(data):
-    '''
+    """
     Checks if a string represents a hexadecimal coded numeric value.
-    '''
-    if data is None: return False
+    """
+    if data is None:
+        return False
     try:
         int(data, 16)
     except ValueError:
@@ -155,10 +163,11 @@ def ishex(data):
 
 
 def isbin(data):
-    '''
+    """
     Checks if a string represents a binary coded numeric value.
-    '''
-    if data is None: return False
+    """
+    if data is None:
+        return False
     try:
         int(data, 2)
     except ValueError:
@@ -171,28 +180,28 @@ def isdate(data):
         return False
 
     try:
-        m, d, y = data.split('-')
+        m, d, y = data.split("-")
 
         if len(m) != 2 or len(d) != 2 or int(m) < 1 or int(m) > 12:
-            logger.error('Invalid EDS_DATE month length or month value!')
+            logger.error("Invalid EDS_DATE month length or month value!")
             return False
 
         if len(y) == 4:
             if int(y) < 1994:
-                logger.error('Invalid EDS_DATE yyyy value!')
+                logger.error("Invalid EDS_DATE yyyy value!")
                 return False
         elif len(y) == 2:
             if int(y) < 94:
-                logger.error('Invalid EDS_DATE yy value!')
+                logger.error("Invalid EDS_DATE yy value!")
                 return False
         else:
-            logger.error('Invalid EDS_DATE year format!')
+            logger.error("Invalid EDS_DATE year format!")
             return False
 
-        if int(d) < 1 or (int(d) > (monthrange(int(y), int(m))[1]) ):
-            logger.error('Invalid EDS_DATE day value!')
+        if int(d) < 1 or (int(d) > (monthrange(int(y), int(m))[1])):
+            logger.error("Invalid EDS_DATE day value!")
             return False
-    except:
+    except Exception:
         return False
     return True
 
@@ -200,15 +209,20 @@ def isdate(data):
 def getdate():
     return datetime.strftime(datetime.now(), "%m-%d-%Y")
 
+
 def cast2date(val):
-    '''
+    """
     Converts a 16-bit value to a valid DATE string between 01.01.1972 and 06.06.2151
-    '''
-    return datetime.strftime(datetime.strptime('01-01-1972', "%m-%d-%Y") + timedelta(days=val), "%m-%d-%Y")
+    """
+    return datetime.strftime(
+        datetime.strptime("01-01-1972", "%m-%d-%Y") + timedelta(days=val), "%m-%d-%Y"
+    )
+
 
 def istime(data):
-    if data is None: return False
-    data = data.split(':')
+    if data is None:
+        return False
+    data = data.split(":")
     if len(data) != 3:
         return False
     hh = data[0]
@@ -228,20 +242,19 @@ def istime(data):
 
 
 def gettime():
-    hh = format(datetime.now().hour, '02')
-    mm = format(datetime.now().minute, '02')
-    ss = format(datetime.now().second, '02')
-    return "%s:%s:%s" %(hh, mm, ss)
-
+    hh = format(datetime.now().hour, "02")
+    mm = format(datetime.now().minute, "02")
+    ss = format(datetime.now().second, "02")
+    return "%s:%s:%s" % (hh, mm, ss)
 
 
 class CIP_EDS_BASE_TYPE(object):
     _typeid = None
-    _range  = []
+    _range = []
 
     def __init__(self, value, *args):
         self._value = value
-        #sele._range = *args
+        # sele._range = *args
 
     @property
     def range(self):
@@ -253,13 +266,14 @@ class CIP_EDS_BASE_TYPE(object):
 
     @classmethod
     def validate(cls, value, *args):
-        raise(NotImplementedError)
+        raise (NotImplementedError)
 
     def __repr__(self):
-        return "{}({})".format(self.__class__.__name__, self.__value)
+        return f"{self.__class__.__name__}({self.__value})"
 
     def __str__(self):
-        return '{}'.format(self._value)
+        return f"{self._value}"
+
 
 class CIP_EDS_BASE_INT(CIP_EDS_BASE_TYPE):
 
@@ -272,27 +286,27 @@ class CIP_EDS_BASE_INT(CIP_EDS_BASE_TYPE):
         return value is not None and value >= cls._range.min and value <= cls._range.max
 
     def __format__(self, format_spec):
-            return format(self._value, format_spec)
+        return format(self._value, format_spec)
 
     def __hex__(self):
-        return '0x{:X}'.format(self._value)
+        return f"0x{self._value:X}"
 
-    def __eq__( self , other):
+    def __eq__(self, other):
         return self._value == other
 
-    def __ne__( self , other):
+    def __ne__(self, other):
         return self._value != other
 
-    def __lt__( self , other):
+    def __lt__(self, other):
         return self._value < other
 
-    def __gt__( self , other):
+    def __gt__(self, other):
         return self._value > other
 
-    def __le__( self , other):
+    def __le__(self, other):
         return self._value <= other
 
-    def __ge__( self , other):
+    def __ge__(self, other):
         return self._value <= other
 
     def __add__(self, other):
@@ -319,6 +333,7 @@ class CIP_EDS_BASE_INT(CIP_EDS_BASE_TYPE):
     def __len__(self):
         return self._size
 
+
 class BOOL(CIP_EDS_BASE_INT):
     _typeid = CIP_TYPES.BOOL
     _range = RANGE(0, 1)
@@ -327,12 +342,14 @@ class BOOL(CIP_EDS_BASE_INT):
         if cls.validate(value):
             return super(BOOL, cls).__new__(cls)
         else:
-            raise Exception(__name__ + ":> Invalid value: {} for ".format(value)
-                                     + "<{} (CIP typeID: 0x{:X})> data type."
-                                       .format(cls.__name__, cls._typeid))
+            raise Exception(
+                __name__
+                + f":> Invalid value: {value} for <{cls.__name__} (CIP typeID: 0x{cls._typeid:X})> data type."
+            )
 
     def __init__(self, value, *args):
         super(BOOL, self).__init__(value)
+
 
 class USINT(CIP_EDS_BASE_INT):
     _typeid = CIP_TYPES.USINT
@@ -342,9 +359,10 @@ class USINT(CIP_EDS_BASE_INT):
         if cls.validate(value):
             return super(USINT, cls).__new__(cls)
         else:
-            raise Exception(__name__ + ":> Invalid value: {} for ".format(value)
-                                     + "<{} (CIP typeID: 0x{:X})> data type."
-                                       .format(cls.__name__, cls._typeid))
+            raise Exception(
+                __name__
+                + f":> Invalid value: {value} for <{cls.__name__} (CIP typeID: 0x{cls._typeid:X})> data type."
+            )
 
     def __init__(self, value, *args):
         super(USINT, self).__init__(value)
@@ -358,9 +376,10 @@ class SINT(CIP_EDS_BASE_INT):
         if cls.validate(value):
             return super(SINT, cls).__new__(cls)
         else:
-            raise Exception(__name__ + ":> Invalid value: {} for ".format(value)
-                                     + "<{} (CIP typeID: 0x{:X})> data type."
-                                       .format(cls.__name__, cls._typeid))
+            raise Exception(
+                __name__
+                + f":> Invalid value: {value} for <{cls.__name__} (CIP typeID: 0x{cls._typeid:X})> data type."
+            )
 
     def __init__(self, value, *args):
         super(SINT, self).__init__(value)
@@ -374,9 +393,10 @@ class UINT(CIP_EDS_BASE_INT):
         if cls.validate(value):
             return super(UINT, cls).__new__(cls)
         else:
-            raise Exception(__name__ + ":> Invalid value: {} for ".format(value)
-                                     + "<{} (CIP typeID: 0x{:X})> data type."
-                                       .format(cls.__name__, cls._typeid))
+            raise Exception(
+                __name__
+                + f":> Invalid value: {value} for <{cls.__name__} (CIP typeID: 0x{cls._typeid:X})> data type."
+            )
 
     def __init__(self, value, *args):
         super(UINT, self).__init__(value)
@@ -390,9 +410,10 @@ class INT(CIP_EDS_BASE_INT):
         if cls.validate(value):
             return super(INT, cls).__new__(cls)
         else:
-            raise Exception(__name__ + ":> Invalid value: {} for ".format(value)
-                                     + "<{} (CIP typeID: 0x{:X})> data type."
-                                       .format(cls.__name__, cls._typeid))
+            raise Exception(
+                __name__
+                + f":> Invalid value: {value} for <{cls.__name__} (CIP typeID: 0x{cls._typeid:X})> data type."
+            )
 
     def __init__(self, value, *args):
         super(INT, self).__init__(value)
@@ -406,9 +427,10 @@ class UDINT(CIP_EDS_BASE_INT):
         if cls.validate(value):
             return super(UDINT, cls).__new__(cls)
         else:
-            raise Exception(__name__ + ":> Invalid value: {} for ".format(value)
-                                     + "<{} (CIP typeID: 0x{:X})> data type."
-                                       .format(cls.__name__, cls._typeid))
+            raise Exception(
+                __name__
+                + f":> Invalid value: {value} for <{cls.__name__} (CIP typeID: 0x{cls._typeid:X})> data type."
+            )
 
     def __init__(self, value, *args):
         super(UDINT, self).__init__(value)
@@ -422,13 +444,13 @@ class DINT(CIP_EDS_BASE_INT):
         if cls.validate(value):
             return super(DINT, cls).__new__(cls)
         else:
-            raise Exception(__name__ + ":> Invalid value: {} for ".format(value)
-                                     + "<{} (CIP typeID: 0x{:X})> data type."
-                                       .format(cls.__name__, cls._typeid))
+            raise Exception(
+                __name__
+                + f":> Invalid value: {value} for <{cls.__name__} (CIP typeID: 0x{cls._typeid:X})> data type."
+            )
 
     def __init__(self, value, *args):
         super(DINT, self).__init__(value)
-
 
 
 class ULINT(CIP_EDS_BASE_INT):
@@ -439,9 +461,10 @@ class ULINT(CIP_EDS_BASE_INT):
         if cls.validate(value):
             return super(ULINT, cls).__new__(cls)
         else:
-            raise Exception(__name__ + ":> Invalid value: {} for ".format(value)
-                                     + "<{} (CIP typeID: 0x{:X})> data type."
-                                       .format(cls.__name__, cls._typeid))
+            raise Exception(
+                __name__
+                + f":> Invalid value: {value} for <{cls.__name__} (CIP typeID: 0x{cls._typeid:X})> data type."
+            )
 
     def __init__(self, value, *args):
         super(ULINT, self).__init__(value)
@@ -450,13 +473,15 @@ class ULINT(CIP_EDS_BASE_INT):
 class LINT(CIP_EDS_BASE_INT):
     _typeid = CIP_TYPES.LINT
     _range = RANGE(-9223372036854775808, 9223372036854775807)
+
     def __new__(cls, value, *args):
         if cls.validate(value):
             return super(LINT, cls).__new__(cls)
         else:
-            raise Exception(__name__ + ":> Invalid value: {} for ".format(value)
-                                     + "<{} (CIP typeID: 0x{:X})> data type."
-                                       .format(cls.__name__, cls._typeid))
+            raise Exception(
+                __name__
+                + f":> Invalid value: {value} for <{cls.__name__} (CIP typeID: 0x{cls._typeid:X})> data type."
+            )
 
     def __init__(self, value, *args):
         super(LINT, self).__init__(value)
@@ -470,15 +495,17 @@ class BYTE(CIP_EDS_BASE_INT):
         if cls.validate(value):
             return super(BYTE, cls).__new__(cls)
         else:
-            raise Exception(__name__ + ":> Invalid value: {} for ".format(value)
-                                     + "<{} (CIP typeID: 0x{:X})> data type."
-                                       .format(cls.__name__, cls._typeid))
+            raise Exception(
+                __name__
+                + f":> Invalid value: {value} for <{cls.__name__} (CIP typeID: 0x{cls._typeid:X})> data type."
+            )
 
     def __init__(self, value, *args):
         super(BYTE, self).__init__(value)
 
     def __str__(self):
-        return "0x{:02X}".format(self._value)
+        return f"0x{self._value:02X}"
+
 
 class WORD(CIP_EDS_BASE_INT):
     _typeid = CIP_TYPES.WORD
@@ -488,15 +515,17 @@ class WORD(CIP_EDS_BASE_INT):
         if cls.validate(value):
             return super(WORD, cls).__new__(cls)
         else:
-            raise Exception(__name__ + ":> Invalid value: {} for ".format(value)
-                                     + "<{} (CIP typeID: 0x{:X})> data type."
-                                       .format(cls.__name__, cls._typeid))
+            raise Exception(
+                __name__
+                + f":> Invalid value: {value} for <{cls.__name__} (CIP typeID: 0x{cls._typeid:X})> data type."
+            )
 
     def __init__(self, value, *args):
         super(WORD, self).__init__(value)
 
     def __str__(self):
-        return "0x{:04X}".format(self._value)
+        return f"0x{self._value:04X}"
+
 
 class DWORD(CIP_EDS_BASE_INT):
     _typeid = CIP_TYPES.DWORD
@@ -506,15 +535,17 @@ class DWORD(CIP_EDS_BASE_INT):
         if cls.validate(value):
             return super(DWORD, cls).__new__(cls)
         else:
-            raise Exception(__name__ + ":> Invalid value: {} for ".format(value)
-                                     + "<{} (CIP typeID: 0x{:X})> data type."
-                                       .format(cls.__name__, cls._typeid))
+            raise Exception(
+                __name__
+                + f":> Invalid value: {value} for <{cls.__name__} (CIP typeID: 0x{cls._typeid:X})> data type."
+            )
 
     def __init__(self, value, *args):
         super(DWORD, self).__init__(value)
 
     def __str__(self):
-        return "0x{:08X}".format(self._value)
+        return f"0x{self._value:08X}"
+
 
 class LWORD(CIP_EDS_BASE_INT):
     _typeid = CIP_TYPES.LWORD
@@ -524,14 +555,16 @@ class LWORD(CIP_EDS_BASE_INT):
         if cls.validate(value):
             return super(LWORD, cls).__new__(cls)
         else:
-            raise Exception(__name__ + ":> Invalid value: {} for ".format(value)
-                                     + "<{} (CIP typeID: 0x{:X})> data type."
-                                       .format(cls.__name__, cls._typeid))
+            raise Exception(
+                __name__
+                + f":> Invalid value: {value} for <{cls.__name__} (CIP typeID: 0x{cls._typeid:X})> data type."
+            )
 
     def __init__(self, value, *args):
         super(LWORD, self).__init__(value)
 
-class REAL(CIP_EDS_BASE_INT): # TODO: improve validate
+
+class REAL(CIP_EDS_BASE_INT):  # TODO: improve validate
     _typeid = CIP_TYPES.REAL
     _range = RANGE(-16777216.0, 16777216.0)
 
@@ -539,14 +572,16 @@ class REAL(CIP_EDS_BASE_INT): # TODO: improve validate
         if cls.validate(value):
             return super(REAL, cls).__new__(cls)
         else:
-            raise Exception(__name__ + ":> Invalid value: {} for ".format(value)
-                                     + "<{} (CIP typeID: 0x{:X})> data type."
-                                       .format(cls.__name__, cls._typeid))
+            raise Exception(
+                __name__
+                + f":> Invalid value: {value} for <{cls.__name__} (CIP typeID: 0x{cls._typeid:X})> data type."
+            )
 
     def __init__(self, value, *args):
         super(REAL, self).__init__(value)
 
-class LREAL(CIP_EDS_BASE_INT): # TODO: improve validate
+
+class LREAL(CIP_EDS_BASE_INT):  # TODO: improve validate
     _typeid = CIP_TYPES.LREAL
     _range = RANGE(-9007199254740992.0, 9007199254740992.0)
 
@@ -554,27 +589,30 @@ class LREAL(CIP_EDS_BASE_INT): # TODO: improve validate
         if cls.validate(value):
             return super(LREAL, cls).__new__(cls)
         else:
-            raise Exception(__name__ + ":> Invalid value: {} for ".format(value)
-                                     + "<{} (CIP typeID: 0x{:X})> data type."
-                                       .format(cls.__name__, cls._typeid))
+            raise Exception(
+                __name__
+                + f":> Invalid value: {value} for <{cls.__name__} (CIP typeID: 0x{cls._typeid:X})> data type."
+            )
 
     def __init__(self, value, *args):
         super(LREAL, self).__init__(value)
 
 
-class STIME(CIP_EDS_BASE_TYPE): #  dummy type! TODO
+class STIME(CIP_EDS_BASE_TYPE):
     _typeid = CIP_TYPES.STIME
 
     def __new__(cls, value, *args):
         if cls.validate(value):
             return super(STIME, cls).__new__(cls)
         else:
-            raise Exception(__name__ + ":> Invalid value: {} for ".format(value)
-                                     + "<{} (CIP typeID: 0x{:X})> data type."
-                                       .format(cls.__name__, cls._typeid))
+            raise Exception(
+                __name__
+                + f":> Invalid value: {value} for <{cls.__name__} (CIP typeID: 0x{cls._typeid:X})> data type."
+            )
 
     def __init__(self, value, *args):
         super(STIME, self).__init__(value)
+
 
 class STRING(CIP_EDS_BASE_TYPE):
     _typeid = CIP_TYPES.STRING
@@ -583,9 +621,10 @@ class STRING(CIP_EDS_BASE_TYPE):
         if cls.validate(value):
             return super(STRING, cls).__new__(cls)
         else:
-            raise Exception(__name__ + ":> Invalid value: {} for ".format(value)
-                                     + "<{} (CIP typeID: 0x{:X})> data type."
-                                       .format(cls.__name__, cls._typeid))
+            raise Exception(
+                __name__
+                + f":> Invalid value: {value} for <{cls.__name__} (CIP typeID: 0x{cls._typeid:X})> data type."
+            )
 
     def __init__(self, value, *args):
         super(STRING, self).__init__(value)
@@ -597,6 +636,7 @@ class STRING(CIP_EDS_BASE_TYPE):
     def __str__(self):
         return self.value
 
+
 class STRINGI(CIP_EDS_BASE_TYPE):
     _typeid = CIP_TYPES.STRINGI
 
@@ -604,12 +644,13 @@ class STRINGI(CIP_EDS_BASE_TYPE):
         if cls.validate(value):
             return super(STRINGI, cls).__new__(cls)
         else:
-            raise Exception(__name__ + ":> Invalid value: {} for ".format(value)
-                                     + "<{} (CIP typeID: 0x{:X})> data type."
-                                       .format(cls.__name__, cls._typeid))
+            raise Exception(
+                __name__
+                + f":> Invalid value: {value} for <{cls.__name__} (CIP typeID: 0x{cls._typeid:X})> data type."
+            )
 
     def __init__(self, value, *args):
-        self._range = ['mm-dd-yyyy']
+        self._range = ["mm-dd-yyyy"]
         super(STRINGI, self).__init__(value)
 
     @classmethod
@@ -618,20 +659,21 @@ class STRINGI(CIP_EDS_BASE_TYPE):
         pass
 
     def __str__(self):
-        return 'STRINGI...' # TODO
+        return "STRINGI..."  # TODO
 
 
 class DATE(CIP_EDS_BASE_TYPE):
     # EDS_DATE mm.dd.yyyy from 1994 to 9999
-    _range = ['mm.dd.yyyy', 'mm.dd.yy']
+    _range = ["mm.dd.yyyy", "mm.dd.yy"]
 
     def __new__(cls, value, *args):
         if cls.validate(value):
             return super(DATE, cls).__new__(cls)
         else:
-            raise Exception(__name__ + ":> Invalid value: {} for ".format(value)
-                                     + "<{} (CIP typeID: 0x{:X})> data type."
-                                       .format(cls.__name__, cls._typeid))
+            raise Exception(
+                __name__
+                + f":> Invalid value: {value} for <{cls.__name__} (CIP typeID: 0x{cls._typeid:X})> data type."
+            )
 
     def __init__(self, value, *args):
         super(DATE, self).__init__(value)
@@ -648,9 +690,10 @@ class TIME(CIP_EDS_BASE_TYPE):
         if cls.validate(value):
             return super(TIME, cls).__new__(cls)
         else:
-            raise Exception(__name__ + ":> Invalid value: {} for ".format(value)
-                                     + "<{} (CIP typeID: 0x{:X})> data type."
-                                       .format(cls.__name__, cls._typeid))
+            raise Exception(
+                __name__
+                + f":> Invalid value: {value} for <{cls.__name__} (CIP typeID: 0x{cls._typeid:X})> data type."
+            )
 
     def __init__(self, value, *args):
         self.__value = value
@@ -658,13 +701,13 @@ class TIME(CIP_EDS_BASE_TYPE):
 
     @property
     def range(self):
-        return ['HH:MM:SS'] # TODO
+        return ["HH:MM:SS"]  # TODO
 
     @staticmethod
     def validate(value, *args):
         try:
-            data = value.split(':')
-        except:
+            data = value.split(":")
+        except Exception:
             return False
 
         if len(data) != 3:
@@ -674,12 +717,14 @@ class TIME(CIP_EDS_BASE_TYPE):
         ss = data[2]
 
         # Tolerate no leading zeros
-        #if len(mm) < 2 or len(hh) < 2 or len(ss) < 2:
+        # if len(mm) < 2 or len(hh) < 2 or len(ss) < 2:
         #    return False
 
-        if ((len(hh) < 1 or len(hh) > 2) or
-            (len(mm) < 1 or len(mm) > 2) or
-            (len(ss) < 1 or len(ss) > 2)):
+        if (
+            (len(hh) < 1 or len(hh) > 2)
+            or (len(mm) < 1 or len(mm) > 2)
+            or (len(ss) < 1 or len(ss) > 2)
+        ):
             return False
 
         if int(hh) > 24 or int(hh) < 0:
@@ -698,9 +743,10 @@ class EPATH(CIP_EDS_BASE_TYPE):
         if cls.validate(value):
             return super(EPATH, cls).__new__(cls)
         else:
-            raise Exception(__name__ + ":> Invalid value: {} for ".format(value)
-                                     + "<{} (CIP typeID: 0x{:X})> data type."
-                                       .format(cls.__name__, cls._typeid))
+            raise Exception(
+                __name__
+                + f":> Invalid value: {value} for <{cls.__name__} (CIP typeID: 0x{cls._typeid:X})> data type."
+            )
 
     def __init__(self, value, *args):
         super(EPATH, self).__init__(value)
@@ -709,13 +755,15 @@ class EPATH(CIP_EDS_BASE_TYPE):
     def validate(value, *args):
         try:
             elements = value.split()
-        except:
+        except Exception:
             return False
         for element in elements:
             if len(element) < 2:
                 return False
             if not isnumber(element):
-                if (element[0] == '[' and element[-1] == ']'): #TODO: accept references without brackets
+                if (
+                    element[0] == "[" and element[-1] == "]"
+                ):  # TODO: accept references without brackets
                     continue
                 return False
             elif not ishex(element):
@@ -725,15 +773,17 @@ class EPATH(CIP_EDS_BASE_TYPE):
     def __str__(self):
         return self.value
 
+
 class REVISION(CIP_EDS_BASE_TYPE):
 
     def __new__(cls, value, *args):
         if cls.validate(value):
             return super(REVISION, cls).__new__(cls)
         else:
-            raise Exception(__name__ + ":> Invalid value: {} for ".format(value)
-                                     + "<{}> data type."
-                                       .format(cls.__name__, cls._typeid))
+            raise Exception(
+                __name__
+                + f":> Invalid value: {value} for <{cls.__name__} (CIP typeID: 0x{cls._typeid:X})> data type."
+            )
 
     def __init__(self, value, *args):
         super(REVISION, self).__init__(value)
@@ -741,8 +791,8 @@ class REVISION(CIP_EDS_BASE_TYPE):
     @staticmethod
     def validate(value, *args):
         try:
-            elements = value.split('.')
-        except:
+            elements = value.split(".")
+        except Exception:
             return False
 
         if len(elements) != 2:
@@ -752,17 +802,18 @@ class REVISION(CIP_EDS_BASE_TYPE):
                 return False
         return True
 
+
 class REF(CIP_EDS_BASE_TYPE):
     def __new__(cls, value, *args):
         if cls.validate(value, *args):
             return super(REF, cls).__new__(cls)
         else:
-            raise Exception(__name__ + ":> Invalid value: {} for ".format(value)
-                                     + "<{}> data type."
-                                       .format(cls.__name__))
+            raise Exception(
+                __name__ + f":> Invalid value: {value} for <{cls.__name__}> data type."
+            )
 
     def __init__(self, value, *args):
-        self._range = args[0] # TODO
+        self._range = args[0]  # TODO
         super(REF, self).__init__(value)
 
     @staticmethod
@@ -770,8 +821,8 @@ class REF(CIP_EDS_BASE_TYPE):
         if not isinstance(value, str):
             return False
         for keyword in args[0]:
-            keyword = keyword.rstrip('N').lower()
-            if value[:len(keyword)].lower() == keyword:
+            keyword = keyword.rstrip("N").lower()
+            if value[: len(keyword)].lower() == keyword:
                 return True
         return False
 
@@ -782,9 +833,9 @@ class KEYWORD(CIP_EDS_BASE_TYPE):
         if cls.validate(value, *args):
             return super(KEYWORD, cls).__new__(cls)
         else:
-            raise Exception(__name__ + ":> Invalid value: {} ".format(arg[0])
-                                     + "for <{}> data type."
-                                       .format(cls.__name__))
+            raise Exception(
+                __name__ + f":> Invalid value: {value} for <{cls.__name__}> data type."
+            )
 
     def __init__(self, value, *args):
         self._range = args[0]
@@ -804,16 +855,16 @@ class DATATYPE_REF(CIP_EDS_BASE_TYPE):
         if cls.validate(value):
             return super(DATATYPE_REF, cls).__new__(cls)
         else:
-            raise Exception(__name__ + ":> Invalid value: {} for ".format(value)
-                                     + "<{}> data type."
-                                       .format(cls.__name__))
+            raise Exception(
+                __name__ + f":> Invalid value: {value} for <{cls.__name__}> data type."
+            )
 
     def __init__(self, value, *args):
         super(DATATYPE_REF, self).__init__(value)
 
     @staticmethod
     def validate(value, *args):
-        return True # TODO
+        return True  # TODO
 
 
 class EDS_SERVICE(CIP_EDS_BASE_TYPE):
@@ -822,16 +873,16 @@ class EDS_SERVICE(CIP_EDS_BASE_TYPE):
         if cls.validate(value):
             return super(EDS_SERVICE, cls).__new__(cls)
         else:
-            raise Exception(__name__ + ":> Invalid value: {} for ".format(value)
-                                     + "<{}> data type."
-                                       .format(cls.__name__))
+            raise Exception(
+                __name__ + f":> Invalid value: {value} for <{cls.__name__}> data type."
+            )
 
     def __init__(self, value, *args):
         super(EDS_SERVICE, self).__init__(value)
 
     @staticmethod
     def validate(value, *args):
-        return True # TODO
+        return True  # TODO
 
 
 class EMPTY(CIP_EDS_BASE_TYPE):
@@ -840,21 +891,21 @@ class EMPTY(CIP_EDS_BASE_TYPE):
         if cls.validate(value):
             return super(EMPTY, cls).__new__(cls)
         else:
-            raise Exception(__name__ + ":> Invalid value: {} for ".format(value)
-                                     + "<{}> data type."
-                                       .format(cls.__name__))
+            raise Exception(
+                __name__ + f":> Invalid value: {value} for <{cls.__name__}> data type."
+            )
 
     def __init__(self, value, *args):
         super(EMPTY, self).__init__(value)
 
     @staticmethod
     def validate(value, *args):
-        if args is None or value == '':
+        if args is None or value == "":
             return True
         return False
 
     def __str__(self):
-        return ''
+        return ""
 
 
 class VENDOR_SPECIFIC(CIP_EDS_BASE_TYPE):
@@ -863,9 +914,9 @@ class VENDOR_SPECIFIC(CIP_EDS_BASE_TYPE):
         if cls.validate(value):
             return super(VENDOR_SPECIFIC, cls).__new__(cls)
         else:
-            raise Exception(__name__ + ":> Invalid value: {} for ".format(value)
-                                     + "<{}> data type."
-                                       .format(cls.__name__))
+            raise Exception(
+                __name__ + f":> Invalid value: {value} for <{cls.__name__}> data type."
+            )
 
     def __init__(self, value, *args):
         super(VENDOR_SPECIFIC, self).__init__(value)
@@ -873,7 +924,7 @@ class VENDOR_SPECIFIC(CIP_EDS_BASE_TYPE):
     @staticmethod
     def validate(value, *args):
         # Vendor specific value: 123_vendorSepcific_value
-        if isinstance(value, str) and value != '':
+        if isinstance(value, str) and value != "":
             elements = value.split("_")
             if len(elements) >= 2 and elements[0].isdigit():
                 # Leading zeros are invalid
@@ -887,9 +938,9 @@ class UNDEFINED(CIP_EDS_BASE_TYPE):
         if cls.validate(value):
             return super(UNDEFINED, cls).__new__(cls)
         else:
-            raise Exception(__name__ + ":> Invalid value: {} for ".format(value)
-                                     + "<{}> data type."
-                                       .format(cls.__name__))
+            raise Exception(
+                __name__ + f":> Invalid value: {value} for <{cls.__name__}> data type."
+            )
 
     def __init__(self, value, *args):
         self.__value = value
