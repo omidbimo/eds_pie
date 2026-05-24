@@ -4,22 +4,27 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "eds_pie"
-version = "1.0.0"
+version = "1.1.0"
 description = "EDS parser library for ODVA's CIP® protocol family (EtherNet/IP®, DeviceNet®, etc.)"
 readme = "README.md"
-license = { file = "LICENSE" }
 authors = [
     { name = "omidbimo", email = "kompani.omid@gmail.com" }
 ]
+
+license = "MIT"
+license-files = ["LICENSE"]
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+
 requires-python = ">=3.8"
 dependencies = []
 
 [tool.setuptools]
-packages = ["eds_pie"]
+packages = ["eds_pie", "eds_pie.references"]
 include-package-data = true
-
-[tool.setuptools.package-data]
-"eds_pie" = ["references/*.json"]
 
 [tool.black]
 line-length = 88
