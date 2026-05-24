@@ -23,7 +23,7 @@ An Electronic Data Sheet (EDS), in the context of industrial communication, is a
 
 ## Setup
 ```
-pip install git+https://github.com/omidbimo/eds_pie.git
+pip install eds_pie
 ```
 
 ## Usage
