@@ -81,9 +81,9 @@ print(eds) # Print the serialized EDS
 - EDS.has_section( section_keyword )
 - EDS.has_entry( section_keyword, entry_keyword )
 - EDS.has_field( section_keyword, entry_keyword, field_index )
-- EDS.add_section( section_keyword )
-- EDS.add_entry( section_keyword, entry_keyword )
-- EDS.add_field( section_keyword, entry_keyword, field_value, *[field_data_type]*=None ) # field_data_type must be one of defined CIP_TYPES from cip_eds_types module 
+- EDS.add_section( section_keyword, hcomment="", fcomment="" )
+- EDS.add_entry( section_keyword, entry_keyword, hcomment="", fcomment="" )
+- EDS.add_field( section_keyword, entry_keyword, field_value, *[field_data_type]*=None, hcomment="", fcomment=""  ) # field_data_type must be one of defined CIP_TYPES from cip_eds_types module 
 - EDS.list() # Lists all objects in the EDS
 - EDS.validate() # Performs semantic validation of the EDS data structure. Validation is automatically executed after each parsing operation. It may also be invoked explicitly at any time to validate the current state of the EDS contents.
 - EDS.save( filename, *[overwrite]*=False )	# To save the EDS contents into a file
@@ -100,7 +100,7 @@ print(eds) # Print the serialized EDS
 - Section.get_field( entry_keyword, field_index )
 - Section.get_value( entry_keyword, field_index=0 )
 - Section.has_entry( entry_keyword )
-- Section.add_entry( entry_keyword )
+- Section.add_entry( entry_keyword, hcomment="", fcomment="" )
 - Section.list()
 - Section.entries # Representation of all EDS entries as a dictionary of {entry_keyword: entry_object}
 - Section.name # Full descriptive name of the Section
@@ -112,7 +112,7 @@ print(eds) # Print the serialized EDS
 
 - Entry.get_field( field_index )
 - Entry.get_value( field_index )
-- Entry.add_field( field_value, *[field_data_type]*=None ) # field_data_type must be one of defined CIP_TYPES from cip_eds_types module 
+- Entry.add_field( field_value, *[field_data_type]*=None, hcomment="", fcomment="" ) # field_data_type must be one of defined CIP_TYPES from cip_eds_types module 
 - Entry.list()
 - Entry.name # Full descriptive name of the Entry
 - Entry.fields # Representation of all EDS fields in as a list 
