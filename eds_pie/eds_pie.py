@@ -46,11 +46,11 @@ class Parser:
                 self.expect(token, TOKEN_TYPES.SECTION)
                 self.entry_in_process = None
                 self.field_in_process = None
-                self.section_in_process = self.eds.add_section(token.value, token.line)
+                self.section_in_process = self.eds.add_section(token.value)
 
                 if self.section_in_process is None:
                     raise Exception(f"Unable to create Section: {token.value}")
-
+                self.section_in_process._line_number = token.line
                 if self.cached_comment:
                     self.section_in_process.hcomment = self.cached_comment
                     self.cached_comment = ""
@@ -63,12 +63,13 @@ class Parser:
                 self.expect(token, TOKEN_TYPES.IDENTIFIER)
                 self.entry_in_process = None
                 self.entry_in_process = self.eds.add_entry(
-                    self.section_in_process.keyword, token.value, token.line
+                    self.section_in_process.keyword, token.value
                 )
 
                 if self.entry_in_process is None:
                     raise Exception(f"Unable to create Entry: {token.value}")
 
+                self.entry_in_process._line_number = token.line
                 if self.cached_comment:
                     self.entry_in_process.hcomment = self.cached_comment
                     self.cached_comment = ""
@@ -89,8 +90,7 @@ class Parser:
                     self.field_in_process = self.eds.add_field(
                         self.section_in_process.keyword,
                         self.entry_in_process.keyword,
-                        "",
-                        line_number=token.line,
+                        ""
                     )
                 else:
                     # Store token data to concatenate field values if required
@@ -110,12 +110,12 @@ class Parser:
                         self.section_in_process.keyword,
                         self.entry_in_process.keyword,
                         field_value,
-                        line_number=token.line,
                     )
 
                 if self.field_in_process is None:
                     raise Exception(f"Unable to create Field: {token.value}")
 
+                self.field_in_process._line_number = token.line
                 if self.cached_comment:
                     self.field_in_process.hcomment = self.cached_comment
                     self.cached_comment = ""
@@ -133,13 +133,12 @@ class Parser:
                 if self.match(token, TOKEN_TYPES.SECTION):
                     self.entry_in_process = None
                     self.field_in_process = None
-                    self.section_in_process = self.eds.add_section(
-                        token.value, token.line
-                    )
+                    self.section_in_process = self.eds.add_section(token.value)
                     if self.section_in_process is None:
                         raise Exception(
                             f"Unable to create section: {token.value}"
                         )
+                    self.section_in_process._line_number = token.line
                     if self.cached_comment:
                         self.section_in_process.hcomment = self.cached_comment
                         self.cached_comment = ""
@@ -149,10 +148,12 @@ class Parser:
                 self.expect(token, TOKEN_TYPES.IDENTIFIER)
                 self.entry_in_process = None
                 self.entry_in_process = self.eds.add_entry(
-                    self.section_in_process.keyword, token.value, token.line
+                    self.section_in_process.keyword, token.value
                 )
                 if self.entry_in_process is None:
                     raise Exception(f"Unable to create entry: {token.value}")
+
+                self.section_in_process._line_number = token.line
                 if self.cached_comment:
                     self.entry_in_process.hcomment = self.cached_comment
                     self.cached_comment = ""
@@ -168,27 +169,33 @@ class Parser:
         return self.eds
 
     def add_comment(self, comment, line):
+        """
+        Add comment to an object or cache it for a later use.
+
+            Comments appearing on the same line as an object are considered footer
+            comments. All other comments are considered header comments for the next
+            object, or closing comments at the end of the EDS file.
+        """
         if self.section_in_process is None:
             self.eds.hcomment += comment.strip() + "\n"
         elif self.field_in_process:
-            if line == self.field_in_process.line_number:
+            if line == self.field_in_process._line_number:
                 self.field_in_process.fcomment += comment.strip() + "\n"
-            elif line > self.field_in_process.line_number:
-                if (
-                    self.state == State.EXPECT_FIELD
-                ):  # The last field can hold only one line of comment (after semicolon)
+            elif line > self.field_in_process._line_number:
+                if self.state == State.EXPECT_FIELD:
+                    # The last field can hold only one line of comment (after semicolon)
                     self.field_in_process.fcomment += comment.strip() + "\n"
                 else:
                     self.cached_comment += comment.strip() + "\n"
         elif self.entry_in_process:
-            if line == self.entry_in_process.line_number:
+            if line == self.entry_in_process._line_number:
                 self.entry_in_process.fcomment += comment.strip() + "\n"
-            elif line > self.entry_in_process.line_number:
+            elif line > self.entry_in_process._line_number:
                 self.cached_comment += comment.strip() + "\n"
         elif self.section_in_process:
-            if line == self.section_in_process.line_number:
+            if line == self.section_in_process._line_number:
                 self.section_in_process.fcomment += comment.strip() + "\n"
-            elif line > self.section_in_process.line_number:
+            elif line > self.section_in_process._line_number:
                 self.cached_comment += comment.strip() + "\n"
         else:
             assert False

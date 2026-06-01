@@ -46,7 +46,7 @@ class EDS:
 
     def get_field(self, section_keyword, entry_keyword, field_index):
         """
-        To get an field by its section name/section id, its entry name and its field anme/field index
+        Get a field by its section name/section id, its entry name and its field anme/field index
         """
         entry = self.get_entry(section_keyword, entry_keyword)
         if entry:
@@ -90,7 +90,17 @@ class EDS:
             return field_index < len(entry.fields)
         return False
 
-    def add_section(self, section_keyword, line_number=0):
+    def add_section(self, section_keyword: str, hcomment="", fcomment=""):
+        """
+        Add a section to the EDS.
+
+        Args:
+            section_keyword: Keyword of the section to add.
+            hcomment: Optional header comment associated with the section.
+                The comment is written above the section.
+            fcomment: Optional footer comment associated with the section.
+                The comment is written on the same line after the section.
+        """
         if section_keyword == "":
             raise Exception(f"Invalid section keyword! [{section_keyword}]")
 
@@ -100,27 +110,56 @@ class EDS:
         section_name = (
             section_keyword  # using section keyword as the default section name
         )
-        section = Section(self, section_keyword, section_name, None, line_number)
+        section = Section(self, section_keyword, section_name, None)
+        section.hcomment = hcomment
+        section.fcomment = fcomment
+
         self.sections.update({section_keyword: section})
 
         return section
 
-    def add_entry(self, section_keyword, entry_keyword, line_number=0):
+    def add_entry(self, section_keyword, entry_keyword, hcomment="", fcomment=""):
+        """
+        Add an entry to a section.
+
+        Args:
+            section_keyword: Name of the section to add the entry to
+            entry_keyword: Keyword of the entry to add.
+            hcomment: Optional header comment associated with the entry.
+                The comment is written above the entry.
+            fcomment: Optional footer comment associated with the entry.
+                The comment is written on the same line after the entry.
+        """
         section = self.get_section(section_keyword)
         if section is None:
             raise Exception(f"Section not found! [{section_keyword}]")
-        return section.add_entry(entry_keyword, line_number)
+        return section.add_entry(entry_keyword, hcomment, fcomment)
 
     def add_field(
         self,
-        section_keyword,
-        entry_keyword,
+        section_keyword: str,
+        entry_keyword: str,
         field_value,
         field_data_type=None,
-        line_number=0,
+        hcomment="",
+        fcomment="",
     ):
         """
-        Fields must be added in order and no random access is allowed.
+        Add a field to an entry.
+
+        Args:
+            section_keyword: Name of the section that holds the entry
+            entry_keyword: Name of the entry to add the field
+            field_value: value of the field
+            field_data_type: Optional data type for the field. If No data type is
+                      passed, then a data type will be automatically assign to the
+                      field based on the field index and its value.
+            hcomment: Optional header comment associated with the field.
+                The comment is written above the field.
+            fcomment: Optional footer comment associated with the field.
+                The comment is written on the same line after the field.
+
+        Note: Fields must be added in the correct order. No random access is allowed.
         """
         section = self.get_section(section_keyword)
 
@@ -130,7 +169,7 @@ class EDS:
         entry = section.get_entry(entry_keyword)
         if entry is None:
             raise Exception(f"Entry not found! [{entry_keyword}]")
-        return entry.add_field(field_value, field_data_type, line_number)
+        return entry.add_field(field_value, field_data_type, hcomment, fcomment)
 
     def remove_section(self, section_keyword, removetree=False):
         section = self.get_section(section_keyword)
@@ -565,19 +604,27 @@ class EDS:
 
 
 class Section:
-    def __init__(self, eds, keyword, name, class_id=0, line_number=0):
+    def __init__(self, eds, keyword, name, class_id=0):
         self.parent = eds
         self.keyword = keyword
         self.name = name
         self.class_id = class_id
-        self.line_number = (
-            line_number  # line number in the eds data. required for comment assignment
-        )
+        self._line_number = 0 # line number in the eds data. required for comment assignment
         self.entries = {}
         self.hcomment = ""
         self.fcomment = ""
 
-    def add_entry(self, entry_keyword, line_number=0):
+    def add_entry(self, entry_keyword: str, hcomment="", fcomment=""):
+        """
+        Add an entry to the section.
+
+        Args:
+            entry_keyword: Keyword of the entry to add.
+            hcomment: Optional header comment associated with the entry.
+                The comment is written above the entry.
+            fcomment: Optional footer comment associated with the entry.
+                The comment is written on the same line after the entry.
+        """
         if entry_keyword == "":
             raise Exception(f'Invalid Entry keyword! [{self.keyword}]"{entry_keyword}"')
 
@@ -585,7 +632,9 @@ class Section:
             raise Exception(f'Duplicate Entry! [{self.keyword}]"{entry_keyword}"')
 
         entry_name = entry_keyword  # using entry keyword as the default entry name
-        entry = Entry(self, entry_keyword, entry_name, line_number)
+        entry = Entry(self, entry_keyword, entry_name)
+        entry.hcomment = hcomment
+        entry.fcomment = fcomment
         self.entries[entry_keyword] = entry
 
         return entry
@@ -627,20 +676,29 @@ class Section:
 
 class Entry:
 
-    def __init__(self, section, keyword, name, line_number=0):
+    def __init__(self, section, keyword, name):
         self.parent = section
         self.keyword = keyword
         self.name = name
-        self.line_number = (
-            line_number  # line number in the eds data. required for comment assignment
-        )
-        self.fields = (
-            []
-        )  # Unlike the sections and entries, fields are implemented as a list.
+        self._line_number = 0 # line number in the eds data. required for comment assignment
+        self.fields = [] # Unlike sections and entries, fields are implemented as a list.
         self.hcomment = ""
         self.fcomment = ""
 
-    def add_field(self, field_value, field_data_type=None, line_number=0):
+    def add_field(self, field_value, field_data_type=None, hcomment="", fcomment=""):
+        """
+        Add a field to the entry.
+
+        Args:
+            field_value: value of the field
+            field_data_type: Optional data type for the field. If No data type is
+                      passed, then a data type will be automatically assign to the
+                      field based on the field index and its value.
+            hcomment: Optional header comment associated with the field.
+                The comment is written above the field.
+            fcomment: Optional footer comment associated with the field.
+                The comment is written on the same line after the field.
+        """
         field_data_object = None  # This going to be an instance of CIP_TYPE
         field_name = f"field{len(self.fields)}"
 
@@ -654,8 +712,10 @@ class Entry:
             field_data_object = eds_types.UNDEFINED(field_value)
 
         field = Field(
-            self, field_name, field_data_object, len(self.fields), line_number
+            self, field_name, field_data_object, len(self.fields)
         )
+        field.hcomment = hcomment
+        field.fcomment = fcomment
         self.fields.append(field)
 
         return field
@@ -714,13 +774,11 @@ class Entry:
 
 
 class Field:
-    def __init__(self, entry, name, data, index, line_number=0):
+    def __init__(self, entry, name, data, index):
         self.index = index
         self.parent = entry
         self.name = name
-        self.line_number = (
-            line_number  # line number in the eds data. required for comment assignment
-        )
+        self._line_number = 0 # line number in the eds data. required for comment assignment
         self.data = data  # datatype object. Actually is the Field value containing also its type information
         self.data_types = []  # Valid datatypes a field supports
         self.hcomment = ""
