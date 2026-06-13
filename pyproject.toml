@@ -26,6 +26,9 @@ dependencies = []
 packages = ["eds_pie", "eds_pie.references"]
 include-package-data = true
 
+[tool.setuptools.package-data]
+eds_pie = ["references/*"]
+
 [tool.black]
 line-length = 88
 target-version = ["py38"]
