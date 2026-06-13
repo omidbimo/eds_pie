@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "eds_pie"
-version = "1.1.0"
+version = "1.2.0"
 description = "EDS parser library for ODVA's CIP® protocol family (EtherNet/IP®, DeviceNet®, etc.)"
 readme = "README.md"
 authors = [
