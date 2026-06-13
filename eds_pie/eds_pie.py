@@ -4,8 +4,6 @@ import eds_pie.cip_eds_types as eds_types
 from .eds_lexer import Lexer, TOKEN_TYPES, SYMBOLS
 from .eds import EDS
 
-from ._version import __version__
-
 logging.basicConfig(
     level=logging.DEBUG, format="%(asctime)s - %(name)s.%(levelname)-8s %(message)s"
 )
