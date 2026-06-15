@@ -386,7 +386,7 @@ class EDS:
                         section.keyword
                     ) and not eds_types.VENDOR_SPECIFIC.validate(entry.keyword):
                         logger.warning(
-                            "Unknown Entry [{section.keyword,}].{entry.keyword}"
+                            f"Unknown Entry [{section.keyword}].{entry.keyword}"
                         )
                 else:
                     # replace the default name with the correct one from reflib
@@ -439,13 +439,8 @@ class EDS:
                             )
                             if field.value != "":
                                 logger.error(
-                                    "Data_type mismatch! [{}].{}.{} = ({}), Field should be of type: {}".format(
-                                        section.keyword,
-                                        entry.keyword,
-                                        field_index,
-                                        field.value,
-                                        types_str,
-                                    )
+                                    f"Data_type mismatch! [{section.keyword}].{entry.keyword}.{field_index} = "
+                                    + f"({field.value}), Field should be of type: {types_str}"
                                 )
                     else:
                         if not eds_types.VENDOR_SPECIFIC.validate(
@@ -462,22 +457,14 @@ class EDS:
                         if "Param" in field.value:
                             if self.get_entry("Params", field.value) is None:
                                 logger.error(
-                                    "Missing referenced Entry [Params].{} required by [{}].{}.{}".format(
-                                        field.value,
-                                        section.keyword,
-                                        entry.keyword,
-                                        field.name,
-                                    )
+                                    f"Missing referenced Entry [Params].{field.value} required by "
+                                    + f"[{section.keyword}].{entry.keyword}.{field.name}"
                                 )
                         elif "Assem" in field.value:
                             if self.get_entry("Assembly", field.value) is None:
                                 logger.error(
-                                    "Missing referenced Entry [Assembly].{} required by [{}].{}.{}".format(
-                                        field.value,
-                                        section.keyword,
-                                        entry.keyword,
-                                        field.name,
-                                    )
+                                    f"Missing referenced Entry [Assembly].{field.value} required by"
+                                    + f"[{section.keyword}].{entry.keyword}.{field.name}"
                                 )
                         else:
                             logger.warning("Reference checking not implemented!")
